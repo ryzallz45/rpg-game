@@ -96,13 +96,15 @@
     return w;
   }
 
-  function buildBanditMesh() {
+  function buildBanditMesh(variant) {
+    var isKnight = variant === 'knight';
     var mats = [];
     function M(hex, rough, metal) { return matsWrap(mats, smat(hex, rough, metal)); }
-    var shirt = M(0x7A3B30, 0.9);
-    var pants = M(0x3A3F4A, 0.9);
-    var skin = M(0xC08A5E, 0.8);
-    var band = M(0xA03A2A, 0.9);
+    var shirt = M(isKnight ? 0x4C5259 : 0x7A3B30, 0.9);
+    var pants = M(isKnight ? 0x32363B : 0x3A3F4A, 0.9);
+    var skin = M(isKnight ? 0xB9C2C6 : 0xC08A5E, 0.8);
+    var band = M(isKnight ? 0x2A2E33 : 0xA03A2A, 0.9);
+    var armor = M(isKnight ? 0x7C848A : 0x6B5A45, isKnight ? 0.4 : 0.85, isKnight ? 0.4 : 0);
     var blade = M(0xC6CCD4, 0.35, 0.55);
     var wood = M(0x5A4326, 0.85);
     var eye = M(0x15100B, 0.4);
@@ -110,6 +112,7 @@
       global.TexLib.apply(shirt, 'cloth', 1.5, 1.2);
       global.TexLib.apply(pants, 'cloth', 1.4, 1.4);
       global.TexLib.apply(band, 'leather', 1, 1);
+      global.TexLib.apply(armor, isKnight ? 'metal' : 'leather', 1.2, 1.2);
       global.TexLib.apply(blade, 'metal', 1, 2.2);
       global.TexLib.apply(wood, 'wood', 1, 1);
     }
@@ -125,8 +128,23 @@
 
     part(g, new THREE.BoxGeometry(0.32, 0.2, 0.22), pants, 0, 0.86, 0);
     part(g, new THREE.BoxGeometry(0.4, 0.5, 0.26), shirt, 0, 1.2, 0);
+    if (isKnight) {
+      part(g, new THREE.BoxGeometry(0.44, 0.42, 0.12), armor, 0, 1.24, 0.13);
+      part(g, new THREE.BoxGeometry(0.5, 0.09, 0.3), band, 0, 0.98, 0);
+      var pl = part(g, new THREE.SphereGeometry(0.11, 10, 8), armor, -0.27, 1.45, 0);
+      pl.scale.set(1.1, 0.72, 1.0);
+      var pr = part(g, new THREE.SphereGeometry(0.11, 10, 8), armor, 0.27, 1.45, 0);
+      pr.scale.set(1.1, 0.72, 1.0);
+    } else {
+      part(g, new THREE.BoxGeometry(0.42, 0.08, 0.34), band, 0, 1.63, 0);
+    }
     part(g, new THREE.SphereGeometry(0.185, 12, 10), skin, 0, 1.58, 0);
-    part(g, new THREE.BoxGeometry(0.42, 0.08, 0.34), band, 0, 1.63, 0);
+    if (isKnight) {
+      var helm = part(g, new THREE.SphereGeometry(0.205, 12, 9, 0, Math.PI * 2, 0, Math.PI * 0.56), armor, 0, 1.605, -0.012);
+      helm.scale.set(1.02, 1.0, 1.04);
+      part(g, new THREE.BoxGeometry(0.05, 0.2, 0.05), armor, 0, 1.56, 0.19);
+      part(g, new THREE.BoxGeometry(0.16, 0.05, 0.04), eye, 0, 1.615, 0.185);
+    }
     part(g, new THREE.SphereGeometry(0.024, 8, 6), eye, -0.06, 1.59, 0.165);
     part(g, new THREE.SphereGeometry(0.024, 8, 6), eye, 0.06, 1.59, 0.165);
 
@@ -163,12 +181,17 @@
   function buildSlimeMesh() {
     var mats = [];
     var gel = new THREE.MeshStandardMaterial({
-      color: srgb(0x69BF57), roughness: 0.35, metalness: 0,
-      emissive: srgb(0x1E4416), emissiveIntensity: 0.7
+      color: srgb(0x7FC9A8), roughness: 0.32, metalness: 0,
+      emissive: srgb(0x1F6B57), emissiveIntensity: 0.85,
+      transparent: true, opacity: 0.88
     });
     if (global.TexLib) global.TexLib.apply(gel, 'gel', 2, 2);
     matsWrap(mats, gel);
-    var eye = matsWrap(mats, smat(0x15100B, 0.4));
+    var eye = matsWrap(mats, smat(0x101613, 0.4));
+    var moteMat = matsWrap(mats, new THREE.MeshStandardMaterial({
+      color: srgb(0xBDF0D4), emissive: srgb(0x3FA37E), emissiveIntensity: 1.2,
+      roughness: 0.4, metalness: 0, transparent: true, opacity: 0.8
+    }));
 
     var g = new THREE.Group();
     var body = new THREE.Mesh(new THREE.SphereGeometry(0.42, 10, 7), gel);
@@ -184,14 +207,24 @@
     body.add(e1);
     body.add(e2);
 
-    return { group: g, anim: { body: body }, mats: mats };
+    // Roh rawa: tiga titik api rawa yang mengorbit — tanda kehidupan akan datang.
+    var motes = [];
+    for (var i = 0; i < 3; i++) {
+      var m = new THREE.Mesh(new THREE.SphereGeometry(0.055, 7, 5), moteMat);
+      var a = i / 3 * Math.PI * 2;
+      m.position.set(Math.cos(a) * 0.55, 0.5 + i * 0.12, Math.sin(a) * 0.55);
+      g.add(m);
+      motes.push(m);
+    }
+
+    return { group: g, anim: { body: body, motes: motes }, mats: mats };
   }
 
   /* ---------- Jenis makhluk ---------- */
 
   var TYPES = {
     babi: {
-      label: 'Babi Hutan', icon: '🐗',
+      label: 'Celeng Hutan', icon: '🐗',
       hp: 40, dmg: 9, wanderSpeed: 1.6, chaseSpeed: 4.6, detect: 13,
       range: 2.4, cd: 1.5, xp: 12, r: 0.75, height: 1.2, build: buildBoarMesh,
       loot: [
@@ -201,7 +234,7 @@
       ]
     },
     bandit: {
-      label: 'Bandit Rimba', icon: '🗡️',
+      label: 'Penyamun Jalan Raya', icon: '🗡️',
       hp: 65, dmg: 12, wanderSpeed: 1.4, chaseSpeed: 3.7, detect: 15,
       range: 2.5, cd: 1.9, xp: 20, r: 0.5, height: 1.95, build: buildBanditMesh,
       loot: [
@@ -210,11 +243,22 @@
       ]
     },
     slime: {
-      label: 'Slime Hutan', icon: '🟢',
+      label: 'Roh Rawa', icon: '🔮',
       hp: 24, dmg: 6, wanderSpeed: 1.2, chaseSpeed: 2.8, detect: 9.5,
       range: 1.8, cd: 1.7, xp: 8, r: 0.55, height: 0.9, build: buildSlimeMesh,
       loot: [
         { id: 'lendir', min: 1, max: 3, chance: 1 }
+      ]
+    },
+    knight: {
+      label: 'Ksatria Terkutuk', icon: '⚔️',
+      hp: 95, dmg: 16, wanderSpeed: 1.1, chaseSpeed: 3.5, detect: 17,
+      range: 2.7, cd: 2.1, xp: 34, r: 0.55, height: 2.0,
+      build: function () { return buildBanditMesh('knight'); },
+      loot: [
+        { id: 'koin', min: 3, max: 7, chance: 1 },
+        { id: 'besi', min: 1, max: 2, chance: 0.7 },
+        { id: 'taring', min: 1, max: 1, chance: 0.2 }
       ]
     }
   };
@@ -426,7 +470,7 @@
         ? (prog < 0.6 ? -0.45 * (prog / 0.6) : 0.6)
         : 0;
       this.bounceY = moving ? Math.abs(Math.sin(this.walkPhase)) * 0.03 : 0;
-    } else if (this.typeId === 'bandit') {
+    } else if (this.typeId === 'bandit' || this.typeId === 'knight') {
       this.walkPhase += dt * (moving ? (this.state === 'chase' ? 10.5 : 6) : 1.5);
       var sw2 = Math.sin(this.walkPhase) * (moving ? 0.6 : 0);
       this.anim.legL.rotation.x = sw2;
@@ -447,6 +491,14 @@
         this.anim.body.scale.set(1.08 - hop * 0.14, 0.72 * (0.85 + 0.42 * hop), 1.08 - hop * 0.14);
         this.bounceY = hop * (moving ? 0.26 : 0.07);
       }
+      if (this.anim.motes) {
+        for (var mi = 0; mi < this.anim.motes.length; mi++) {
+          var mo = this.anim.motes[mi];
+          var ma = this.hopPhase * 0.7 + mi * (Math.PI * 2 / 3);
+          var mr = 0.5 + Math.sin(this.hopPhase * 0.8 + mi) * 0.08;
+          mo.position.set(Math.cos(ma) * mr, 0.48 + mi * 0.12 + Math.sin(ma * 1.7) * 0.06, Math.sin(ma) * mr);
+        }
+      }
     }
   };
 
@@ -456,8 +508,9 @@
     if (this.mixer) return false; // sudah memakai model 3D
     var spawned = lib.spawn(name, {
       cloneMaterials: true, // tiap ekor punya material sendiri agar bisa berkedip merah
-      height: name === 'boar' ? 1.25 : 1.9,
-      tint: name === 'boar' ? 0x8F7860 : undefined // babi hutan = coklat lumpur
+      height: name === 'boar' ? 1.25 : (name === 'knight' ? 2.0 : 1.9),
+      tint: name === 'boar' ? 0x8F7860 : (name === 'knight' ? 0x4E565E : undefined),
+      tintMix: name === 'knight' ? 0.72 : 1
     });
     if (!spawned) return false;
 
@@ -498,27 +551,30 @@
         attack: act(['1H_Melee_Attack_Chop', '1H_Melee_Attack_Slice_Horizontal', '1H_Melee_Attack_Stab'], true),
         death: act(['(^|\\|)Death_A$'], true)
       };
-      // Golok ditempel ke tangan kanan model bandit
-      var hand = null;
-      spawned.root.traverse(function (o) {
-        if (!hand && /^handslot[._]?r$/i.test(o.name)) hand = o;
-      });
-      if (!hand) {
-        spawned.root.traverse(function (o) { if (!hand && /^hand[._]?r$/i.test(o.name)) hand = o; });
-      }
-      if (hand) {
-        var gm = smat(0x5A4326, 0.85);
-        var gb = smat(0xC6CCD4, 0.35, 0.55);
-        if (global.TexLib) {
-          global.TexLib.apply(gm, 'wood', 1, 1);
-          global.TexLib.apply(gb, 'metal', 1, 2.2);
+      // Golok ditempel ke tangan kanan model bandit. Ksatria KayKit sudah
+      // membawa pedang sendiri, jadi jangan ditambahi senjata kedua.
+      if (name !== 'knight') {
+        var hand = null;
+        spawned.root.traverse(function (o) {
+          if (!hand && /^handslot[._]?r$/i.test(o.name)) hand = o;
+        });
+        if (!hand) {
+          spawned.root.traverse(function (o) { if (!hand && /^hand[._]?r$/i.test(o.name)) hand = o; });
         }
-        var golok = buildGolok(gm, gb);
-        golok.position.set(0.02, 0.02, 0.0);
-        golok.rotation.set(0, 0, Math.PI / 2); // bilah menggantung dari telapak
-        hand.add(golok);
-        spawned.mats.push({ m: gm, hex: gm.emissive.getHex(), int: gm.emissiveIntensity });
-        spawned.mats.push({ m: gb, hex: gb.emissive.getHex(), int: gb.emissiveIntensity });
+        if (hand) {
+          var gm = smat(0x5A4326, 0.85);
+          var gb = smat(0xC6CCD4, 0.35, 0.55);
+          if (global.TexLib) {
+            global.TexLib.apply(gm, 'wood', 1, 1);
+            global.TexLib.apply(gb, 'metal', 1, 2.2);
+          }
+          var golok = buildGolok(gm, gb);
+          golok.position.set(0.02, 0.02, 0.0);
+          golok.rotation.set(0, 0, Math.PI / 2); // bilah menggantung dari telapak
+          hand.add(golok);
+          spawned.mats.push({ m: gm, hex: gm.emissive.getHex(), int: gm.emissiveIntensity });
+          spawned.mats.push({ m: gb, hex: gb.emissive.getHex(), int: gb.emissiveIntensity });
+        }
       }
     }
     if (A.attack) A.attack._fit = U.clamp(A.attack.getClip().duration / 0.42, 1.2, 3.0);
@@ -644,7 +700,7 @@
     this.list = [];
     this.loot = [];
     this.hooks = null;
-    this.counts = { babi: 0, bandit: 0, slime: 0 };
+    this.counts = { babi: 0, bandit: 0, slime: 0, knight: 0 };
     this.introBoar = null;
     this._lootT = 0;
     this._lootGeo = null;
@@ -738,6 +794,27 @@
       this.introBoar = ib;
     }
 
+    // Penjaga terkutuk di reruntuhan kastil. Mereka menambah bahaya sekaligus
+    // memberi alasan untuk menjelajahi landmark batu tua di punggung bukit.
+    var castle = null;
+    for (var lm = 0; lm < (world.landmarks || []).length; lm++) {
+      if (world.landmarks[lm].id === 'castle') { castle = world.landmarks[lm]; break; }
+    }
+    if (castle) {
+      for (var kn = 0; kn < 6; kn++) {
+        var ka = kn / 6 * Math.PI * 2 + 0.4;
+        var kr = 13 + (kn % 3) * 4.5;
+        var kx = castle.x + Math.cos(ka) * kr;
+        var kz = castle.z + Math.sin(ka) * kr;
+        if (world.groundHeight(kx, kz) < 2.0 * S) continue;
+        if (world._slopeAt(kx, kz) > 0.5) continue;
+        var knEnemy = new Enemy('knight', kx, kz, world, C.WORLD.seed + 9100 + kn * 97);
+        this.scene.add(knEnemy.group);
+        this.list.push(knEnemy);
+        this.counts.knight++;
+      }
+    }
+
     this._buildBar();
   };
 
@@ -746,7 +823,8 @@
     var count = 0;
     for (var i = 0; i < this.list.length; i++) {
       var e = this.list[i];
-      var name = e.typeId === 'bandit' ? 'hooded' : (e.typeId === 'babi' ? 'boar' : null);
+      var name = e.typeId === 'bandit' ? 'hooded' :
+        (e.typeId === 'babi' ? 'boar' : (e.typeId === 'knight' ? 'knight' : null));
       if (!name || !lib.has(name)) continue;
       if (e.attachModel(lib, name)) count++;
     }

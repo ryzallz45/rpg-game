@@ -570,7 +570,7 @@ h1 {
 }
 
 .wm-panel {
-  width: min(94vw, 860px, calc(68vh + 40px));
+  width: min(94vw, 860px, calc(62vh + 40px));
   max-height: 96vh;
   overflow-y: auto;
   padding: 12px 14px 10px;
@@ -676,7 +676,7 @@ h1 {
 
 .wm-map-wrap {
   position: relative;
-  width: min(86vw, 68vh);
+  width: min(86vw, 62vh);
   max-width: 100%;
   margin: 0 auto;
   aspect-ratio: 1 / 1;
@@ -742,9 +742,9 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 5px 14px;
-  margin-top: 7px;
-  font-size: 10px;
+  gap: 4px 10px;
+  margin-top: 6px;
+  font-size: 9.5px;
   color: #8fb0c6;
 }
 

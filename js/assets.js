@@ -109,6 +109,7 @@
     root.rotation.y = opts.yaw !== undefined ? opts.yaw : (FIX[name] ? FIX[name].yaw : 0);
 
     var tint = opts.tint !== undefined ? new THREE.Color(opts.tint) : null;
+    var tintMix = opts.tintMix === undefined ? 1 : Math.max(0, Math.min(1, opts.tintMix));
     var mats = [];
     root.traverse(function (o) {
       if (!o.isMesh && !o.isSkinnedMesh) return;
@@ -121,7 +122,10 @@
           mat = mat.clone();
           o.material = mat;
         }
-        if (tint) mat.color.copy(tint);
+        if (tint) {
+          if (tintMix >= 0.999) mat.color.copy(tint);
+          else mat.color.lerp(tint, tintMix);
+        }
         mats.push({
           m: mat,
           hex: mat.emissive ? mat.emissive.getHex() : 0,

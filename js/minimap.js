@@ -106,14 +106,14 @@
     var data = img.data;
     var size = this.worldSize;
     var S = world.scale || (global.CONFIG && global.CONFIG.WORLD && global.CONFIG.WORLD.scale) || 1;
-    var deep = [10, 42, 64];
-    var shallow = [57, 139, 157];
-    var sand = [211, 196, 152];
-    var grass = [83, 126, 70];
-    var grassDark = [99, 124, 72];
-    var hill = [124, 126, 92];
-    var rock = [136, 134, 122];
-    var peak = [155, 154, 145];
+    var deep = [8, 34, 52];
+    var shallow = [54, 111, 111];
+    var sand = [190, 176, 137];
+    var grass = [74, 101, 60];
+    var grassDark = [88, 108, 66];
+    var hill = [107, 108, 82];
+    var rock = [118, 116, 104];
+    var peak = [144, 144, 136];
 
     for (var j = 0; j < res; j++) {
       var z = (j / (res - 1) - 0.5) * size;
@@ -169,6 +169,11 @@
     var now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
     var pulse = 0.5 + 0.5 * Math.sin(now * 0.0043);
     this._bigHotspots = [];
+    var occupied = []; // kotak label yang sudah terpakai, agar label POI tidak bertumpuk
+
+    function rectsOverlap(a, b) {
+      return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    }
 
     function mx(wx) { return (wx / ws + 0.5) * size; }
     function my(wz) { return (wz / ws + 0.5) * size; }
@@ -191,6 +196,73 @@
       c.stroke();
       c.strokeStyle = 'rgba(5, 14, 21, 0.85)';
       c.strokeRect(-6, 0, 12, 8);
+      c.restore();
+    }
+
+    function iconCastle(x, y, s) {
+      c.save();
+      c.translate(x, y);
+      c.scale(s, s);
+      c.fillStyle = 'rgba(62, 60, 54, 0.97)';
+      c.fillRect(-7, -2, 14, 10);
+      c.fillRect(-9, -7, 4, 15);
+      c.fillRect(5, -7, 4, 15);
+      c.fillStyle = '#c9c2ae';
+      c.beginPath();
+      c.moveTo(-11, -7); c.lineTo(-9, -11); c.lineTo(-7, -7); c.closePath(); c.fill();
+      c.beginPath();
+      c.moveTo(7, -7); c.lineTo(9, -11); c.lineTo(11, -7); c.closePath(); c.fill();
+      c.fillRect(-2, 2, 4, 6);
+      c.lineWidth = 1.4;
+      c.strokeStyle = 'rgba(5, 14, 21, 0.95)';
+      c.strokeRect(-7, -2, 14, 10);
+      c.strokeStyle = '#ffd166';
+      c.beginPath();
+      c.moveTo(0, -14); c.lineTo(3, -9); c.lineTo(0, -4); c.lineTo(-3, -9); c.closePath();
+      c.stroke();
+      c.restore();
+    }
+
+    function iconChapel(x, y, s) {
+      c.save();
+      c.translate(x, y);
+      c.scale(s, s);
+      c.fillStyle = 'rgba(84, 85, 80, 0.98)';
+      c.fillRect(-5, -2, 10, 10);
+      c.beginPath();
+      c.moveTo(-8, -2); c.lineTo(0, -10); c.lineTo(8, -2); c.closePath();
+      c.fillStyle = '#b9c7cf';
+      c.fill();
+      c.lineWidth = 1.4;
+      c.strokeStyle = 'rgba(5, 14, 21, 0.95)';
+      c.stroke();
+      c.strokeStyle = 'rgba(5, 14, 21, 0.9)';
+      c.strokeRect(-5, -2, 10, 10);
+      c.fillStyle = '#e6eef2';
+      c.fillRect(-1, -16, 2, 6);
+      c.fillRect(-4, -13, 8, 2);
+      c.fillStyle = '#222a2e';
+      c.fillRect(-1.5, 3, 3, 5);
+      c.restore();
+    }
+
+    function iconStones(x, y, s) {
+      c.save();
+      c.translate(x, y);
+      c.scale(s, s);
+      c.fillStyle = '#9b9f99';
+      c.strokeStyle = 'rgba(5, 14, 21, 0.95)';
+      c.lineWidth = 1.4;
+      c.fillRect(-8, -5, 3.4, 13);
+      c.fillRect(4.6, -5, 3.4, 13);
+      c.fillRect(-8, -9, 16, 3.2);
+      c.strokeRect(-8, -5, 3.4, 13);
+      c.strokeRect(4.6, -5, 3.4, 13);
+      c.strokeRect(-8, -9, 16, 3.2);
+      c.fillStyle = '#c8cbbf';
+      c.beginPath();
+      c.arc(0, 2.5, 2.2, 0, Math.PI * 2);
+      c.fill();
       c.restore();
     }
 
@@ -244,22 +316,44 @@
       c.textAlign = 'left';
       c.textBaseline = 'middle';
       var tw = c.measureText(text).width;
-      var gap = 22 * k;
-      var lx;
-      if (side === 'left') {
-        lx = x - gap - tw;
+      var gap = 30 * k;
+      var row = fs * 1.6;
+      var d0 = dy || 0;
+      var other = side === 'left' ? 'right' : 'left';
+      // Coba beberapa posisi di sekitar ikon; pilih yang tidak menimpa label lain.
+      var tries = [
+        [side, d0], [side, d0 + row], [side, d0 - row],
+        [other, d0], [other, d0 + row], [other, d0 - row],
+        [side, d0 + row * 2], [other, d0 + row * 2]
+      ];
+      var best = null;
+      for (var ti = 0; ti < tries.length; ti++) {
+        var sd = tries[ti][0], off = tries[ti][1];
+        var lx = sd === 'left' ? x - gap - tw : x + gap;
         if (lx < 8 * k) lx = x + gap;
-      } else {
-        lx = x + gap;
         if (lx + tw > size - 8 * k) lx = x - gap - tw;
+        var ly = Math.max(fs + 10 * k, Math.min(size - fs - 10 * k, y + off));
+        var rect = { x: lx - 4 * k, y: ly - fs * 0.72, w: tw + 8 * k, h: fs * 1.44 };
+        var hit = false;
+        for (var oi = 0; oi < occupied.length; oi++) {
+          if (rectsOverlap(rect, occupied[oi])) { hit = true; break; }
+        }
+        if (!hit) { best = { x: lx, y: ly, rect: rect }; break; }
       }
-      var ly = y + (dy || 0);
+      if (!best) {
+        var bx = side === 'left' ? x - gap - tw : x + gap;
+        if (bx < 8 * k) bx = x + gap;
+        if (bx + tw > size - 8 * k) bx = x - gap - tw;
+        var by = Math.max(fs + 10 * k, Math.min(size - fs - 10 * k, y + d0));
+        best = { x: bx, y: by, rect: { x: bx - 4 * k, y: by - fs * 0.72, w: tw + 8 * k, h: fs * 1.44 } };
+      }
       c.lineWidth = Math.max(3, 5 * k);
       c.strokeStyle = 'rgba(3, 11, 17, 0.95)';
-      c.strokeText(text, lx, ly);
+      c.strokeText(text, best.x, best.y);
       c.fillStyle = color || '#f2fbff';
-      c.fillText(text, lx, ly);
-      return { x: lx - 4 * k, y: ly - fs * 0.72, w: tw + 8 * k, h: fs * 1.44 };
+      c.fillText(text, best.x, best.y);
+      occupied.push(best.rect);
+      return best.rect;
     }
 
     // Label kecil untuk pemain/perahu/tujuan (selain label POI).
@@ -316,17 +410,25 @@
       var p = pois[i];
       if (!p || !isFinite(p.x) || !isFinite(p.z)) continue;
       var sx = mx(p.x), sy = my(p.z);
+      var major = p.id === 'village' || p.id === 'harbor' || p.id === 'castle';
       c.beginPath();
-      c.arc(sx, sy, 24 * k, 0, Math.PI * 2);
+      c.arc(sx, sy, (major ? 24 : 17) * k, 0, Math.PI * 2);
       c.fillStyle = 'rgba(4, 13, 20, 0.58)';
       c.fill();
       if (p.id === 'harbor') iconAnchor(sx, sy, 1.95 * k);
       else if (p.id === 'hut' || p.id === 'hut2') iconHut(sx, sy, 1.95 * k);
+      else if (p.id === 'castle') iconCastle(sx, sy, 1.95 * k);
+      else if (p.id === 'chapel') iconChapel(sx, sy, 1.95 * k);
+      else if (p.id === 'stones') iconStones(sx, sy, 1.95 * k);
       else iconHouse(sx, sy, 1.95 * k, '#ffd166');
 
-      var side = p.id === 'village' ? 'left' : 'right';
-      var dy = p.id === 'village' ? 29 * k : (p.id === 'harbor' ? -24 * k : 24 * k);
-      var color = p.id === 'harbor' ? '#c8f6ff' : (p.id === 'village' ? '#ffe9b0' : '#f3e2c0');
+      var side = (p.id === 'village' || p.id === 'castle' || p.id === 'chapel') ? 'left' : 'right';
+      var dy = p.id === 'village' ? 29 * k :
+        (p.id === 'harbor' ? -26 * k :
+          (p.id === 'chapel' ? -22 * k : (p.id === 'stones' ? 38 * k : 24 * k)));
+      var color = p.id === 'harbor' ? '#c8f6ff' :
+        (p.id === 'village' ? '#ffe9b0' :
+          (p.id === 'castle' ? '#e8d7b0' : (p.id === 'chapel' ? '#d7e3e9' : '#f3e2c0')));
       var lb = drawLabel(p.label || p.id, sx, sy, side, dy, color);
       this._bigHotspots.push({
         poi: p.id, x: p.x, z: p.z,
@@ -381,7 +483,16 @@
     c.lineWidth = 1.8 * k;
     c.strokeStyle = 'rgba(5, 14, 21, 0.95)';
     c.stroke();
-    drawTag(state.playerLabel || 'Kamu', pcx, pcy + 34 * k, '#ffffff');
+    // Label "Kamu" hanya digambar bila tidak bertabrakan dengan label POI.
+    var tagY = pcy + 34 * k, tagBlocked = false;
+    for (var oi = 0; oi < occupied.length; oi++) {
+      var rr = occupied[oi];
+      if (pcx > rr.x - 46 * k && pcx < rr.x + rr.w + 46 * k &&
+          tagY > rr.y - 12 * k && tagY < rr.y + rr.h + 12 * k) {
+        tagBlocked = true; break;
+      }
+    }
+    if (!tagBlocked) drawTag(state.playerLabel || 'Kamu', pcx, tagY, '#ffffff');
 
     // Tujuan: garis putus-putus + pin emas berdenyut.
     var wp = state.waypoint;

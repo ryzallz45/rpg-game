@@ -1,17 +1,25 @@
 # Aetheria: Legacy of the Dawn — Eksplorasi 3D Low-Poly
 
-Game eksplorasi 3D open-world (mini RPG) berbasis Three.js r128. Seluruh dunia,
-vegetasi, langit, dan karakter dibuat **prosedural** — cukup dobel-klik
-`index.html` (atau tombol Play di editor), tanpa internet. Versi grafis penuh
-(bayangan halus, tekstur, efek, dan **model karakter 3D CC0**) menyala otomatis
-saat dijalankan lewat `jalankan.bat`; semua aset tersimpan lokal di repo ini.
+Game eksplorasi 3D open-world (mini RPG) berbasis Three.js r128, berlatar
+**kerajaan pesisir abad pertengahan**. Seluruh dunia, vegetasi, langit, dan
+karakter dibuat **prosedural** — cukup dobel-klik `index.html` (atau tombol Play
+di editor), tanpa internet. Versi grafis penuh (bayangan halus, tekstur, efek,
+dan **model karakter 3D CC0**) menyala otomatis saat dijalankan lewat
+`jalankan.bat`; semua aset tersimpan lokal di repo ini.
 
 **Fase 5** memperluas dunia menjadi **±3,24 km persegi (10× luas sebelumnya)**
 dengan pegunungan & perbukitan yang ikut membesar, **12 pulau kecil** di lautan,
 **pelabuhan beratap dermaga + perahu cadik yang bisa dikemudikan**, rumah
-seukuran manusia yang lapang, **peta 4 mode** di kanan atas, **peta besar yang
+setengah-kayu yang lapang, **peta 4 mode** di kanan atas, **peta besar yang
 bisa ditandai tujuannya** (kompas HUD + mercusuar 3D), dan HUD yang seluruhnya
 bisa diklik.
+
+Pembaruan **kerajaan abad pertengahan** mengubah pemain menjadi **ksatria
+fajar**, desa utama menjadi **Aldenmere** dengan rumah setengah-kayu, alun-alun
+batu, pasar beratap kain, dan gapura batu; menambah **reruntuhan kastil,
+kapel tua, menara jaga, dan lingkaran batu berdiri** di lanskap; serta
+menghadirkan **celeng hutan, penyamun jalan raya, roh rawa, dan ksatria
+terkutuk**. Semua ID internal, simpanan v2, dan mekanik Fase 1–5 tetap utuh.
 
 ## Cara menjalankan
 
@@ -42,8 +50,9 @@ tetap tampil penuh saat dibuka lewat `file://` tanpa internet.
 - **Bahasa** — **Bahasa Indonesia / English** untuk antarmuka & menu (dialog
   cerita tetap Bahasa Indonesia).
 
-Trailer menampilkan kamera terbang mengelilingi pulau (pantai → desa → puncak
-gunung) dengan kartu judul dwibahasa dan bilah letterbox sinematik.
+Trailer menampilkan kamera terbang mengelilingi kerajaan pesisir (pantai →
+Aldenmere → perbukitan) dengan kartu judul dwibahasa dan bilah letterbox
+sinematik.
 
 ## Kontrol
 
@@ -56,7 +65,7 @@ gunung) dengan kartu judul dwibahasa dan bilah letterbox sinematik.
 | E | bicara dengan penduduk / memetik kelapa / mengambil benda / **naik & turun perahu** |
 | Klik / E | memajukan dialog |
 | I | buka/tutup **tas** besar di tengah layar (isi jarahan) |
-| H | makan daging babi (+30 HP) |
+| H | makan daging celeng (+30 HP) |
 | M | ganti mode **peta mini**: Dunia → Sekitar → Lokal → Sembunyi |
 | Klik peta mini / 🗺️ | buka **peta besar**; klik lokasi atau POI untuk menandai tujuan |
 | × kompas / **Hapus Tujuan** | hapus tujuan yang aktif |
@@ -87,48 +96,62 @@ gerak & serangan dikunci, dan peta menutup otomatis bila pemain diserang.
 - **Langit & siklus siang–malam 10 menit**: kubah gradasi yang berubah warna,
   matahari terbit/terbenam, pendar matahari, bulan, 700 bintang, awan tertiup
   angin (berputar ulang di ujung langit), kabut atmosferik (FogExp2)
-- **Vegetasi instanced**: **±960 pohon** — rimbun pedalaman yang **lebih tinggi**
-  (mahkota 7 gumpalan organik bertekstur daun), **kelapa** pantai yang **sangat
-  tinggi dengan batang melengkung + 16 pelepah 3D** (bergerigi, melengkung turun,
-  pelepah kering & 3 kelapa), dan **cemara bertingkat** di punggung bukit &
-  lereng — plus **340 batu**; low-poly, ditanam pas mengikuti permukaan tanah, + tabrakan
+- **Vegetasi instanced**: **±1.000 pohon** bergaya hutan sedang — rimbun
+  pedalaman (mahkota 7 gumpalan organik bertekstur daun), **cemara bertingkat**
+  yang mendominasi punggung bukit & lereng, dan **kelapa pesisir yang jarang**
+  (batang melengkung + pelepah 3D) — plus **±330 batu**; low-poly, ditanam pas
+  mengikuti permukaan tanah, + tabrakan. Palet daun, rumput, dan bunga digeser
+  ke hijau zaitun/tanah agar terasa seperti lembah kerajaan, bukan tropis
 - **Rumput & bunga**: dibagi **potongan 36 m** yang dibangun bertahap (5×5
   potongan aktif ±90 m, 2 potongan per frame) — ±1.400 rumpun + ±200 bunga instanced
   di sekitar pemain, bergoyang tertiup angin (shader), hanya di daratan berumput.
   Dengan dunia 10×, biaya gambar rumput tetap konstan
-- **Desa Aetheria (utama)**: alun-alun besar, 10 rumah panggung yang **bisa
-  dimasuki** (pintu terbuka 1,5×2,15 m, tangga depan, lantai rendah), **balai
-  desa** terbesar (pintu 1,8×2,3 m), sumur batu, pagar kayu, dan **3 tiang
-  lampu alun-alun** — ukuran rumah **normal untuk manusia**, langit-langit dalam
-  **2,8–3,05 m** agar leluasa berjalan di dalam
+- **Desa Aldenmere (utama)**: alun-alun batu dengan **medali batu**, 10 rumah
+  **setengah-kayu** yang **bisa dimasuki** (fondasi batu, dinding plester,
+  rangka kayu gelap, atap sirap curam, cerobong, jendela berterali, pintu besi,
+  dan lentera beranda), **balai desa** terbesar dengan panji, sumur batu,
+  **gapura batu** berpilar dan berdinding rendah, pagar kayu, serta **3 pasar
+  beratap kain** dengan peti, tong, dan barang dagangan. Ukuran rumah normal
+  untuk manusia, langit-langit dalam **2,8–3,05 m** agar leluasa berjalan
 - **Cahaya malam**: saat senja–fajar **jendela & lentera rumah menyala hangat**,
-  tiang lampu menerangi alun-alun (cahaya nyata di HD/Ultra), api unggun
-  pendukuhan menyala lebih terang, dan satu **lampu ruangan** menyertai pemain
-  di dalam rumah
+  lentera besi dan tiang lampu menerangi alun-alun (cahaya nyata di HD/Ultra),
+  api unggun pendukuhan menyala lebih terang, dan satu **lampu ruangan**
+  menyertai pemain di dalam rumah
 - **3 pendukuhan kecil** tersebar di bagian pulau lain (barat & selatan):
-  rumah panggung (bisa dimasuki), alun-alun mungil, dan **api unggun berkedip** —
-  peta jalan di HUD tetap menuntun ke desa utama
-- **9 penduduk** dengan jadwal jelajah sendiri: Pak Raka (kepala desa),
-  Bu Sari, Mira, Adi, Kakek Bimo — plus **Bu Nia, Joni, dan Kakek Umar** di
-  pendukuhan, serta **Paman Dera** (pelaut) di pulau kecil berpondok; berhenti
-  & menoleh saat diajak bicara
+  rumah setengah-kayu (bisa dimasuki), alun-alun mungil, dan **api unggun
+  berkedip** — peta jalan di HUD tetap menuntun ke desa utama
+- **9 penduduk** dengan jadwal jelajah sendiri: **Raka** (tetua desa), **Sari**
+  (pedagang), **Mira** (tabib), **Adi** (nelayan), **Bimo** (kakek), plus
+  **Nia, Joni, dan Umar** di pendukuhan, serta **Dera** (pelaut) di pulau kecil
+  berpondok; pakaian prosedural berupa mantel, celemek, kerudung, ikat
+  pinggang, tas, janggut, dan tongkat. Mereka berhenti & menoleh saat diajak
+  bicara
 - **Dialog & tugas** (Bahasa Indonesia): panel dialog, petunjuk interaksi (E),
-  daftar tugas di HUD, dan notifikasi singkat. Dua tugas: mengumpulkan
-  **5 kelapa** untuk Pak Raka dan mencari **keranjang Mira** yang hilang
-- **Karakter dengan animasi** jalan/lari/lompat + **pedang di tangan kanan** dan
-  bayangan nyata — memakai **model 3D CC0** (KayKit Adventurers: Barbarian,
-  Knight, Mage, Rogue) saat dijalankan lewat `jalankan.bat`, dengan bentuk
-  prosedural sebagai fallback otomatis
+  daftar tugas kerajaan di HUD, dan notifikasi singkat. Dua tugas: mengumpulkan
+  **5 kelapa** untuk minyak lampu Fajar Panen milik Raka, dan mencari
+  **keranjang obat Mira** di dekat lingkaran batu berdiri
+- **Reruntuhan batu tua**: **kastil** di punggung bukit (dinding tirai, menara
+  sudut, keep, gerbang kayu berlapis besi, panji merah-biru, obor), **kapel
+  gotik** dengan gapura bergerigi, jendela lancip, salib batu, dan kuburan,
+  **menara jaga** pesisir dengan brazier, serta **lingkaran batu berdiri**
+  dengan altar dan rune. Semua dibangun dari balok batu instanced, dilengkapi
+  collider dinding yang terlihat, dan muncul sebagai **POI di peta**
+- **Pemain ksatria fajar** dengan animasi jalan/lari/lompat + **pedang di
+  tangan kanan** dan bayangan nyata — memakai **model 3D CC0 KayKit Knight**
+  saat dijalankan lewat `jalankan.bat`, dengan bentuk prosedural lengkap
+  (pelat dada, pauldron, jubah perang, dan helm baja) sebagai fallback `file://`
 - **Grafis berjenjang (Cepat/HD/Ultra)**: bayangan halus (peta bayangan 1–4K),
   **tekstur prosedural** (kayu, papan, rumbia, kain, batu, air), **pantulan
   lingkungan** dari langit (PMREM), **bloom + FXAA**, dan model 3D
 - **Pertarungan pedang (Fase 3)**: kombo 3 ayunan (klik kiri / F), busur
   tebasan di depan pemain, musuh terlempar & berkedip merah saat kena
-- **3 jenis makhluk pulau** (±65 ekor: 26 babi, 22 slime, 16 bandit + 1 pembuka;
-  pembangkit kembali setelah ~75 dtk):
-  **Babi Hutan** (liar & cepat menanduk), **Bandit Rimba** (golok, koin),
-  **Slime Hutan** (melompat kenyal) — AI: jelajah → kejar → serang → lemas →
-  kembali pulang; menjauh dari desa & titik awal
+- **4 jenis penghuni rimba** (±69 ekor: 27 celeng, 22 roh rawa, 16 penyamun,
+  ditambah penjaga terkutuk di kastil; pembangkit kembali setelah ~75 dtk):
+  **Celeng Hutan** (liar & cepat menanduk), **Penyamun Jalan Raya** (golok,
+  koin), **Roh Rawa** (melompat kenyal dengan tiga titik api rawa), dan
+  **Ksatria Terkutuk** (pedang panjang, menjaga reruntuhan kastil) — AI:
+  jelajah → kejar → serang → lemas → kembali pulang; menjauh dari desa &
+  titik awal
 - **HP · XP · level**: **level melayang di atas kepala pemain**; bilah **HP & XP
   di atas hotbar**; naik level menambah HP maks & serangan (pulih penuh), bilah
   HP musuh melayang mengikuti sasaran terakhir
@@ -136,9 +159,10 @@ gerak & serangan dikunci, dan peta menutup otomatis bila pemain diserang.
   kelapa tugas, kulit, taring, koin, besi, lendir) dengan jumlah barang; ikon
   **tas 🎒** membuka **panel besar di tengah layar** berisi kartu item, jumlah,
   deskripsi, dan statistik pemain — tutup dengan I, Esc, ✕, atau klik di luar
-- **Tas & jarahan**: musuh menjatuhkan barang (🥩 daging, 🟫 kulit, 🦷 taring,
-  🪙 koin, ⚙️ besi, 🫧 lendir) berupa kotak berpendar yang otomatis terhisap
-  saat didekati; tekan **I** untuk membuka tas, **H** untuk makan daging
+- **Tas & jarahan**: musuh menjatuhkan barang (🥩 daging celeng, 🟫 kulit celeng,
+  🦷 taring celeng, 🪙 koin perak kerajaan, ⚙️ besi tempa, 🫧 inti roh rawa)
+  berupa kotak berpendar yang otomatis terhisap saat didekati; tekan **I** untuk
+  membuka tas, **H** untuk makan daging
 - **Layar tumbang & bangkit**: saat HP habis, "KAU TUMBANG" muncul —
   tekan *Bangkit Kembali* untuk lahir ulang di pantai dengan HP penuh
 - **Kamera orang ketiga**, mouse + keyboard, HUD jam dunia; instruksi kanan-bawah
@@ -162,8 +186,9 @@ gerak & serangan dikunci, dan peta menutup otomatis bila pemain diserang.
   plus panah tepi bila sasaran jauh.
 - **Peta besar & tujuan (Fase 5 lanjutan)**: klik peta mini atau tombol 🗺️
   membuka peta seluruh dunia (kanvas 1024² dari peta dasar 512² yang sama) dengan
-  ikon & label **Desa Aetheria**, **Pelabuhan**, **Pondok Paman Dera**, dan
-  **Pondok Pulau**. Klik ikon/label — tujuan menempel otomatis — atau titik bebas;
+  ikon & label **Desa Aldenmere**, **Pelabuhan**, **Pondok Dera**, **Pondok
+  Pulau**, **Reruntuhan Kastil**, **Kapel Tua**, dan **Lingkaran Batu**. Klik
+  ikon/label — tujuan menempel otomatis — atau titik bebas;
   footer menampilkan label & jarak, tombol **Hapus Tujuan** dan **Tutup & Jalan**
   (atau ✕/Esc). Setelah ditutup: **panah kompas** di HUD berputar relatif kamera,
   jarak m/km diperbarui, peta mini menampilkan **pin + garis putus-putus**, dan
@@ -174,7 +199,7 @@ gerak & serangan dikunci, dan peta menutup otomatis bila pemain diserang.
 - **Dunia 10× (Fase 5)**: luas **3240×3240 m** dengan bentuk pulau utama yang
   sama namun diperbesar; pegunungan & perbukitan ±3,16× lebih tinggi. **12 pulau
   kecil** tersebar di lautan; **dua** di antaranya punya **pondok, api unggun,
-  dan penghuni** (Paman Dera) — bisa didarati dengan perahu atau **direnangi**
+  dan penghuni** (Dera) — bisa didarati dengan perahu atau **direnangi**
 - **Pelabuhan & perahu (Fase 5)**: dermaga kayu 28 m di pesisir dekat titik awal
   (dek 1,15 m di atas air, 12 tiang, lentera, peti & tong) dengan **jembatan
   pantai** yang menyambung pasir ke dek (dulu dermaga terpisah oleh air dan terasa
@@ -248,12 +273,12 @@ js/effects.js           pool partikel THREE.Points, cincin gelombang, debu & efe
 js/textures.js          pustaka tekstur prosedural (canvas; aman di Node)
 js/assets.js            pemuat model 3D + klon berig (fallback aman)
 js/sky.js               WorldSky: kubah langit, matahari/bulan/bintang/awan, cahaya
-js/world.js             terrain warna vertex, laut, vegetasi/batu, tabrakan, pulau kecil, pelabuhan
-js/player.js            karakter prosedural + pedang, fisika, animasi, kombo serangan
+js/world.js             terrain warna vertex, laut, vegetasi/batu, landmark batu tua (kastil/kapel/menara/lingkaran batu), tabrakan, pulau kecil, pelabuhan
+js/player.js            ksatria prosedural + pedang, fisika, animasi, kombo serangan
 js/grass.js             rumput & bunga instanced berpotongan (chunk) + goyangan angin
-js/village.js           desa + pendukuhan + pondok pulau (rumah/sumur/pagar/api unggun), NPC, dialog, tugas
+js/village.js           Aldenmere + pendukuhan + pondok pulau (rumah setengah-kayu, pasar, gapura, sumur, pagar, api unggun), NPC, dialog, tugas
 js/boat.js              pelabuhan (dermaga) + perahu cadik: naik/turun, kemudi, gelombang & bangun
-js/enemies.js           makhluk (babi/bandit/slime), AI, pertarungan, jarahan, bilah HP
+js/enemies.js           celeng/penyamun/roh rawa/ksatria terkutuk, AI, pertarungan, jarahan, bilah HP
 js/main.js              game loop, pemuatan bertahap, menu/pengaturan/keluar, trailer, kamera, HUD, simpan/muat, peta besar & tujuan, efek
 assets/models/*.glb     model karakter 3D CC0 (KayKit + Quaternius)
 assets/fonts/*.woff2    font menu lokal (Cinzel Decorative, Cinzel, Alegreya) + lisensi OFL
@@ -290,3 +315,4 @@ tools/                  uji & alat (Node)
 - [x] **Menu M2** — Redesign medieval tavern: panel kulit/emas, emblem fajar, tombol plakat berikon, font Cinzel/Alegreya lokal, partikel debu emas, branding Aetheria
 - [x] **Grafis G6** — Lingkungan: terrain lebih halus + tekstur tanah, pohon lebih tinggi + cemara, rumah besar yang bisa dimasuki + lampu malam
 - [x] **Grafis G7** — Pohon lebih tinggi (kelapa melengkung + pelepah 3D), hotbar item + panel tas besar, label level di atas kepala, instruksi/FPS disembunyikan
+- [x] **Dunia K1** — Konversi kerajaan abad pertengahan: ksatria pemain, Aldenmere setengah-kayu + pasar + gapura batu, kapel/kastil/menara/lingkaran batu, celeng/penyamun/roh rawa/ksatria terkutuk, palet hutan sedang, dialog & peta bernuansa kerajaan

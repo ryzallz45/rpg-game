@@ -6,11 +6,11 @@
 
   function srgb(hex) { return new THREE.Color(hex).convertSRGBToLinear(); }
 
-  var NIGHT = { top: srgb(0x0B1030), bot: srgb(0x18244F) };
-  var DAY = { top: srgb(0x3F7FD6), bot: srgb(0xA9D9F2) };
-  var DUSK = { top: srgb(0x3D4A9E), bot: srgb(0xFF9D5C) };
-  var SUN_WARM = srgb(0xFFB066);
-  var SUN_WHITE = srgb(0xFFFFFF);
+  var NIGHT = { top: srgb(0x080D1B), bot: srgb(0x182338) };
+  var DAY = { top: srgb(0x496B88), bot: srgb(0xC2CBC5) };
+  var DUSK = { top: srgb(0x4A405F), bot: srgb(0xE3A067) };
+  var SUN_WARM = srgb(0xFFC27A);
+  var SUN_WHITE = srgb(0xFFF7E8);
 
   function WorldSky(scene, renderer) {
     this.scene = scene;
@@ -18,7 +18,7 @@
     this.rig = new THREE.Group();
     scene.add(this.rig);
     this.sunDir = new THREE.Vector3(0, 1, 0);
-    this.fogColor = new THREE.Color(0xA8D8F0).convertSRGBToLinear();
+    this.fogColor = new THREE.Color(0xB8C3BE).convertSRGBToLinear();
     this._tmpColor = new THREE.Color();
     this._tmpColor2 = new THREE.Color();
     this._cloudT = 0;
@@ -138,11 +138,10 @@
 
     // --- Awan (tertiup angin; alasnya rata supaya rapi) ---
     var cloudMat = new THREE.MeshLambertMaterial({
-      color: srgb(0xFFFFFF),
-      // Emissive dingin menutup pantulan hijau hemisphere di alas awan agar
-      // tidak tampak seperti pulau melayang.
-      emissive: srgb(0xAFC4D8), emissiveIntensity: 0.42,
-      transparent: true, opacity: 0.92, fog: false
+      color: srgb(0xE3E5E0),
+      // Awan kelabu hangat khas langit kerajaan pesisir.
+      emissive: srgb(0x8E989C), emissiveIntensity: 0.38,
+      transparent: true, opacity: 0.88, fog: false
     });
     var puffGeo = new THREE.SphereGeometry(1, 7, 5);
     var clouds = new THREE.Group();
@@ -171,7 +170,7 @@
     this.scene.add(clouds);
 
     // --- Cahaya ---
-    this.hemi = new THREE.HemisphereLight(srgb(0xBFD9F5), srgb(0x6F9A5F), 0.5);
+    this.hemi = new THREE.HemisphereLight(srgb(0xC2D3DD), srgb(0x4B5A3B), 0.52);
     this.scene.add(this.hemi);
 
     this.sunLight = new THREE.DirectionalLight(0xFFFFFF, 1.15);
@@ -279,7 +278,7 @@
 
     // Cahaya utama
     var anchor = camera.position;
-    var sunIntensity = U.smoothstep(-0.02, 0.12, sunY) * 1.7;
+    var sunIntensity = U.smoothstep(-0.02, 0.12, sunY) * 1.55;
     this.sunLight.intensity = sunIntensity;
     this.sunLight.visible = sunIntensity > 0.01;
     this.sunLight.color.copy(SUN_WARM).lerp(SUN_WHITE, U.smoothstep(0.12, 0.5, sunY));
@@ -291,8 +290,10 @@
     this.moonLight.position.copy(anchor).addScaledVector(sd, -180);
     this.moonLight.target.position.copy(anchor);
 
-    this.hemi.intensity = 0.08 + 0.22 * day;
-    this.hemi.color.copy(bot);
+    // Langit berawan: naikkan cahaya ambient agar lereng berbatu tidak menjadi
+    // hitam pekat dan detail batu tua tetap terbaca.
+    this.hemi.intensity = 0.16 + 0.42 * day;
+    this.hemi.color.copy(bot).lerp(SUN_WHITE, 0.22);
 
     // Rig mengikuti kamera
     this.rig.position.copy(camera.position);

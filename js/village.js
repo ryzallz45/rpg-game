@@ -50,25 +50,31 @@
      4..5 = pondok di pulau-pulau kecil (world.islandSites) */
 
   var NPC_DEFS = [
-    { name: 'Pak Raka', role: 'kepala', village: 0, home: { x: -2.8, z: 2.8 }, wanderR: 3.0, speed: 1.6,
-      pal: { shirt: 0x3E7C8F, pants: 0x4C5A6B, skin: 0xD9A878, hair: 0x2A2118, hat: true } },
-    { name: 'Bu Sari', role: 'pedagang', village: 0, home: { x: 4.1, z: -2.8 }, wanderR: 3.4, speed: 1.8,
-      pal: { shirt: 0xC96A6A, pants: 0x6B4A8F, skin: 0xE0B08A, hair: 0x1E1A16, dress: true } },
+    { name: 'Raka', role: 'kepala', village: 0, home: { x: -2.8, z: 2.8 }, wanderR: 3.0, speed: 1.6,
+      pal: { shirt: 0x4C5B3D, pants: 0x3D372F, skin: 0xC99A70, hair: 0x8D877E,
+        cloak: 0x3B342A, beard: true, staff: true } },
+    { name: 'Sari', role: 'pedagang', village: 0, home: { x: 4.1, z: -2.8 }, wanderR: 3.4, speed: 1.8,
+      pal: { shirt: 0x71463F, pants: 0x3E3830, skin: 0xD8A983, hair: 0x2A2118,
+        dress: true, apron: 0xB7A88A, hood: 0x5A3A35 } },
     { name: 'Mira', role: 'mira', village: 0, home: { x: -5.3, z: -3.7 }, wanderR: 4.6, speed: 2.0,
-      pal: { shirt: 0xE8D06A, pants: 0x7A5A98, skin: 0xE8C098, hair: 0x3A2A1A, longHair: true } },
+      pal: { shirt: 0x526448, pants: 0x3B3B32, skin: 0xDDBA92, hair: 0x51372A,
+        longHair: true, dress: true, apron: 0xB9A57C, satchel: true } },
     { name: 'Adi', role: 'nelayan', village: 0, home: { x: 5.8, z: 4.1 }, wanderR: 3.8, speed: 2.1,
-      pal: { shirt: 0x6FB3A8, pants: 0x3E4A56, skin: 0xC98F62, hair: 0x14100C } },
-    { name: 'Kakek Bimo', role: 'kakek', village: 0, home: { x: 0.7, z: -5.5 }, wanderR: 2.0, speed: 1.1,
-      pal: { shirt: 0x9A8F7A, pants: 0x5A5148, skin: 0xD9B48C, hair: 0xD8D8D8 } },
-    { name: 'Bu Nia', role: 'pedagang', village: 1, home: { x: 2.3, z: -1.8 }, wanderR: 2.2, speed: 1.7,
-      pal: { shirt: 0xE08A4A, pants: 0x4A6B8F, skin: 0xE0B08A, hair: 0x2E1E14, dress: true } },
+      pal: { shirt: 0x435B66, pants: 0x373D3F, skin: 0xBD865D, hair: 0x211A14, apron: 0x66533D } },
+    { name: 'Bimo', role: 'kakek', village: 0, home: { x: 0.7, z: -5.5 }, wanderR: 2.0, speed: 1.1,
+      pal: { shirt: 0x5A5346, pants: 0x3B352D, skin: 0xD3AD86, hair: 0xD3D0C8,
+        beard: true, cloak: 0x41392E, staff: true } },
+    { name: 'Nia', role: 'pedagang', village: 1, home: { x: 2.3, z: -1.8 }, wanderR: 2.2, speed: 1.7,
+      pal: { shirt: 0x7A5A36, pants: 0x3E423A, skin: 0xD8A983, hair: 0x33241A,
+        dress: true, apron: 0xA99A7A, hood: 0x59462F } },
     { name: 'Joni', role: 'nelayan', village: 2, home: { x: -2.4, z: 1.6 }, wanderR: 2.4, speed: 2.0,
-      pal: { shirt: 0x4A8F6B, pants: 0x3E4A56, skin: 0xB97F52, hair: 0x14100C } },
-    { name: 'Kakek Umar', role: 'kakek', village: 3, home: { x: -2.0, z: -1.6 }, wanderR: 1.8, speed: 1.1,
-      pal: { shirt: 0x7A8A9A, pants: 0x4E463C, skin: 0xD9B48C, hair: 0xE2E2E2 } },
+      pal: { shirt: 0x455D4C, pants: 0x373D3F, skin: 0xA97850, hair: 0x19130F, apron: 0x5A4A37 } },
+    { name: 'Umar', role: 'kakek', village: 3, home: { x: -2.0, z: -1.6 }, wanderR: 1.8, speed: 1.1,
+      pal: { shirt: 0x5E6670, pants: 0x3E3A31, skin: 0xD3AD86, hair: 0xD8D8D2,
+        beard: true, cloak: 0x3A3D3B, staff: true } },
     // Fase 5: penghuni pulau kecil (pondok di dunia.islandSites)
-    { name: 'Paman Dera', role: 'pelaut', village: 4, home: { x: 1.1, z: 0.9 }, wanderR: 2.2, speed: 1.5,
-      pal: { shirt: 0x4E7A6A, pants: 0x3E4A56, skin: 0xC98F62, hair: 0x1E1712 } }
+    { name: 'Dera', role: 'pelaut', village: 4, home: { x: 1.1, z: 0.9 }, wanderR: 2.2, speed: 1.5,
+      pal: { shirt: 0x4A5D5A, pants: 0x373D3F, skin: 0xBD865D, hair: 0x211A14, hood: 0x394A47 } }
   ];
 
   function buildNpcMesh(pal) {
@@ -77,13 +83,21 @@
       hair: smat(pal.hair, 0.9),
       shirt: smat(pal.shirt, 0.9),
       pants: smat(pal.pants, 0.9),
-      boots: smat(0x5C4327, 0.85),
+      boots: smat(0x4E3A28, 0.85),
+      belt: smat(0x3A2A1C, 0.88),
+      apron: smat(pal.apron || 0xA99A7A, 0.94),
+      cloak: smat(pal.cloak || 0x4A4034, 0.94),
+      hood: smat(pal.hood || pal.shirt, 0.94),
       eye: smat(0x1C1C1E, 0.35)
     };
     if (global.TexLib) {
       global.TexLib.apply(M.shirt, 'cloth', 1.5, 1.2);
       global.TexLib.apply(M.pants, 'cloth', 1.4, 1.4);
       global.TexLib.apply(M.boots, 'leather', 1.2, 1.2);
+      global.TexLib.apply(M.belt, 'leather', 1, 1);
+      global.TexLib.apply(M.apron, 'cloth', 1.2, 1.4);
+      global.TexLib.apply(M.cloak, 'cloth', 1.4, 1.6);
+      global.TexLib.apply(M.hood, 'cloth', 1.2, 1.2);
     }
     var g = new THREE.Group();
     var limbs = {};
@@ -98,9 +112,22 @@
 
     part(g, new THREE.BoxGeometry(0.34, 0.2, 0.23), M.pants, 0, 0.88, 0);
     limbs.torso = part(g, new THREE.BoxGeometry(0.4, 0.5, 0.26), M.shirt, 0, 1.21, 0);
+    part(g, new THREE.BoxGeometry(0.42, 0.065, 0.285), M.belt, 0, 1.0, 0);
+    part(g, new THREE.BoxGeometry(0.09, 0.09, 0.035), M.belt, 0, 1.0, 0.16);
     if (pal.dress) {
       var skirt = part(g, new THREE.CylinderGeometry(0.17, 0.36, 0.56, 10), M.pants, 0, 0.68, 0);
       skirt.scale.z = 0.85;
+    }
+    if (pal.apron) {
+      var apron = part(g, new THREE.BoxGeometry(0.34, 0.58, 0.025), M.apron, 0, 1.07, 0.145);
+      apron.castShadow = false;
+    }
+    if (pal.cloak) {
+      var cloak = part(g, new THREE.BoxGeometry(0.46, 0.7, 0.05), M.cloak, 0, 1.17, -0.165);
+      cloak.rotation.x = -0.04;
+    }
+    if (pal.satchel) {
+      part(g, new THREE.BoxGeometry(0.2, 0.17, 0.08), M.belt, 0.24, 1.02, 0.08);
     }
     if (pal.hat) {
       part(g, new THREE.CylinderGeometry(0.34, 0.34, 0.035, 12), M.hair, 0, 1.79, 0);
@@ -111,6 +138,15 @@
     hair.scale.y = 0.72;
     if (pal.longHair) {
       part(g, new THREE.CylinderGeometry(0.11, 0.14, 0.5, 8), M.hair, 0, 1.42, -0.15);
+    }
+    if (pal.hood) {
+      var hood = part(g, new THREE.SphereGeometry(0.235, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.52), M.hood, 0, 1.70, -0.025);
+      hood.scale.set(1.06, 1.02, 1.08);
+      part(g, new THREE.CylinderGeometry(0.17, 0.31, 0.27, 10), M.hood, 0, 1.44, -0.03);
+    }
+    if (pal.beard) {
+      var beard = part(g, new THREE.ConeGeometry(0.075, 0.27, 6), M.hair, 0, 1.48, 0.115);
+      beard.rotation.x = Math.PI;
     }
     part(g, new THREE.SphereGeometry(0.021, 8, 6), M.eye, -0.055, 1.64, 0.136);
     part(g, new THREE.SphereGeometry(0.021, 8, 6), M.eye, 0.055, 1.64, 0.136);
@@ -136,6 +172,15 @@
     limbs.armR = makeArm(1);
     limbs.legL = makeLeg(-1);
     limbs.legR = makeLeg(1);
+    if (pal.staff) {
+      var staffMat = smat(0x59452F, 0.92);
+      if (global.TexLib) global.TexLib.apply(staffMat, 'wood', 1, 2);
+      var staff = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.045, 1.78, 7), staffMat);
+      staff.position.set(0, -0.55, 0.09);
+      staff.rotation.z = 0.06;
+      staff.castShadow = true;
+      limbs.armL.add(staff);
+    }
     return { group: g, limbs: limbs };
   }
 
@@ -261,15 +306,15 @@
   };
 
   /* ---------- Model 3D penduduk (Tahap G5) ---------- */
-  var NPC_MODELS = ['knight', 'mage', 'rogue', 'hooded', 'knight', 'mage', 'hooded', 'rogue'];
-  var NPC_HEIGHTS = [1.72, 1.60, 1.50, 1.72, 1.50, 1.58, 1.64, 1.52];
+  var NPC_MODELS = ['rogue', 'hooded', 'mage', 'rogue', 'hooded', 'mage', 'rogue', 'hooded', 'mage'];
+  var NPC_HEIGHTS = [1.72, 1.62, 1.52, 1.70, 1.50, 1.58, 1.64, 1.52, 1.60];
 
-  /* Warna pakaian NPC → tint pastel lembut agar tiap warga tampil beda. */
+  /* Warna kain desa yang pudar, tetap beragam tetapi tidak pastel. */
   function tintFromHex(hex) {
     var c = new THREE.Color(hex);
     var hsl = { h: 0, s: 0, l: 0 };
     c.getHSL(hsl);
-    return new THREE.Color().setHSL(hsl.h, hsl.s * 0.35, 0.92);
+    return new THREE.Color().setHSL(hsl.h, hsl.s * 0.62, U.clamp(hsl.l * 0.9, 0.48, 0.7));
   }
 
   Npc.prototype.attachModel = function (spawned) {
@@ -309,7 +354,8 @@
       var def = NPC_DEFS[i % NPC_DEFS.length];
       var spawned = lib.spawn(name, {
         height: NPC_HEIGHTS[i % NPC_HEIGHTS.length],
-        tint: tintFromHex(def.pal.shirt)
+        tint: tintFromHex(def.pal.shirt),
+        tintMix: 0.34
       });
       if (!spawned) continue;
       npc.attachModel(spawned);
@@ -323,24 +369,24 @@
 
   var FLAVOR = {
     pedagang: [
-      ['Aku menjual hasil kebun: ubi, pisang, dan sesekali madu hutan.', 'Desa kami kecil, tapi hatinya lapang.'],
-      ['Nanti sore mampir ke pondokku — pisangnya baru matang.'],
-      ['Kalau lelah, duduklah di alun-alun. Angin lautnya sejuk sekali.']
+      ['Aku membawa gandum, madu, dan kain wol dari jalan raya kerajaan.', 'Aldenmere kecil, tetapi letaknya strategis di pesisir.'],
+      ['Barang daganganku datang dari lembah utara. Penjaga jalan raya akhir-akhir ini sibuk mengusir penyamun.'],
+      ['Mampirlah ke lapakku nanti sore. Aku menyimpan rempah dan tembikar dari kota pelabuhan.']
     ],
     nelayan: [
-      ['Laut hari ini tenang. Ikan-ikan berkumpul dekat karang.'],
-      ['Katanya di balik bukit ada air terjun kecil. Belum sempat kudatangi.'],
-      ['Perahu kami kecil, tapi cukup untuk mencari rezeki tiap hari.']
+      ['Laut timur sedang tenang. Ikan berkumpul di sekitar karang tua.'],
+      ['Dulu ada menara jaga di tanjung untuk memandu kapal kerajaan. Sekarang hanya batu yang tersisa.'],
+      ['Perahu cadik kami kecil, tetapi cukup membawa hasil laut ke pasar Aldenmere.']
     ],
     kakek: [
-      ['Dulu dari puncak gunung itu aku bisa melihat seluruh pulau.', 'Kakiku tak lagi kuat mendaki. Naiklah kau ke sana — pemandangannya luar biasa.'],
-      ['Jaga pulau ini baik-baik, anak muda. Ia titipan untuk cucu-cucu kita.'],
-      ['Senja di pulau ini paling indah dari semua yang pernah kulihat.']
+      ['Dulu kastil di puncak itu berdiri megah. Kini hanya burung dan kabut yang tinggal di sana.'],
+      ['Jaga desa ini baik-baik, anak muda. Kerajaan tidak dibangun oleh raja seorang diri.'],
+      ['Senja di lembah ini masih sama seperti saat aku masih muda. Kelak kau akan mengerti.']
     ],
     pelaut: [
-      ['Halo, pengembara! Aku menjaga pondok di pulau kecil ini.', 'Sepi, tenang — hanya suara ombak dan burung laut.'],
-      ['Ada perahu di dermaga pelabuhan. Naikilah — dunia ini luas sekali untuk dijelajahi!'],
-      ['Pulau-pulau kecil di sekitar sini tak berpenghuni. Mampirlah kalau singgah.']
+      ['Halo, pengembara! Aku menjaga pondok persinggahan pelaut kerajaan di pulau kecil ini.'],
+      ['Ada perahu di dermaga pelabuhan. Naikilah - laut di sekitar Aetheria luas untuk dijelajahi!'],
+      ['Pulau-pulau kecil di sekitar sini tak berpenghuni. Dulu para pelaut menyalakan api di sana.']
     ]
   };
 
@@ -407,8 +453,8 @@
       }
     }
 
-    this._parts = { stilt: [], floor: [], wall: [], roof: [], door: [], window: [],
-      ceiling: [], stair: [], mat: [], table: [], lamp: [] };
+    this._parts = { stilt: [], foundation: [], floor: [], wall: [], roof: [], door: [], window: [],
+      ceiling: [], stair: [], mat: [], table: [], lamp: [], timber: [], iron: [], banner: [] };
 
     for (i = 0; i < this.sites.length; i++) {
       var site = this.sites[i];
@@ -418,6 +464,8 @@
         this._buildWell(site);
         this._buildFence(site, 18.4);
         this._buildLampPosts(site);
+        this._buildMarket(site);
+        this._buildGate(site);
       } else {
         this._addHutsAt(site, rng, 3, 7.9, false);
         this._buildCampfire(site);
@@ -457,15 +505,169 @@
     }
     geo.computeVertexNormals();
     var mat = new THREE.MeshStandardMaterial({
-      color: srgb(0xA0794F), roughness: 0.98, metalness: 0,
+      color: srgb(0x83786B), roughness: 0.98, metalness: 0,
       polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2
     });
-    if (global.TexLib) global.TexLib.apply(mat, 'dirt', 8, 8);
+    if (global.TexLib) global.TexLib.apply(mat, 'cobble', 14, 14);
     var mesh = new THREE.Mesh(geo, mat);
     mesh.position.set(site.x, site.y, site.z);
     mesh.receiveShadow = true;
     this.scene.add(mesh);
-    if (site.main) this.plaza = mesh;
+    if (site.main) {
+      this.plaza = mesh;
+      // Lingkaran batu & medali tengah agar alun-alun terasa seperti kota lama.
+      var ringMat = new THREE.MeshStandardMaterial({
+        color: srgb(0x686860), roughness: 0.97, metalness: 0,
+        polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3
+      });
+      if (global.TexLib) global.TexLib.apply(ringMat, 'stoneBrick', 3, 3);
+      var ring = new THREE.Mesh(new THREE.RingGeometry(R * 0.7, R * 0.78, 48), ringMat);
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.set(site.x, site.y + 0.085, site.z);
+      ring.receiveShadow = true;
+      this.scene.add(ring);
+      var seal = new THREE.Mesh(new THREE.CircleGeometry(R * 0.22, 32), ringMat);
+      seal.rotation.x = -Math.PI / 2;
+      seal.position.set(site.x, site.y + 0.09, site.z);
+      seal.receiveShadow = true;
+      this.scene.add(seal);
+    }
+  };
+
+  /* Pasar desa: tiga lapak kayu beratap kain bergaris, peti, tong, dan
+     barang dagangan. Ditempatkan di tepi alun-alun, tidak menutup jalan. */
+  Village.prototype._buildMarket = function (site) {
+    var world = this.world;
+    var wood = smat(0x59422D, 0.94);
+    var woodDark = smat(0x453322, 0.94);
+    var clothA = smat(0x6E2B30, 0.92);
+    var clothB = smat(0xB09A6B, 0.92);
+    var gold = smat(0xA9853F, 0.72);
+    var goods = [smat(0x7C5B35, 0.95), smat(0x5F6E3C, 0.95), smat(0x8E3F36, 0.95)];
+    if (global.TexLib) {
+      global.TexLib.apply(wood, 'wood', 1, 2);
+      global.TexLib.apply(woodDark, 'wood', 1, 1.4);
+      global.TexLib.apply(clothA, 'cloth', 1.4, 1.0);
+      global.TexLib.apply(clothB, 'cloth', 1.4, 1.0);
+      global.TexLib.apply(gold, 'metal', 1, 1);
+      for (var gi = 0; gi < goods.length; gi++) global.TexLib.apply(goods[gi], 'cloth', 1, 1);
+    }
+    var angles = [2.15, 3.78, 5.46];
+    for (var s = 0; s < angles.length; s++) {
+      var a = angles[s];
+      var px = site.x + Math.cos(a) * 8.7;
+      var pz = site.z + Math.sin(a) * 8.7;
+      var py = world.groundHeight(px, pz);
+      var g = new THREE.Group();
+      g.position.set(px, py, pz);
+      g.rotation.y = Math.atan2(site.x - px, site.z - pz);
+
+      function part(geo, mat, x, y, z, ry) {
+        var m = new THREE.Mesh(geo, mat);
+        m.position.set(x, y, z);
+        if (ry) m.rotation.y = ry;
+        m.castShadow = true;
+        m.receiveShadow = true;
+        g.add(m);
+        return m;
+      }
+      // empat tiang
+      part(new THREE.CylinderGeometry(0.07, 0.09, 2.25, 7), woodDark, -1.05, 1.12, -0.55);
+      part(new THREE.CylinderGeometry(0.07, 0.09, 2.25, 7), woodDark, 1.05, 1.12, -0.55);
+      part(new THREE.CylinderGeometry(0.07, 0.09, 2.0, 7), woodDark, -1.05, 1.0, 0.6);
+      part(new THREE.CylinderGeometry(0.07, 0.09, 2.0, 7), woodDark, 1.05, 1.0, 0.6);
+      // meja & kain depan
+      part(new THREE.BoxGeometry(2.2, 0.14, 0.75), wood, 0, 0.96, 0.25);
+      part(new THREE.BoxGeometry(2.15, 0.7, 0.08), clothA, 0, 0.62, 0.64);
+      part(new THREE.BoxGeometry(2.2, 0.08, 0.75), woodDark, 0, 0.39, 0.25);
+      // atap kain bergaris miring
+      var canopy = new THREE.Group();
+      canopy.position.set(0, 2.08, 0);
+      canopy.rotation.x = -0.1;
+      g.add(canopy);
+      for (var c = 0; c < 6; c++) {
+        var cm = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.07, 1.65), c % 2 ? clothB : clothA);
+        cm.position.set(-1.05 + c * 0.42, 0, 0);
+        cm.castShadow = true;
+        canopy.add(cm);
+      }
+      // barang: peti, tong, sayur, dan kain
+      part(new THREE.BoxGeometry(0.58, 0.45, 0.5), wood, -0.72, 1.24, 0.18, 0.2);
+      part(new THREE.BoxGeometry(0.42, 0.3, 0.34), goods[0], 0.12, 1.16, 0.18, -0.15);
+      part(new THREE.BoxGeometry(0.34, 0.24, 0.28), goods[1], 0.62, 1.13, 0.2, 0.25);
+      var barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.25, 0.55, 9), woodDark);
+      barrel.position.set(-1.32, 0.3, 0.72);
+      barrel.castShadow = true;
+      g.add(barrel);
+      part(new THREE.BoxGeometry(0.34, 0.08, 0.26), gold, 0.32, 1.28, 0.2, -0.1);
+      // bendera kecil di tiang sudut
+      part(new THREE.BoxGeometry(0.045, 0.9, 0.045), gold, 1.08, 2.55, -0.55);
+      part(new THREE.BoxGeometry(0.55, 0.38, 0.03), clothA, 1.36, 2.75, -0.55);
+      this.scene.add(g);
+      world.colliders.push({ x: px, z: pz, r: 1.05 });
+    }
+  };
+
+  /* Gapura batu di jalan masuk desa — dua pilar, ambang batu, panji, dan
+     lampu besi. Jalan tengah dibiarkan terbuka agar pemain bebas lewat. */
+  Village.prototype._buildGate = function (site) {
+    var world = this.world;
+    var sp = world.findSpawnPoint ? world.findSpawnPoint() : { x: site.x, z: site.z + 20 };
+    var ang = Math.atan2(sp.x - site.x, sp.z - site.z);
+    var px = site.x + Math.sin(ang) * 21.6;
+    var pz = site.z + Math.cos(ang) * 21.6;
+    var py = world.groundHeight(px, pz);
+    var g = new THREE.Group();
+    g.position.set(px, py, pz);
+    g.rotation.y = ang;
+    var stone = smat(0x6D6B62, 0.96);
+    var stoneDark = smat(0x595850, 0.96);
+    var iron = smat(0x323436, 0.55);
+    var cloth = smat(0x6B2C32, 0.92);
+    iron.metalness = 0.4;
+    if (global.TexLib) {
+      global.TexLib.apply(stone, 'stoneBrick', 1.5, 1.6);
+      global.TexLib.apply(stoneDark, 'stoneBrick', 1.5, 1.6);
+      global.TexLib.apply(iron, 'metal', 1, 1);
+      global.TexLib.apply(cloth, 'cloth', 1.2, 1.2);
+    }
+    function add(geo, mat, x, y, z) {
+      var m = new THREE.Mesh(geo, mat);
+      m.position.set(x, y, z);
+      m.castShadow = true;
+      m.receiveShadow = true;
+      g.add(m);
+      return m;
+    }
+    add(new THREE.BoxGeometry(0.9, 3.4, 0.9), stone, -2.15, 1.7, 0);
+    add(new THREE.BoxGeometry(0.9, 3.4, 0.9), stone, 2.15, 1.7, 0);
+    add(new THREE.BoxGeometry(1.08, 0.22, 1.08), stoneDark, -2.15, 3.48, 0);
+    add(new THREE.BoxGeometry(1.08, 0.22, 1.08), stoneDark, 2.15, 3.48, 0);
+    add(new THREE.BoxGeometry(5.25, 0.42, 0.7), stoneDark, 0, 3.72, 0);
+    add(new THREE.BoxGeometry(4.2, 0.12, 0.74), iron, 0, 3.94, 0);
+    add(new THREE.BoxGeometry(1.25, 1.55, 0.05), cloth, 0, 3.18, 0.4);
+    add(new THREE.BoxGeometry(1.25, 0.14, 0.06), smat(0xB08A45, 0.7), 0, 3.8, 0.42);
+    // Dinding batu rendah menyambung gapura ke pagar desa.
+    add(new THREE.BoxGeometry(6.4, 1.55, 0.55), stoneDark, -5.55, 0.78, 0);
+    add(new THREE.BoxGeometry(6.4, 1.55, 0.55), stoneDark, 5.55, 0.78, 0);
+    // Dua lentera besi di sisi gapura.
+    for (var s = -1; s <= 1; s += 2) {
+      add(new THREE.BoxGeometry(0.06, 1.1, 0.06), iron, s * 2.15, 3.05, 0.52);
+      add(new THREE.BoxGeometry(0.28, 0.36, 0.28), this._postLampMat, s * 2.15, 2.58, 0.52);
+    }
+    this.scene.add(g);
+    world.colliders.push({ x: px - Math.cos(ang) * 2.15, z: pz + Math.sin(ang) * 2.15, r: 0.72 });
+    world.colliders.push({ x: px + Math.cos(ang) * 2.15, z: pz - Math.sin(ang) * 2.15, r: 0.72 });
+    // Dinding sayap gapura (bukan jalan tengah).
+    var wing = 4.1;
+    world.walls.push({
+      x1: px - Math.cos(ang) * (2.4 + wing), z1: pz + Math.sin(ang) * (2.4 + wing),
+      x2: px - Math.cos(ang) * 2.4, z2: pz + Math.sin(ang) * 2.4, r: 0.4
+    });
+    world.walls.push({
+      x1: px + Math.cos(ang) * 2.4, z1: pz - Math.sin(ang) * 2.4,
+      x2: px + Math.cos(ang) * (2.4 + wing), z2: pz - Math.sin(ang) * (2.4 + wing), r: 0.4
+    });
   };
 
   /* Tambah rumah panggung di sekeliling satu alun-alun; bagian rumah dikumpulkan
@@ -483,8 +685,8 @@
     }
     if (isMain) this._hutAngles = angles; // dipakai pagar
 
-    var wallColors = [0xB08A5A, 0xC49B69, 0x9F7A4E];
-    var roofColors = [0xA9855C, 0xB5623F, 0x8F6B44];
+    var wallColors = [0xC3B398, 0xB8A88C, 0xC9BAA0, 0xB1A185];
+    var roofColors = [0x57483C, 0x624A3C, 0x4E4238, 0x5C5143];
 
     for (i = 0; i < count; i++) {
       var ang = angles[i];
@@ -498,7 +700,7 @@
       var hw = big ? 3.4 : 2.6 + rng() * 0.4;     // setengah lebar (menurut X lokal)
       var hd = big ? 2.9 : 2.3 + rng() * 0.3;     // setengah kedalaman (menurut Z lokal)
       var wallH = big ? 3.05 : 2.8;               // tinggi dinding = tinggi ruang dalam
-      var roofH = big ? 1.7 : 1.25 + rng() * 0.2;
+      var roofH = big ? 2.15 : 1.55 + rng() * 0.25;
       var floorY = big ? 1.05 : 0.95;             // lantai panggung rendah, mudah dipijak
       var stiltH = big ? 1.05 : 0.95;
       var doorW = big ? 1.8 : 1.5;
@@ -526,47 +728,153 @@
           );
           list.push({ m: new THREE.Matrix4().multiplyMatrices(hutM, local), hex: hex });
         }
-        // tiang (rendah) & lantai panggung
-        add(parts.stilt, -(hw - 0.15), 0, -(hd - 0.15), 1, stiltH, 1, 0x7A5836);
-        add(parts.stilt, hw - 0.15, 0, -(hd - 0.15), 1, stiltH, 1, 0x7A5836);
-        add(parts.stilt, -(hw - 0.15), 0, hd - 0.15, 1, stiltH, 1, 0x7A5836);
-        add(parts.stilt, hw - 0.15, 0, hd - 0.15, 1, stiltH, 1, 0x7A5836);
-        add(parts.floor, 0, floorY, 0, hw * 2 + 0.34, 0.14, hd * 2 + 0.34, 0x8F6B44);
+        function addR(list, lx, ly, lz, sx, sy, sz, hex, rx, ry, rz) {
+          var q = new THREE.Quaternion().setFromEuler(new THREE.Euler(rx || 0, ry || 0, rz || 0));
+          var local = new THREE.Matrix4().compose(
+            new THREE.Vector3(lx, ly, lz), q, new THREE.Vector3(sx, sy, sz)
+          );
+          list.push({ m: new THREE.Matrix4().multiplyMatrices(hutM, local), hex: hex });
+        }
 
-        // Dinding dipecah: belakang, kiri, kanan, dan depan (dua sisi + ambang pintu)
+        // Fondasi batu masif + lantai papan rendah (rumah setengah-kayu).
+        add(parts.foundation, 0, stiltH * 0.5, 0, hw * 2 + 0.34, stiltH, hd * 2 + 0.34, 0x68665E);
+        add(parts.foundation, 0, stiltH * 0.94, 0, hw * 2 + 0.5, 0.16, hd * 2 + 0.5, 0x777267);
+        add(parts.floor, 0, floorY, 0, hw * 2 + 0.34, 0.14, hd * 2 + 0.34, 0x795A3C);
+
+        // Dinding plester dipecah: belakang, kiri, kanan, depan (dua panel + pintu)
         add(parts.wall, 0, wallBase + wallH / 2, -hd, hw * 2, wallH, wt, wallHex);
         add(parts.wall, -hw, wallBase + wallH / 2, 0, wt, wallH, hd * 2, wallHex);
         add(parts.wall, hw, wallBase + wallH / 2, 0, wt, wallH, hd * 2, wallHex);
         var frontW = hw - doorW / 2;
-        add(parts.wall, -(doorW / 2 + frontW / 2), wallBase + wallH / 2, hd, frontW, wallH, wt, wallHex);
-        add(parts.wall, doorW / 2 + frontW / 2, wallBase + wallH / 2, hd, frontW, wallH, wt, wallHex);
+        var lPanel = -(doorW / 2 + frontW / 2), rPanel = doorW / 2 + frontW / 2;
+        add(parts.wall, lPanel, wallBase + wallH / 2, hd, frontW, wallH, wt, wallHex);
+        add(parts.wall, rPanel, wallBase + wallH / 2, hd, frontW, wallH, wt, wallHex);
         add(parts.wall, 0, wallBase + doorH + (wallH - doorH) / 2, hd, doorW, wallH - doorH, wt, wallHex);
 
-        add(parts.roof, 0, wallBase + wallH, 0, hw + 0.42, roofH, hd + 0.5, roofHex);
-        add(parts.ceiling, 0, wallBase + wallH + 0.02, 0, hw * 2, 0.08, hd * 2, 0x9A7A54);
+        // Rangka kayu gelap khas rumah abad pertengahan.
+        var beam = 0x3B2B1F;
+        var post = 0.15;
+        var cxi = hw + 0.01, czi = hd + 0.01;
+        add(parts.timber, -cxi, wallBase + wallH / 2, -czi, post, wallH + 0.06, post, beam);
+        add(parts.timber, cxi, wallBase + wallH / 2, -czi, post, wallH + 0.06, post, beam);
+        add(parts.timber, -cxi, wallBase + wallH / 2, czi, post, wallH + 0.06, post, beam);
+        add(parts.timber, cxi, wallBase + wallH / 2, czi, post, wallH + 0.06, post, beam);
+        add(parts.timber, 0, wallBase + 0.08, hd + 0.035, hw * 2, 0.15, 0.1, beam);
+        add(parts.timber, 0, wallBase + wallH - 0.09, hd + 0.035, hw * 2, 0.16, 0.1, beam);
+        add(parts.timber, 0, wallBase + 0.08, -hd - 0.035, hw * 2, 0.15, 0.1, beam);
+        add(parts.timber, 0, wallBase + wallH - 0.09, -hd - 0.035, hw * 2, 0.16, 0.1, beam);
+        add(parts.timber, -hw - 0.035, wallBase + 0.08, 0, 0.1, 0.15, hd * 2, beam);
+        add(parts.timber, hw + 0.035, wallBase + 0.08, 0, 0.1, 0.15, hd * 2, beam);
+        add(parts.timber, -hw - 0.035, wallBase + wallH - 0.09, 0, 0.1, 0.16, hd * 2, beam);
+        add(parts.timber, hw + 0.035, wallBase + wallH - 0.09, 0, 0.1, 0.16, hd * 2, beam);
+        // tiang pintu, ambang, dan penyangga diagonal fasad
+        add(parts.timber, -doorW / 2 - 0.09, wallBase + doorH / 2, hd + 0.05, 0.13, doorH + 0.18, 0.12, beam);
+        add(parts.timber, doorW / 2 + 0.09, wallBase + doorH / 2, hd + 0.05, 0.13, doorH + 0.18, 0.12, beam);
+        add(parts.timber, 0, wallBase + doorH + 0.08, hd + 0.05, doorW + 0.3, 0.15, 0.12, beam);
+        var braceAng = Math.atan2(wallH * 0.58, frontW * 0.82);
+        var braceLen = Math.sqrt(wallH * 0.58 * wallH * 0.58 + frontW * 0.82 * frontW * 0.82);
+        addR(parts.timber, lPanel, wallBase + wallH * 0.48, hd + 0.035, braceLen, 0.09, 0.075, beam, 0, 0, braceAng);
+        addR(parts.timber, rPanel, wallBase + wallH * 0.48, hd + 0.035, braceLen, 0.09, 0.075, beam, 0, 0, -braceAng);
+        // tiang vertikal pada panel fasad
+        add(parts.timber, lPanel, wallBase + wallH * 0.5, hd + 0.035, 0.115, wallH, 0.075, beam);
+        add(parts.timber, rPanel, wallBase + wallH * 0.5, hd + 0.035, 0.115, wallH, 0.075, beam);
 
-        // Pintu terbuka (diengsel di kusen kiri, membuka keluar ±72°)
+        // Rangka setengah-kayu pada dinding belakang & samping agar rumah tetap
+        // terbaca sebagai rumah abad pertengahan dari segala arah, bukan hanya fasad.
+        var backAng = Math.atan2(wallH * 0.42, hw * 0.46);
+        var backLen = Math.sqrt(wallH * 0.42 * wallH * 0.42 + hw * 0.46 * hw * 0.46);
+        for (var bx = -hw * 0.5; bx <= hw * 0.51; bx += hw * 0.5) {
+          add(parts.timber, bx, wallBase + wallH * 0.5, -hd - 0.045, 0.12, wallH, 0.075, beam);
+          addR(parts.timber, bx, wallBase + wallH * 0.48, -hd - 0.045,
+            backLen, 0.085, 0.07, beam, 0, 0, bx < 0 ? backAng : -backAng);
+        }
+        add(parts.timber, 0, wallBase + wallH * 0.5, -hd - 0.045, hw * 2, 0.09, 0.07, beam);
+        var sideAng = Math.atan2(wallH * 0.4, hd * 0.5);
+        var sideLen = Math.sqrt(wallH * 0.4 * wallH * 0.4 + hd * 0.5 * hd * 0.5);
+        for (var sz = -hd * 0.5; sz <= hd * 0.51; sz += hd * 0.5) {
+          add(parts.timber, -hw - 0.045, wallBase + wallH * 0.5, sz, 0.075, wallH, 0.12, beam);
+          add(parts.timber, hw + 0.045, wallBase + wallH * 0.5, sz, 0.075, wallH, 0.12, beam);
+          addR(parts.timber, -hw - 0.045, wallBase + wallH * 0.48, sz,
+            0.07, sideLen, 0.085, beam, sz < 0 ? sideAng : -sideAng, 0, 0);
+          addR(parts.timber, hw + 0.045, wallBase + wallH * 0.48, sz,
+            0.07, sideLen, 0.085, beam, sz < 0 ? -sideAng : sideAng, 0, 0);
+        }
+        add(parts.timber, -hw - 0.045, wallBase + wallH * 0.5, 0, 0.07, 0.09, hd * 2, beam);
+        add(parts.timber, hw + 0.045, wallBase + wallH * 0.5, 0, 0.07, 0.09, hd * 2, beam);
+
+        // Atap sirap curam, bubungan, dan lis kayu.
+        add(parts.roof, 0, wallBase + wallH, 0, hw + 0.55, roofH, hd + 0.62, roofHex);
+        add(parts.ceiling, 0, wallBase + wallH + 0.02, 0, hw * 2, 0.08, hd * 2, 0x8C6C4E);
+        add(parts.timber, 0, wallBase + wallH + roofH * 0.985, 0, hw * 2 + 0.88, 0.13, 0.13, beam);
+        add(parts.timber, 0, wallBase + wallH + 0.06, hd + 0.6, hw * 2 + 0.9, 0.1, 0.1, beam);
+        add(parts.timber, 0, wallBase + wallH + 0.06, -hd - 0.6, hw * 2 + 0.9, 0.1, 0.1, beam);
+
+        // Cerobong batu di sisi belakang.
+        var chx = hw * 0.62, chz = -hd * 0.58;
+        var chH = wallH + roofH * 0.72;
+        add(parts.foundation, chx, wallBase + chH * 0.5, chz, 0.62, chH, 0.62, 0x66645C);
+        add(parts.foundation, chx, wallBase + chH + 0.08, chz, 0.78, 0.16, 0.78, 0x747168);
+
+        // Pintu berat berlapis besi (terbuka keluar).
         var doorAng = -1.25;
         var dCx = Math.cos(doorAng) * doorW * 0.46, dCz = -Math.sin(doorAng) * doorW * 0.46;
-        add(parts.door, -doorW / 2 + dCx, wallBase + doorH / 2, hd + 0.07 + dCz, doorW * 0.92, doorH, 0.07, 0x6B4A2F, doorAng);
+        var dOx = -doorW / 2 + dCx, dOz = hd + 0.07 + dCz;
+        add(parts.door, dOx, wallBase + doorH / 2, dOz, doorW * 0.92, doorH, 0.07, 0x4D3725, doorAng);
+        add(parts.iron, dOx, wallBase + doorH * 0.32, dOz + 0.015, doorW * 0.8, 0.09, 0.045, 0x303133, doorAng);
+        add(parts.iron, dOx, wallBase + doorH * 0.72, dOz + 0.015, doorW * 0.8, 0.09, 0.045, 0x303133, doorAng);
+        add(parts.iron, dOx + doorW * 0.25, wallBase + doorH * 0.52, dOz + 0.03, 0.13, 0.13, 0.06, 0x424345, doorAng);
 
-        // Tangga kayu menjemput di depan pintu
-        add(parts.stair, 0, 0.62, hd + 0.62, doorW + 0.3, 0.24, 0.46, 0x8A6A46);
-        add(parts.stair, 0, 0.86, hd + 0.28, doorW + 0.1, 0.2, 0.34, 0x8A6A46);
+        // Tangga batu/kayu menjemput di depan pintu.
+        add(parts.stair, 0, 0.62, hd + 0.64, doorW + 0.34, 0.24, 0.46, 0x7E6244);
+        add(parts.stair, 0, 0.86, hd + 0.3, doorW + 0.14, 0.2, 0.34, 0x876B4B);
 
-        // Jendela: dua di fasad + satu di samping (menyala saat malam)
-        add(parts.window, -(hw * 0.62), wallBase + wallH * 0.6, hd + 0.02, 0.46, 0.4, 0.06, 0x3A4A56);
-        add(parts.window, hw * 0.62, wallBase + wallH * 0.6, hd + 0.02, 0.46, 0.4, 0.06, 0x3A4A56);
-        add(parts.window, -(hw + 0.02), wallBase + wallH * 0.6, -hd * 0.3, 0.06, 0.4, 0.5, 0x3A4A56);
+        // Jendela berpanjang kayu dan kaca hangat saat malam.
+        var wy = wallBase + wallH * 0.63;
+        function windowFrame(wx, wz, side) {
+          if (side) {
+            add(parts.window, wx, wy, wz, 0.06, 0.52, 0.6, 0x2F3B42);
+            add(parts.timber, wx + 0.01, wy + 0.29, wz, 0.07, 0.09, 0.76, beam);
+            add(parts.timber, wx + 0.01, wy - 0.29, wz, 0.07, 0.09, 0.76, beam);
+            add(parts.timber, wx + 0.01, wy, wz - 0.34, 0.07, 0.66, 0.09, beam);
+            add(parts.timber, wx + 0.01, wy, wz + 0.34, 0.07, 0.66, 0.09, beam);
+            add(parts.timber, wx + 0.02, wy, wz, 0.075, 0.56, 0.06, beam);
+          } else {
+            add(parts.window, wx, wy, wz, 0.52, 0.52, 0.06, 0x2F3B42);
+            add(parts.timber, wx, wy + 0.29, wz + 0.02, 0.68, 0.09, 0.07, beam);
+            add(parts.timber, wx, wy - 0.29, wz + 0.02, 0.68, 0.09, 0.07, beam);
+            add(parts.timber, wx - 0.31, wy, wz + 0.02, 0.09, 0.66, 0.07, beam);
+            add(parts.timber, wx + 0.31, wy, wz + 0.02, 0.09, 0.66, 0.07, beam);
+            add(parts.timber, wx, wy, wz + 0.03, 0.06, 0.6, 0.07, beam);
+          }
+        }
+        windowFrame(-(hw * 0.62), hd + 0.03, false);
+        windowFrame(hw * 0.62, hd + 0.03, false);
+        windowFrame(-(hw + 0.03), -hd * 0.3, true);
+        windowFrame(hw + 0.03, -hd * 0.3, true);
+        // Jendela belakang kecil dengan kusen kayu.
+        add(parts.window, hw * 0.34, wy, -hd - 0.035, 0.52, 0.52, 0.06, 0x2F3B42);
+        add(parts.timber, hw * 0.34, wy + 0.29, -hd - 0.055, 0.68, 0.09, 0.07, beam);
+        add(parts.timber, hw * 0.34, wy - 0.29, -hd - 0.055, 0.68, 0.09, 0.07, beam);
+        add(parts.timber, hw * 0.34 - 0.31, wy, -hd - 0.055, 0.09, 0.66, 0.07, beam);
+        add(parts.timber, hw * 0.34 + 0.31, wy, -hd - 0.055, 0.09, 0.66, 0.07, beam);
+        add(parts.timber, hw * 0.34, wy, -hd - 0.065, 0.06, 0.6, 0.07, beam);
 
-        // Perabot dalam: tikar, meja kecil, lentera gantung (di samping, tak menghalangi kamera)
-        add(parts.mat, -hw * 0.42, floorTop + 0.06, -hd * 0.34, 1.5, 0.1, 0.72, 0x9A6B4F);
-        add(parts.table, hw * 0.48, floorTop + 0.26, -hd * 0.42, 0.6, 0.52, 0.6, 0x8A6A46);
-        add(parts.stilt, hw * 0.5, wallBase + wallH - 0.18, -hd * 0.15, 0.018, 0.2, 0.018, 0x6B4A2F);
+        // Balai desa: panji merah-merah tua di fasad.
+        if (big) {
+          add(parts.timber, hw * 0.78, wallBase + wallH + 0.82, hd + 0.62, 0.075, 2.64, 0.075, beam);
+          add(parts.banner, hw * 0.78 + 0.42, wallBase + wallH + 1.15, hd + 0.67, 0.82, 1.35, 0.045, 0x6B2C32);
+          add(parts.banner, hw * 0.78 + 0.42, wallBase + wallH + 0.72, hd + 0.67, 0.82, 0.12, 0.05, 0xB08A45);
+        }
+
+        // Perabot dalam: permadani, meja, lentera gantung, ceruk batu.
+        add(parts.mat, -hw * 0.42, floorTop + 0.06, -hd * 0.34, 1.5, 0.1, 0.72, 0x8C4A44);
+        add(parts.table, hw * 0.48, floorTop + 0.26, -hd * 0.42, 0.6, 0.52, 0.6, 0x725237);
+        add(parts.foundation, -hw * 0.62, floorTop + 0.36, -hd * 0.62, 1.15, 0.72, 0.55, 0x5E5C55);
+        add(parts.stilt, hw * 0.5, wallBase + wallH - 0.18, -hd * 0.15, 0.018, 0.2, 0.018, 0x5B4328);
         add(parts.lamp, hw * 0.5, wallBase + wallH - 0.3, -hd * 0.15, 0.11, 0.12, 0.11, 0xFFE9B0);
-        // Lentera beranda (di bawah atap, menggantung di dekat pintu)
-        add(parts.stilt, 0, wallBase + wallH - 0.42, hd + 0.4, 0.018, 0.42, 0.018, 0x6B4A2F);
-        add(parts.lamp, 0, wallBase + wallH - 0.62, hd + 0.4, 0.15, 0.16, 0.15, 0xFFE9B0);
+        // Lentera beranda di bawah atap.
+        add(parts.stilt, 0, wallBase + wallH - 0.42, hd + 0.48, 0.018, 0.42, 0.018, 0x5B4328);
+        add(parts.lamp, 0, wallBase + wallH - 0.62, hd + 0.48, 0.15, 0.16, 0.15, 0xFFE9B0);
       })(hutM);
 
       // Lantai panggung = platform yang bisa dipijak pemain
@@ -612,6 +920,7 @@
     var boxGeo = new THREE.BoxGeometry(1, 1, 1);
     var geos = {
       stilt: new THREE.CylinderGeometry(0.09, 0.11, 1, 6).translate(0, 0.5, 0),
+      foundation: boxGeo,
       floor: boxGeo,
       wall: boxGeo,
       roof: makePrismGeometry(),
@@ -621,16 +930,21 @@
       stair: boxGeo,
       mat: boxGeo,
       table: boxGeo,
-      lamp: new THREE.SphereGeometry(1, 8, 6)
+      timber: boxGeo,
+      iron: boxGeo,
+      banner: boxGeo,
+      lamp: boxGeo
     };
-    var casts = { stilt: true, floor: true, wall: true, roof: true, door: false, window: false,
-      ceiling: false, stair: true, mat: false, table: true, lamp: false };
-    var receives = { stilt: false, floor: true, wall: true, roof: true, door: false, window: false,
-      ceiling: true, stair: true, mat: true, table: true, lamp: false };
+    var casts = { stilt: true, foundation: true, floor: true, wall: true, roof: true, door: false, window: false,
+      ceiling: false, stair: true, mat: false, table: true, timber: true, iron: false, banner: false, lamp: false };
+    var receives = { stilt: false, foundation: true, floor: true, wall: true, roof: true, door: false, window: false,
+      ceiling: true, stair: true, mat: true, table: true, timber: true, iron: true, banner: true, lamp: false };
     var texSpec = {
-      stilt: ['wood', 1, 2], floor: ['plank', 2.6, 2], wall: ['plank', 2.4, 1.6],
-      roof: ['thatch', 3, 1.6], door: ['wood', 1, 1.4], window: ['plank', 1.2, 1],
-      ceiling: ['plank', 2.4, 2], stair: ['wood', 1.6, 1], mat: ['cloth', 2, 1], table: ['wood', 1, 1]
+      stilt: ['wood', 1, 2], foundation: ['stoneBrick', 1.6, 1.2], floor: ['plank', 2.6, 2],
+      wall: ['plaster', 2.4, 1.6], roof: ['shingle', 3, 1.8], door: ['wood', 1, 1.4],
+      window: ['plank', 1.2, 1], ceiling: ['plank', 2.4, 2], stair: ['wood', 1.6, 1],
+      mat: ['cloth', 2, 1], table: ['wood', 1, 1], timber: ['wood', 1.2, 2],
+      iron: ['metal', 1, 1], banner: ['cloth', 1.2, 1.2]
     };
     var tmpC = new THREE.Color();
     this.hutMeshes = [];
@@ -641,6 +955,7 @@
       if (!list.length) continue;
       var mat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.92, metalness: 0 });
       if (global.TexLib && texSpec[key]) global.TexLib.apply(mat, texSpec[key][0], texSpec[key][1], texSpec[key][2]);
+      if (key === 'iron') { mat.roughness = 0.55; mat.metalness = 0.42; }
       if (key === 'window') {
         // jendela: kaca gelap saat siang, menyala hangat saat malam
         mat.emissive = srgb(0xFFC069);
@@ -680,22 +995,27 @@
       g.add(m);
       return m;
     }
-    var stone = smat(0x9A9AA0, 0.95);
-    var dark = smat(0x22303A, 0.6);
-    var wood = smat(0x7A5836, 0.9);
+    var stone = smat(0x74736B, 0.95);
+    var dark = smat(0x19242A, 0.6);
+    var wood = smat(0x59422D, 0.9);
+    var iron = smat(0x353638, 0.55);
+    iron.metalness = 0.4;
     if (global.TexLib) {
-      global.TexLib.apply(stone, 'rock', 2, 2);
+      global.TexLib.apply(stone, 'stoneBrick', 2, 1.2);
       global.TexLib.apply(wood, 'wood', 1, 1.6);
+      global.TexLib.apply(iron, 'metal', 1, 1);
     }
     add(new THREE.CylinderGeometry(0.85, 0.95, 0.78, 10), stone, 0, 0.39, 0);
     add(new THREE.CylinderGeometry(0.62, 0.62, 0.06, 10), dark, 0, 0.79, 0);
     add(new THREE.BoxGeometry(0.1, 1.15, 0.1), wood, -0.72, 1.32, 0);
     add(new THREE.BoxGeometry(0.1, 1.15, 0.1), wood, 0.72, 1.32, 0);
-    var roofMat = smat(0xA9855C, 0.95);
-    if (global.TexLib) global.TexLib.apply(roofMat, 'thatch', 2, 1);
+    add(new THREE.CylinderGeometry(0.018, 0.018, 0.75, 5), iron, 0, 1.45, 0);
+    add(new THREE.CylinderGeometry(0.14, 0.11, 0.2, 8), iron, 0, 1.08, 0.02);
+    var roofMat = smat(0x504238, 0.95);
+    if (global.TexLib) global.TexLib.apply(roofMat, 'shingle', 2, 1);
     var roof = new THREE.Mesh(makePrismGeometry(), roofMat);
     roof.position.set(0, 1.9, 0);
-    roof.scale.set(1.0, 0.42, 0.72);
+    roof.scale.set(1.0, 0.52, 0.78);
     roof.castShadow = true;
     g.add(roof);
 
@@ -739,7 +1059,7 @@
     var dummy = new THREE.Object3D();
     var postGeo = new THREE.CylinderGeometry(0.05, 0.065, 0.62, 6);
     postGeo.translate(0, 0.31, 0);
-    var postMat = smat(0x8A6742, 0.92);
+    var postMat = smat(0x5A432C, 0.92);
     if (global.TexLib) global.TexLib.apply(postMat, 'wood', 1, 2);
     var postMesh = new THREE.InstancedMesh(postGeo, postMat, posts.length);
     postMesh.castShadow = true;
@@ -752,7 +1072,7 @@
     this.scene.add(postMesh);
 
     var railGeo = new THREE.BoxGeometry(1, 1, 1);
-    var railMat = smat(0x9A7850, 0.92);
+    var railMat = smat(0x6B5237, 0.92);
     if (global.TexLib) global.TexLib.apply(railMat, 'wood', 1, 1.4);
     var railMesh = new THREE.InstancedMesh(railGeo, railMat, rails.length);
     railMesh.castShadow = true;
@@ -846,8 +1166,9 @@
      Bila preset mengizinkan (HD/Ultra), tiap tiang juga menjadi PointLight. */
   Village.prototype._buildLampPosts = function (site) {
     var world = this.world;
-    var wood = smat(0x6E523A, 0.9);
-    if (global.TexLib) global.TexLib.apply(wood, 'wood', 1, 2);
+    var iron = smat(0x343537, 0.58);
+    iron.metalness = 0.44;
+    if (global.TexLib) global.TexLib.apply(iron, 'metal', 1, 2);
     if (!this._postLampMat) {
       this._postLampMat = new THREE.MeshStandardMaterial({
         color: srgb(0xFFE2A8), emissive: srgb(0xFFA64D), emissiveIntensity: 0.25, roughness: 0.5, metalness: 0
@@ -859,13 +1180,28 @@
       var pz = site.z + Math.sin(angles[i]) * 10.6;
       var py = world.groundHeight(px, pz);
       var g = new THREE.Group();
-      var post = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.11, 2.7, 7), wood);
-      post.position.y = 1.35;
+      var base = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.27, 0.18, 8), iron);
+      base.position.y = 0.09;
+      base.castShadow = true;
+      g.add(base);
+      var post = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.085, 2.75, 7), iron);
+      post.position.y = 1.38;
       post.castShadow = true;
       g.add(post);
-      var head = new THREE.Mesh(new THREE.SphereGeometry(0.19, 8, 6), this._postLampMat);
-      head.position.y = 2.82;
+      var head = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.42, 0.3), this._postLampMat);
+      head.position.y = 2.95;
       g.add(head);
+      var cap = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.24, 4), iron);
+      cap.position.y = 3.27;
+      cap.rotation.y = Math.PI / 4;
+      cap.castShadow = true;
+      g.add(cap);
+      for (var cb = 0; cb < 4; cb++) {
+        var bar = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.5, 0.035), iron);
+        var ca = cb / 4 * Math.PI * 2;
+        bar.position.set(Math.cos(ca) * 0.17, 2.95, Math.sin(ca) * 0.17);
+        g.add(bar);
+      }
       g.position.set(px, py, pz);
       this.scene.add(g);
       this.lampPosts.push(g);
@@ -892,22 +1228,29 @@
     var rocks = world.rocks || [];
     var spots = world.villageSpots || [];
     var best = null;
-    for (var i = 0; i < rocks.length; i++) {
-      var r = rocks[i];
-      if (r.s < 1.25 || r.gy < 1.2) continue;
-      var dx = r.x - c.x, dz = r.z - c.z;
-      var d = Math.sqrt(dx * dx + dz * dz);
-      if (d < 45 || d > 170) continue;
-      var nearVillage = false;
-      for (var j = 0; j < spots.length; j++) {
-        var sdx = r.x - spots[j].x, sdz = r.z - spots[j].z;
-        if (sdx * sdx + sdz * sdz < 14 * 14) { nearVillage = true; break; }
-      }
-      if (nearVillage) continue;
-      if (!best || r.s > best.s) best = r;
+    // Utamakan lingkaran batu berdiri (landmark batu tua) sebagai lokasi keranjang obat.
+    for (var ls = 0; ls < (world.landmarkSites || []).length; ls++) {
+      var site = world.landmarkSites[ls];
+      if (site.id === 'stones') { best = { x: site.x + 7.0, z: site.z + 2.4, s: 99 }; break; }
     }
-    var bx = best ? best.x + 1.7 : c.x + 40;
-    var bz = best ? best.z - 1.3 : c.z + 40;
+    if (!best) {
+      for (var i = 0; i < rocks.length; i++) {
+        var r = rocks[i];
+        if (r.s < 1.25 || r.gy < 1.2) continue;
+        var dx = r.x - c.x, dz = r.z - c.z;
+        var d = Math.sqrt(dx * dx + dz * dz);
+        if (d < 45 || d > 170) continue;
+        var nearVillage = false;
+        for (var j = 0; j < spots.length; j++) {
+          var sdx = r.x - spots[j].x, sdz = r.z - spots[j].z;
+          if (sdx * sdx + sdz * sdz < 14 * 14) { nearVillage = true; break; }
+        }
+        if (nearVillage) continue;
+        if (!best || r.s > best.s) best = r;
+      }
+    }
+    var bx = best ? best.x + (best.s === 99 ? 0 : 1.7) : c.x + 40;
+    var bz = best ? best.z - (best.s === 99 ? 0 : 1.3) : c.z + 40;
     if (world.groundHeight(bx, bz) < 1.0) { bx = c.x + 40; bz = c.z + 40; }
     this.basketSpot = { x: bx, z: bz };
 
@@ -952,17 +1295,17 @@
   Village.prototype.updateTracker = function () {
     var lines = [];
     var q = this.quests.kelapa;
-    if (q.state === 'belum') lines.push('📜 Cari desa &amp; bicara dengan <b>Pak Raka</b>');
+    if (q.state === 'belum') lines.push('📜 Cari desa Aldenmere &amp; bicara dengan <b>Raka</b>');
     else if (q.state === 'cari') lines.push('🥥 Kumpulkan kelapa <b>' + q.count + '/' + q.need + '</b>');
-    else if (q.state === 'kembali') lines.push('🥥 Kembalikan kelapa ke <b>Pak Raka</b>');
-    else lines.push('✓ Kelapa terkumpul');
+    else if (q.state === 'kembali') lines.push('🥥 Kembalikan kelapa ke <b>Raka</b>');
+    else lines.push('✓ Persediaan minyak kelapa cukup');
 
     var k = this.quests.keranjang;
-    if (k.state === 'cari') lines.push('🧺 Temukan keranjang <b>Mira</b>');
+    if (k.state === 'cari') lines.push('🧺 Temukan keranjang obat <b>Mira</b>');
     else if (k.state === 'kembali') lines.push('🧺 Kembalikan keranjang ke <b>Mira</b>');
-    else if (k.state === 'selesai') lines.push('✓ Keranjang Mira kembali');
+    else if (k.state === 'selesai') lines.push('✓ Keranjang obat Mira kembali');
 
-    lines.unshift('<span class="q-title">TUGAS DESA</span>');
+    lines.unshift('<span class="q-title">TUGAS KERAJAAN</span>');
     global.UI.setQuest(lines);
   };
 
@@ -973,39 +1316,39 @@
       if (q.state === 'belum') {
         return {
           lines: [
-            'Selamat datang di desa kami, pengembara! Aku Raka, kepala desa ini.',
-            'Kami sedang menyiapkan pesta panen, tetapi persediaan kelapa kami kurang.',
-            'Maukah kau mengumpulkan 5 kelapa dari pohon-pohon di tepi pantai?',
-            'Tekan E di dekat pohon kelapa untuk memetiknya.'
+            'Selamat datang di Aldenmere, pengembara. Aku Raka, tetua desa ini.',
+            'Kami bersiap merayakan Fajar Panen, tetapi tabib kami kekurangan minyak kelapa.',
+            'Maukah kau mengumpulkan 5 kelapa dari pohon-pohon tua di tepi pantai?',
+            'Tekan E di dekat pohon kelapa untuk memetiknya. Lampu fajar desa bergantung padamu.'
           ],
           after: function () {
             q.state = 'cari';
-            global.UI.toast('📜 Tugas baru: kumpulkan 5 kelapa');
+            global.UI.toast('📜 Tugas kerajaan: kumpulkan 5 kelapa');
             self.updateTracker();
           }
         };
       }
       if (q.state === 'cari') {
-        var lv = ['Kelapa tumbuh di pohon-pohon tinggi di tepi pantai. Tekan E di dekatnya.'];
+        var lv = ['Pohon kelapa tua tumbuh di sepanjang pantai selatan. Tekan E di dekatnya.'];
         if (q.count > 0) lv.unshift('Sejauh ini ' + q.count + ' dari ' + q.need + ' kelapa sudah terkumpul. Teruskan!');
         return { lines: lv, after: null };
       }
       if (q.state === 'kembali') {
         return {
           lines: [
-            'Ah, kelima kelapa sudah terkumpul! Kau sungguh gesit, pengembara.',
-            'Terima kasih! Desa ini berutang budi padamu.',
-            'Ambil istirahat di alun-alun — anggap saja desa ini rumahmu.'
+            'Ah, kelima kelapa sudah terkumpul! Para tabib akan menyalakan lampu fajar malam ini.',
+            'Kau datang seperti ksatria dari cerita lama. Aldenmere berutang budi padamu.',
+            'Beristirahatlah di balai desa. Anggap Aldenmere sebagai rumahmu.'
           ],
           after: function () {
             q.state = 'selesai';
-            global.UI.toast('✓ Tugas selesai: kelapa terkumpul');
+            global.UI.toast('✓ Tugas selesai: minyak kelapa terkumpul');
             self.updateTracker();
           }
         };
       }
       return {
-        lines: ['Terima kasih sekali lagi, pengembara.', 'Nikmati damainya desa kami.'],
+        lines: ['Terima kasih sekali lagi, pengembara.', 'Semoga jalan kerajaan selalu melindungimu.'],
         after: null
       };
     }
@@ -1015,15 +1358,15 @@
       if (k.state === 'belum') {
         return {
           lines: [
-            'Halo! Aku Mira.',
-            'Tadi aku mencari kerang di tepi pantai, tapi keranjang anyamanku hilang!',
-            'Rasanya terjatuh di dekat batu-batu besar, jauh di luar desa sana.',
-            'Maukah kau mencarikannya? Ada pita merah di pinggirnya.'
+            'Halo, pengembara. Aku Mira, tabib Aldenmere.',
+            'Tadi aku memetik ramuan di lingkaran batu tua, tetapi keranjang obatku hilang!',
+            'Keranjang itu berisi persediaan untuk kapel di luar desa. Tanpanya, orang-orang sakit akan terlantar.',
+            'Maukah kau mencarikannya? Anyamannya dari rotan, dengan pita merah di pinggirnya.'
           ],
           after: function () {
             k.state = 'cari';
             if (self.basket) self.basket.visible = true;
-            global.UI.toast('📜 Tugas baru: cari keranjang Mira');
+            global.UI.toast('📜 Tugas kerajaan: cari keranjang obat Mira');
             self.updateTracker();
           }
         };
@@ -1031,23 +1374,23 @@
       if (k.state === 'cari') {
         return {
           lines: [
-            'Keranjangku terbuat dari anyaman pandan, ada pita merahnya.',
-            'Coba cari di sekitar batu-batu besar di luar desa.'
+            'Keranjangku terbuat dari anyaman rotan, ada pita merahnya.',
+            'Coba cari di dekat lingkaran batu berdiri, jauh di luar desa. Rerumputan di sana panjang.'
           ],
           after: null
         };
       }
       if (k.state === 'kembali') {
         return {
-          lines: ['Itu dia keranjangku!', 'Terima kasih banyak, kau baik sekali!'],
+          lines: ['Itu dia keranjangku! Ramuan di dalamnya masih utuh.', 'Berkat para leluhur, kau telah menyelamatkan banyak orang.'],
           after: function () {
             k.state = 'selesai';
-            global.UI.toast('✓ Tugas selesai: keranjang Mira');
+            global.UI.toast('✓ Tugas selesai: keranjang obat Mira');
             self.updateTracker();
           }
         };
       }
-      return { lines: ['Nanti aku ajak kau melihat kerang-kerangku, ya!'], after: null };
+      return { lines: ['Kapel tua di luar desa masih menyimpan rune fajar. Kunjungilah bila kau sempat.'], after: null };
     }
 
     var list = FLAVOR[npc.role];
@@ -1092,7 +1435,7 @@
       var bdx = this.basket.position.x - px, bdz = this.basket.position.z - pz;
       d2 = bdx * bdx + bdz * bdz;
       if (d2 < 2.6 * 2.6 && (!best || d2 < best.d2)) {
-        best = { d2: d2, kind: 'basket', prompt: 'Tekan <b class="ekey">E</b> — ambil keranjang' };
+        best = { d2: d2, kind: 'basket', prompt: 'Tekan <b class="ekey">E</b> - ambil keranjang obat' };
       }
     }
     return best;
@@ -1121,7 +1464,7 @@
     q.count++;
     if (q.count >= q.need) {
       q.state = 'kembali';
-      global.UI.toast('🥥 Kelapa ' + q.count + '/' + q.need + ' — bawa ke Pak Raka!');
+      global.UI.toast('🥥 Kelapa ' + q.count + '/' + q.need + ' — bawa ke Raka!');
     } else {
       global.UI.toast('🥥 Kelapa ' + q.count + '/' + q.need);
     }

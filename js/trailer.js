@@ -8,10 +8,10 @@
   /* Jadwal kartu judul (detik): {t0,t1} jendela tampil, tk/sk = kunci i18n,
      title/sub = teks asli Bahasa Indonesia. */
   var CARDS = [
-    { t0: 0.8, t1: 6.2, tk: 'trailer.c1t', sk: 'trailer.c1s', title: 'AETHERIA', sub: 'Legacy of the Dawn — sebuah petualangan 3D di kepulauan Aetheria' },
-    { t0: 7.6, t1: 12.6, tk: 'trailer.c2t', sk: 'trailer.c2s', title: 'Pantai & hutan', sub: 'Susuri pantai, hutan, dan pelabuhan — naiki perahu, jelajahi kepulauan' },
-    { t0: 14.0, t1: 19.0, tk: 'trailer.c3t', sk: 'trailer.c3s', title: 'Temui penduduk desa', sub: 'Bantu mereka menyelesaikan tugas-tugas kecil' },
-    { t0: 20.4, t1: 25.4, tk: 'trailer.c4t', sk: 'trailer.c4s', title: 'Taklukkan alam liar', sub: 'Babi hutan, bandit & slime — kumpulkan jarahan, naik level' },
+    { t0: 0.8, t1: 6.2, tk: 'trailer.c1t', sk: 'trailer.c1s', title: 'AETHERIA', sub: 'Legacy of the Dawn — sebuah petualangan 3D di kerajaan pesisir Aetheria' },
+    { t0: 7.6, t1: 12.6, tk: 'trailer.c2t', sk: 'trailer.c2s', title: 'Hutan pinus & jalan tua', sub: 'Susuri pantai, hutan pinus, dan pelabuhan — naiki perahu, jelajahi kepulauan' },
+    { t0: 14.0, t1: 19.0, tk: 'trailer.c3t', sk: 'trailer.c3s', title: 'Temui warga Aldenmere', sub: 'Bantu mereka menyelesaikan tugas kerajaan' },
+    { t0: 20.4, t1: 25.4, tk: 'trailer.c4t', sk: 'trailer.c4s', title: 'Taklukkan alam liar', sub: 'Celeng hutan, penyamun & roh rawa — juga ksatria terkutuk di reruntuhan kastil' },
     { t0: 26.8, t1: 32.4, tk: 'trailer.c5t', sk: 'trailer.c5s', title: 'AETHERIA', sub: 'Legacy of the Dawn — selamat menjelajah!' }
   ];
 

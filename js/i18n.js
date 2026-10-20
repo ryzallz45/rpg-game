@@ -10,7 +10,7 @@
   /* ---------- Kamus kunci (elemen ber-atribut data-i18n) ---------- */
   var EN = {
     /* Menu utama */
-    'menu.subtitle': 'Beneath the last dawn, rise from the shores of Aetheria — explore its isles, villages, and open seas.',
+    'menu.subtitle': 'Beneath the last dawn, the kingdom of Aetheria stirs - wander its pine forests, stone villages, and ruined castles.',
     'menu.continue': 'Continue Journey',
     'menu.play': 'Begin Adventure',
     'menu.settings': 'Settings',
@@ -26,7 +26,7 @@
     'help.attack': 'swing sword (3-hit combo)',
     'help.e': 'talk to villagers / pick up items / board & leave the boat',
     'help.i': 'open/close the large bag (battle loot)',
-    'help.h': 'eat boar meat (+30 HP)',
+    'help.h': 'eat wild boar meat (+30 HP)',
     'help.m': 'cycle map mode: World → Around → Local → Hidden',
     'help.map': 'open the world map & mark a destination',
     'help.save': 'quick save (load it from the pause menu)',
@@ -84,7 +84,7 @@
 
     /* Tumbang */
     'death.title': 'YOU HAVE FALLEN',
-    'death.subtitle': 'This island is harsh… but you never give up.',
+    'death.subtitle': 'This kingdom is harsh… but you never give up.',
     'death.respawn': 'Rise Again',
     'death.footnote': 'You will rise again on the beach where the adventure began.',
 
@@ -102,21 +102,25 @@
     'map.local': 'LOCAL',
 
     /* Peta besar & tujuan (Fase 5 lanjutan) */
-    'map.title': 'AETHERIA MAP',
-    'map.subtitle': 'World map — click a location to mark your destination',
+    'map.title': 'MAP OF THE KINGDOM',
+    'map.subtitle': 'Kingdom of Aetheria - click a location to mark your destination',
     'map.running': 'The world keeps running',
     'map.hint': 'Click a location to mark your destination',
     'map.locked': 'movement & attacks locked',
     'map.noTarget': 'No destination yet — click a location on the map',
     'map.targetPrefix': 'Destination',
     'map.freeTarget': 'Custom point',
-    'map.poi.village': 'Aetheria Village',
+    'map.poi.village': 'Aldenmere Village',
     'map.poi.harbor': 'Harbour',
-    'map.poi.hut': "Paman Dera's Hut",
+    'map.poi.hut': "Dera's Hut",
     'map.poi.hut2': 'Island Hut',
+    'map.poi.castle': 'Castle Ruins',
+    'map.poi.chapel': 'Old Chapel',
+    'map.poi.stones': 'Standing Stones',
     'map.legend.village': 'Village',
     'map.legend.harbor': 'Harbour',
     'map.legend.hut': 'Hut',
+    'map.legend.landmark': 'Landmarks',
     'map.legend.you': 'You',
     'map.legend.boat': 'Boat',
     'map.legend.target': 'Destination',
@@ -140,12 +144,12 @@
     'trailer.skip': 'Click / press any key to skip',
     'trailer.c1t': 'AETHERIA',
     'trailer.c1s': 'Legacy of the Dawn — a 3D adventure across the isles of Aetheria',
-    'trailer.c2t': 'Beaches & forests',
-    'trailer.c2s': 'Follow the coast, forests and harbour — sail out and explore the isles',
+    'trailer.c2t': 'Pine coasts & old roads',
+    'trailer.c2s': 'Follow the coast, pine forests and the harbour road - sail out and explore the isles',
     'trailer.c3t': 'Meet the villagers',
-    'trailer.c3s': 'Help them with their little quests',
+    'trailer.c3s': 'Help the folk of Aldenmere with their quests',
     'trailer.c4t': 'Face the wild',
-    'trailer.c4s': 'Boars, bandits and slimes — collect loot, level up',
+    'trailer.c4s': 'Boars, brigands and bog wisps - and the cursed knights of the keep',
     'trailer.c5t': 'AETHERIA',
     'trailer.c5s': 'Legacy of the Dawn — the dawn awaits'
   };
@@ -157,11 +161,14 @@
     'Memasang langit & siklus siang-malam...': 'Raising the sky & day-night cycle...',
     'Memuat model 3D...': 'Loading 3D models...',
     'Menumbuhkan vegetasi & batu...': 'Growing vegetation & rocks...',
+    'Menumbuhkan hutan pinus & batu...': 'Growing pine forests & rocks...',
     'Membangun desa & penduduk...': 'Building the village & villagers...',
+    'Membangun Aldenmere & penduduk...': 'Building Aldenmere & its villagers...',
     'Membangun pelabuhan & perahu...': 'Building the harbour & boat...',
     'Menanam rumput & bunga...': 'Planting grass & flowers...',
     'Menciptakan pemain...': 'Spawning the hero...',
     'Membangkitkan makhluk pulau...': 'Awakening island creatures...',
+    'Membangkitkan penghuni rimba...': 'Awakening the wild folk...',
     'Menyiapkan peta & efek...': 'Charting the island & effects...',
     'Menyiapkan awal perjalanan...': 'Preparing the journey...',
     'Siap!': 'Ready!'

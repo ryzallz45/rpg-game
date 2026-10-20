@@ -37,7 +37,7 @@
   var waypoint = null; // { x, z, poi } — poi null untuk titik bebas
   var wmAcc = 0;
   var beacon = null, beaconBeam = null, beaconGem = null, beaconRing = null, beaconT = 0;
-  var MAP_POI = { village: 1, harbor: 1, hut: 1, hut2: 1 };
+  var MAP_POI = { village: 1, harbor: 1, hut: 1, hut2: 1, castle: 1, chapel: 1, stones: 1 };
 
   /* Dwibahasa (i18n): pintasan terjemahan antarmuka. */
   function L(key, fb) { return window.Lang ? window.Lang.tx(key, fb) : fb; }
@@ -244,7 +244,7 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.setClearColor(0xA8D8F0, 1);
+    renderer.setClearColor(0xB8C3BE, 1);
     renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.05;
@@ -280,8 +280,8 @@
         dom.loadingText.textContent = Lstr('Memuat model 3D...') + ' (' + done + '/' + total + ')';
       });
     }],
-    ['Menumbuhkan vegetasi & batu...', function () { world.buildEnvironment(); }],
-    ['Membangun desa & penduduk...', function () {
+    ['Menumbuhkan hutan pinus & batu...', function () { world.buildEnvironment(); }],
+    ['Membangun Aldenmere & penduduk...', function () {
       village = new window.Village(scene, world);
       village.build();
       attachAssets();
@@ -296,7 +296,7 @@
       player = new window.Player(scene, world);
       attachAssets();
     }],
-    ['Membangkitkan makhluk pulau...', function () { buildEnemies(); }],
+    ['Membangkitkan penghuni rimba...', function () { buildEnemies(); }],
     ['Menyiapkan peta & efek...', function () {
       if (window.Effects) window.Effects.init(scene);
       if (window.Minimap && dom.minimapCanvas && world) {
@@ -755,7 +755,7 @@
     if (world && world.villageSpots && world.villageSpots[0]) {
       list.push({
         id: 'village', x: world.villageSpots[0].x, z: world.villageSpots[0].z,
-        label: L('map.poi.village', 'Desa Aetheria')
+        label: L('map.poi.village', 'Desa Aldenmere')
       });
     }
     if (world && world.harborSpot) {
@@ -769,9 +769,22 @@
         list.push({
           id: i === 0 ? 'hut' : 'hut2',
           x: world.islandSites[i].x, z: world.islandSites[i].z,
-          label: i === 0 ? L('map.poi.hut', 'Pondok Paman Dera')
+          label: i === 0 ? L('map.poi.hut', 'Pondok Dera')
             : L('map.poi.hut2', 'Pondok Pulau')
         });
+      }
+    }
+    if (world && world.landmarks) {
+      var lmLabels = {
+        castle: ['map.poi.castle', 'Reruntuhan Kastil'],
+        chapel: ['map.poi.chapel', 'Kapel Tua'],
+        stones: ['map.poi.stones', 'Lingkaran Batu']
+      };
+      for (var li = 0; li < world.landmarks.length; li++) {
+        var lm = world.landmarks[li];
+        var lab = lmLabels[lm.id];
+        if (!lab) continue;
+        list.push({ id: lm.id, x: lm.x, z: lm.z, label: L(lab[0], lab[1]) });
       }
     }
     return list;
@@ -779,10 +792,13 @@
 
   function waypointLabel() {
     if (!waypoint) return '';
-    if (waypoint.poi === 'village') return L('map.poi.village', 'Desa Aetheria');
+    if (waypoint.poi === 'village') return L('map.poi.village', 'Desa Aldenmere');
     if (waypoint.poi === 'harbor') return L('map.poi.harbor', 'Pelabuhan');
-    if (waypoint.poi === 'hut') return L('map.poi.hut', 'Pondok Paman Dera');
+    if (waypoint.poi === 'hut') return L('map.poi.hut', 'Pondok Dera');
     if (waypoint.poi === 'hut2') return L('map.poi.hut2', 'Pondok Pulau');
+    if (waypoint.poi === 'castle') return L('map.poi.castle', 'Reruntuhan Kastil');
+    if (waypoint.poi === 'chapel') return L('map.poi.chapel', 'Kapel Tua');
+    if (waypoint.poi === 'stones') return L('map.poi.stones', 'Lingkaran Batu');
     return L('map.freeTarget', 'Tujuan');
   }
 
@@ -1057,13 +1073,13 @@
     } else {
       var ITEMS = window.RPG ? window.RPG.ITEMS : {};
       var it = ITEMS[id];
-      window.UI.toast((it ? it.icon + ' ' + it.name : '❔ ' + id) + ' — jarahan dari makhluk pulau');
+      window.UI.toast((it ? it.icon + ' ' + it.name : '❔ ' + id) + ' — jarahan dari penghuni rimba');
     }
   }
 
   function eatFood() {
     if (rpgStats.count('daging') <= 0) {
-      window.UI.toast('🥩 Tidak ada daging — buru babi hutan dulu!');
+      window.UI.toast('🥩 Tidak ada daging — buru celeng hutan dulu!');
       return;
     }
     if (rpgStats.hp >= rpgStats.maxHp) {
@@ -1611,6 +1627,19 @@
     if (boat && boat.boarded) minY = Math.max(minY, 0.75);
     else if (!plat) minY = Math.max(minY, 0.75); // kamera tetap di atas permukaan laut
     if (camera.position.y < minY) camera.position.y = minY;
+
+    // Di lereng curam (mis. jalan menuju reruntuhan kastil), naikkan kamera
+    // agar garis pandang ke pemain tidak tertutup punggung bukit.
+    var camYFix = camera.position.y;
+    for (var cs = 1; cs <= 3; cs++) {
+      var ct = cs / 4;
+      var sx = smoothFocus.x + (camera.position.x - smoothFocus.x) * ct;
+      var sz = smoothFocus.z + (camera.position.z - smoothFocus.z) * ct;
+      var gy = world.groundHeight(sx, sz) + 0.3;
+      var ly = smoothFocus.y + (camYFix - smoothFocus.y) * ct;
+      if (gy > ly) camYFix += (gy - ly) / ct;
+    }
+    camera.position.y = camYFix;
 
     camera.lookAt(smoothFocus.x, smoothFocus.y + 0.2, smoothFocus.z);
 

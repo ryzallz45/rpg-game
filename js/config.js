@@ -72,7 +72,7 @@
       mouseSens: 0.0022
     },
 
-    FOG: { density: 0.00035 }, // FogExp2 — kabut atmosferik (Fase 5: jarak pandang ±2 km)
+    FOG: { density: 0.00048 }, // FogExp2 — kabut kerajaan pesisir (jarak pandang ±1,5 km)
 
     WATER: {
       level: 0,

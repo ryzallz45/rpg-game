@@ -54,24 +54,32 @@
   /* ---------- Bentuk karakter ---------- */
   Player.prototype._buildMesh = function () {
     var M = {
-      skin: smat(0xE8B98E, 0.8),
-      skinDark: smat(0xD8A87A, 0.8),
-      hair: smat(0x3E2C1E, 0.9),
-      shirt: smat(0xEDE3CC, 0.9),
-      stripe: smat(0x2E8BA8, 0.9),
-      pants: smat(0x4C5A6B, 0.9),
-      boots: smat(0x5C4327, 0.85),
-      belt: smat(0x4A3522, 0.85),
-      strap: smat(0x7A5A38, 0.85),
+      skin: smat(0xE2B185, 0.8),
+      skinDark: smat(0xCE9C72, 0.8),
+      hair: smat(0x35261B, 0.9),
+      shirt: smat(0x2F3B52, 0.9),
+      stripe: smat(0x8C2F33, 0.9),
+      armor: smat(0x9AA1A6, 0.42),
+      trim: smat(0xB28C43, 0.5),
+      pants: smat(0x3B3831, 0.9),
+      boots: smat(0x4A3524, 0.85),
+      belt: smat(0x3C2C1E, 0.85),
+      strap: smat(0x5B4329, 0.85),
+      glove: smat(0x53402C, 0.85),
       eye: smat(0x1C1C1E, 0.35)
     };
+    M.armor.metalness = 0.42;
+    M.trim.metalness = 0.35;
     if (global.TexLib) {
       global.TexLib.apply(M.shirt, 'cloth', 1.6, 1.2);
       global.TexLib.apply(M.stripe, 'cloth', 1.4, 1);
+      global.TexLib.apply(M.armor, 'metal', 1.2, 1.2);
+      global.TexLib.apply(M.trim, 'metal', 1, 1);
       global.TexLib.apply(M.pants, 'cloth', 1.4, 1.4);
       global.TexLib.apply(M.boots, 'leather', 1.2, 1.2);
       global.TexLib.apply(M.belt, 'leather', 1, 1);
       global.TexLib.apply(M.strap, 'leather', 1, 1);
+      global.TexLib.apply(M.glove, 'leather', 1, 1);
     }
 
     var g = this.group;
@@ -88,27 +96,51 @@
     function cyl(rt, rb, h) { return new THREE.CylinderGeometry(rt, rb, h, 10); }
     function box(w, h, d) { return new THREE.BoxGeometry(w, h, d); }
 
-    // Pinggul & ikat pinggang
+    // Pinggul & ikat pinggang dengan gesper logam
     part(g, box(0.36, 0.20, 0.24), M.pants, 0, 0.88, 0);
-    part(g, box(0.40, 0.08, 0.28), M.belt, 0, 0.97, 0);
+    part(g, box(0.41, 0.09, 0.29), M.belt, 0, 0.97, 0);
+    part(g, box(0.09, 0.11, 0.04), M.trim, 0, 0.97, 0.155);
 
-    // Torso + tali selempang + kantong
+    // Torso: jubah perang, pelat dada, tabard, tali selempang
     this.torso = part(g, box(0.44, 0.55, 0.28), M.shirt, 0, 1.26, 0);
-    var strap = part(g, box(0.58, 0.07, 0.025), M.strap, 0, 1.33, 0.15);
+    part(g, box(0.46, 0.4, 0.15), M.armor, 0, 1.31, 0.1);
+    part(g, box(0.46, 0.42, 0.08), M.armor, 0, 1.3, -0.1);
+    part(g, box(0.1, 0.1, 0.05), M.trim, 0, 1.35, 0.205);
+    part(g, box(0.16, 0.46, 0.03), M.stripe, 0, 1.22, 0.182);
+    // Surcoat punggung dan jubah perang merah tua — ksatria tetap terbaca dari belakang.
+    part(g, box(0.18, 0.44, 0.03), M.stripe, 0, 1.22, -0.17);
+    var cape = part(g, box(0.52, 0.82, 0.045), M.stripe, 0, 1.07, -0.195);
+    cape.rotation.x = -0.075;
+    part(g, box(0.55, 0.06, 0.055), M.trim, 0, 0.665, -0.23);
+    part(g, box(0.13, 0.07, 0.07), M.trim, 0, 1.48, -0.2);
+    var strap = part(g, box(0.58, 0.07, 0.025), M.strap, 0, 1.36, 0.145);
     strap.rotation.z = 0.55;
     part(g, box(0.17, 0.15, 0.09), M.strap, 0.20, 1.04, 0.14);
+    part(g, box(0.1, 0.08, 0.05), M.trim, 0.2, 1.04, 0.19);
 
-    // Bahu membulat
-    part(g, sph(0.095), M.shirt, -0.265, 1.46, 0);
-    part(g, sph(0.095), M.shirt, 0.265, 1.46, 0);
+    // Bahu: pauldron baja berlapis
+    var pauldL = part(g, sph(0.125, 10, 8), M.armor, -0.275, 1.46, 0);
+    pauldL.scale.set(1.15, 0.72, 1.05);
+    var pauldR = part(g, sph(0.125, 10, 8), M.armor, 0.275, 1.46, 0);
+    pauldR.scale.set(1.15, 0.72, 1.05);
+    part(g, box(0.16, 0.03, 0.12), M.trim, -0.275, 1.52, 0);
+    part(g, box(0.16, 0.03, 0.12), M.trim, 0.275, 1.52, 0);
 
     // Leher & kepala
     part(g, cyl(0.06, 0.075, 0.12), M.skin, 0, 1.60, 0);
+    part(g, cyl(0.13, 0.155, 0.09, 12), M.armor, 0, 1.55, 0); // gorget
     var head = part(g, sph(0.215, 14, 12), M.skin, 0, 1.76, 0);
     head.scale.set(1, 1.06, 1);
     // Rambut: tutup belakang-atas kepala
     var hair = part(g, sph(0.225, 14, 12), M.hair, 0, 1.80, -0.045);
     hair.scale.set(1.02, 0.92, 1.02);
+    // Tutup kepala baja ringan; wajah tetap terbuka agar mudah dikenali.
+    part(g, new THREE.SphereGeometry(0.245, 14, 8, 0, Math.PI * 2, 0, Math.PI * 0.34),
+      M.armor, 0, 1.79, -0.01);
+    // Lingkaran baja pelindung dahi (ksatria tanpa helm tertutup)
+    var band = part(g, new THREE.TorusGeometry(0.208, 0.032, 8, 18), M.armor, 0, 1.84, 0);
+    band.rotation.x = Math.PI / 2;
+    part(g, box(0.035, 0.1, 0.05), M.armor, 0, 1.79, 0.205, true);
     // Wajah: mata & hidung
     part(g, sph(0.03, 8, 8), M.eye, -0.08, 1.78, 0.185, true);
     part(g, sph(0.03, 8, 8), M.eye, 0.08, 1.78, 0.185, true);
@@ -166,11 +198,13 @@
 
     if (isLeg) {
       add(new THREE.CylinderGeometry(0.075, 0.088, 0.70, 10), M.pants, 0, -0.35, 0);
+      var knee = add(new THREE.SphereGeometry(0.082, 10, 8), M.armor, 0, -0.36, 0.03);
+      knee.scale.set(1.05, 0.75, 1.05);
       add(new THREE.BoxGeometry(0.17, 0.12, 0.27), M.boots, 0, -0.70, 0.04);
     } else {
       add(new THREE.CylinderGeometry(0.078, 0.088, 0.26, 10), M.shirt, 0, -0.13, 0);   // lengan baju
-      add(new THREE.CylinderGeometry(0.060, 0.072, 0.30, 10), M.skin, 0, -0.40, 0);    // lengan bawah
-      add(new THREE.SphereGeometry(0.072, 10, 8), M.skin, 0, -0.585, 0);               // tangan
+      add(new THREE.CylinderGeometry(0.062, 0.075, 0.30, 10), M.armor, 0, -0.40, 0);   // pelindung lengan bawah
+      add(new THREE.SphereGeometry(0.072, 10, 8), M.glove, 0, -0.585, 0);              // sarung tangan
     }
     return pivot;
   };
@@ -494,8 +528,8 @@
 
   Player.prototype.attachModel = function (lib, name) {
     if (this.mixer) return false; // sudah memakai model 3D
-    if (!lib || !lib.has(name || 'barbarian')) return false;
-    var spawned = lib.spawn(name || 'barbarian', { height: 1.95 });
+    if (!lib || !lib.has(name || 'knight')) return false;
+    var spawned = lib.spawn(name || 'knight', { height: 1.95 });
     if (!spawned) return false;
 
     // Sembunyikan bentuk prosedural (disimpan agar bisa dikembalikan)
@@ -551,7 +585,7 @@
     this._locoState = null;
     this._atkAction = null;
     if (A.idle) this._fadeTo(A.idle, 0.01);
-    console.log('[Aetheria] Model pemain aktif (KayKit Barbarian)');
+    console.log('[Aetheria] Model pemain aktif (KayKit Knight — ksatria fajar)');
     return true;
   };
 

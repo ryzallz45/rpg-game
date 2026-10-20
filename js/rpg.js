@@ -5,18 +5,18 @@
 
   /* Daftar barang. color dipakai untuk kotak jarahan di dunia. */
   var ITEMS = {
-    daging: { name: 'Daging Babi', icon: '🥩', color: 0xC46A5A, consumable: true, heal: 30,
-      desc: 'Panggang & makan dengan H — memulihkan 30 HP.' },
-    kulit: { name: 'Kulit Babi', icon: '🟫', color: 0x8A6742,
-      desc: 'Kulit tebal — bahan kerajinan.' },
-    taring: { name: 'Taring Babi', icon: '🦷', color: 0xEDE6D0,
-      desc: 'Taring tajam — bahan langka.' },
-    koin: { name: 'Koin Perak', icon: '🪙', color: 0xD8D8E2,
-      desc: 'Mata uang pulau.' },
-    besi: { name: 'Besi Tua', icon: '⚙️', color: 0x9AA2AC,
-      desc: 'Potongan logam dari bandit.' },
-    lendir: { name: 'Lendir Slime', icon: '🫧', color: 0x7FCF6A,
-      desc: 'Gumpalan kenyal — bahan ramuan.' }
+    daging: { name: 'Daging Celeng', icon: '🥩', color: 0xC46A5A, consumable: true, heal: 30,
+      desc: 'Daging asap celeng hutan — makan dengan H untuk memulihkan 30 HP.' },
+    kulit: { name: 'Kulit Celeng', icon: '🟫', color: 0x8A6742,
+      desc: 'Kulit tebal — bahan penyamak dan rompi kulit.' },
+    taring: { name: 'Taring Celeng', icon: '🦷', color: 0xEDE6D0,
+      desc: 'Taring tajam — jimat pemburu dan bahan langka.' },
+    koin: { name: 'Koin Perak Kerajaan', icon: '🪙', color: 0xD8D8E2,
+      desc: 'Mata uang Aetheria, dicetak dengan lambang fajar.' },
+    besi: { name: 'Besi Tempa', icon: '⚙️', color: 0x9AA2AC,
+      desc: 'Potongan logam rampasan penyamun — bahan perbaikan senjata.' },
+    lendir: { name: 'Inti Roh Rawa', icon: '🫧', color: 0x7FCF6A,
+      desc: 'Cahaya rawa yang membeku — bahan ramuan tabib.' }
   };
 
   function Stats() {

@@ -138,6 +138,91 @@
       }
       return cv;
     },
+    // Plester kapur rumah abad pertengahan: bercak halus, retak tipis.
+    plaster: function () {
+      var n = makeTileFbm(153, 26, 2), n2 = makeTileFbm(154, 6, 1);
+      var cv = drawGray(128, function (x, y, s) {
+        return 0.94 + n(x, y, s) * 0.045 + n2(x * 0.7, y * 1.3, s) * 0.025;
+      });
+      var ctx = cv.ctx;
+      ctx.strokeStyle = 'rgba(48,40,32,0.16)';
+      ctx.lineWidth = 1;
+      for (var k = 0; k < 7; k++) {
+        var x0 = (k * 41 + 9) % 118, y0 = (k * 29 + 17) % 112;
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x0 + 9 + (k % 3) * 5, y0 + 7);
+        ctx.lineTo(x0 + 17 + (k % 4) * 4, y0 + 4);
+        ctx.stroke();
+      }
+      return cv;
+    },
+    // Batu bata/balok abu-abu: garis mortar horizontal & sambung vertikal.
+    stoneBrick: function () {
+      var n = makeTileFbm(155, 20, 2), n2 = makeTileFbm(156, 5, 1);
+      var cv = drawGray(128, function (x, y, s) {
+        return 0.83 + n(x, y, s) * 0.11 + n2(x, y, s) * 0.045;
+      });
+      var ctx = cv.ctx;
+      ctx.strokeStyle = 'rgba(28,26,24,0.34)';
+      ctx.lineWidth = 1.5;
+      for (var yy = 0; yy <= 128; yy += 16) {
+        ctx.beginPath(); ctx.moveTo(0, yy + 0.5); ctx.lineTo(128, yy + 0.5); ctx.stroke();
+        if (yy >= 128) break;
+        var off = ((yy / 16) % 2) ? 16 : 0;
+        for (var xx = off; xx <= 128; xx += 32) {
+          ctx.beginPath(); ctx.moveTo(xx + 0.5, yy); ctx.lineTo(xx + 0.5, yy + 16); ctx.stroke();
+        }
+      }
+      return cv;
+    },
+    // Jalan batu bulat (cobblestone): kerikil besar dengan nat gelap.
+    cobble: function () {
+      var n = makeTileFbm(157, 16, 2);
+      var cv = drawGray(128, function (x, y, s) {
+        return 0.80 + n(x, y, s) * 0.09;
+      });
+      var ctx = cv.ctx;
+      var cells = [
+        [8, 10, 13], [34, 7, 10], [57, 12, 14], [87, 6, 11], [112, 13, 12],
+        [6, 40, 11], [29, 35, 14], [57, 42, 9], [81, 34, 13], [111, 40, 15],
+        [10, 71, 13], [38, 68, 10], [64, 74, 14], [96, 66, 10], [119, 76, 11],
+        [4, 104, 10], [28, 101, 13], [55, 108, 11], [85, 100, 14], [113, 109, 10]
+      ];
+      for (var i = 0; i < cells.length; i++) {
+        var c = cells[i];
+        ctx.fillStyle = 'rgba(30,28,26,0.20)';
+        ctx.beginPath(); ctx.ellipse(c[0] + 1.5, c[1] + 2, c[2] * 0.9, c[2] * 0.64, 0.4, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = 'rgba(20,19,18,0.48)';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.ellipse(c[0], c[1], c[2] * 0.92, c[2] * 0.66, 0.4, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,0.07)';
+        ctx.beginPath(); ctx.ellipse(c[0] - 1, c[1] - 1, c[2] * 0.68, c[2] * 0.42, 0.4, 0, Math.PI * 2); ctx.fill();
+      }
+      return cv;
+    },
+    // Sirap atap: baris genting kayu/batu tumpang tindih.
+    shingle: function () {
+      var n = makeTileFbm(158, 24, 2), n2 = makeTileFbm(159, 5, 1);
+      var cv = drawGray(128, function (x, y, s) {
+        return 0.82 + n(x, y, s) * 0.08 + n2(x, y, s) * 0.055;
+      });
+      var ctx = cv.ctx;
+      for (var row = 0; row < 8; row++) {
+        var yy = row * 16;
+        ctx.fillStyle = 'rgba(20,18,16,0.28)';
+        ctx.fillRect(0, yy + 14, 128, 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.055)';
+        ctx.fillRect(0, yy + 1, 128, 1);
+        var off = (row % 2) ? 12 : 0;
+        ctx.strokeStyle = 'rgba(24,21,18,0.24)';
+        ctx.lineWidth = 1;
+        for (var xx = off; xx < 128; xx += 24) {
+          ctx.beginPath(); ctx.moveTo(xx + 0.5, yy + 1); ctx.lineTo(xx + 0.5, yy + 16); ctx.stroke();
+        }
+      }
+      return cv;
+    },
     // Ijuk atap: serat miring panjang + lapisan
     thatch: function () {
       var n = makeTileFbm(151, 22, 2), n2 = makeTileFbm(152, 5, 1);

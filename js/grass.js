@@ -13,8 +13,8 @@
   var SLOTS = (RADIUS * 2 + 1) * (RADIUS * 2 + 1);
   var FILL_PER_FRAME = 2;
 
-  var GREENS = [0x4E8C3C, 0x5A9C46, 0x437B34, 0x66A852, 0x3F7A33];
-  var PETALS = [0xF2F0E4, 0xFFD966, 0xFF8FB1, 0xC9A0F0, 0xFFF0B8];
+  var GREENS = [0x3F5A32, 0x4A6939, 0x344C2A, 0x577741, 0x2E4528];
+  var PETALS = [0xE8E4D5, 0xD8B85A, 0xA8B6D6, 0xB98B5A, 0xE6D58C];
 
   function srgb(hex) { return new THREE.Color(hex).convertSRGBToLinear(); }
 
