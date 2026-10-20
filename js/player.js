@@ -551,7 +551,7 @@
     this._locoState = null;
     this._atkAction = null;
     if (A.idle) this._fadeTo(A.idle, 0.01);
-    console.log('[Pulau Nusantara] Model pemain aktif (KayKit Barbarian)');
+    console.log('[Aetheria] Model pemain aktif (KayKit Barbarian)');
     return true;
   };
 

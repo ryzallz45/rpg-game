@@ -750,7 +750,7 @@
       if (!name || !lib.has(name)) continue;
       if (e.attachModel(lib, name)) count++;
     }
-    if (count) console.log('[Pulau Nusantara] Model makhluk aktif: ' + count + ' ekor');
+    if (count) console.log('[Aetheria] Model makhluk aktif: ' + count + ' ekor');
     return count;
   };
 

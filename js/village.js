@@ -315,7 +315,7 @@
       npc.attachModel(spawned);
       count++;
     }
-    if (count) console.log('[Pulau Nusantara] Model penduduk aktif: ' + count + ' warga');
+    if (count) console.log('[Aetheria] Model penduduk aktif: ' + count + ' warga');
     return count;
   };
 

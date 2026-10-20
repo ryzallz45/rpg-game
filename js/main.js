@@ -124,12 +124,12 @@
       composer.setSize(window.innerWidth, window.innerHeight);
       updateFxaaResolution();
       updateBloomSize();
-      console.log('[Pulau Nusantara] Post-processing aktif (bloom + FXAA)');
+      console.log('[Aetheria] Post-processing aktif (bloom + FXAA)');
     } catch (e) {
       composer = null;
       bloomPass = null;
       fxaaPass = null;
-      if (window.console) console.warn('[Pulau Nusantara] Post-processing gagal:', e && e.message);
+      if (window.console) console.warn('[Aetheria] Post-processing gagal:', e && e.message);
     }
   }
   function updatePostFx() {
@@ -755,7 +755,7 @@
     if (world && world.villageSpots && world.villageSpots[0]) {
       list.push({
         id: 'village', x: world.villageSpots[0].x, z: world.villageSpots[0].z,
-        label: L('map.poi.village', 'Desa Nusantara')
+        label: L('map.poi.village', 'Desa Aetheria')
       });
     }
     if (world && world.harborSpot) {
@@ -779,7 +779,7 @@
 
   function waypointLabel() {
     if (!waypoint) return '';
-    if (waypoint.poi === 'village') return L('map.poi.village', 'Desa Nusantara');
+    if (waypoint.poi === 'village') return L('map.poi.village', 'Desa Aetheria');
     if (waypoint.poi === 'harbor') return L('map.poi.harbor', 'Pelabuhan');
     if (waypoint.poi === 'hut') return L('map.poi.hut', 'Pondok Paman Dera');
     if (waypoint.poi === 'hut2') return L('map.poi.hut2', 'Pondok Pulau');
@@ -1090,7 +1090,7 @@
         setTimeout(function () {
           var t0 = performance.now();
           function done() {
-            console.log('[Pulau Nusantara] ' + label + ' (' + (performance.now() - t0).toFixed(0) + ' ms)');
+            console.log('[Aetheria] ' + label + ' (' + (performance.now() - t0).toFixed(0) + ' ms)');
             i++;
             step();
           }
@@ -1099,7 +1099,7 @@
             if (r && typeof r.then === 'function') r.then(done, done);
             else done();
           } catch (e) {
-            console.error('[Pulau Nusantara] Gagal saat: ' + label, e);
+            console.error('[Aetheria] Gagal saat: ' + label, e);
             done();
           }
         }, 30);
@@ -1135,7 +1135,7 @@
       show(dom.menu);
       state = 'menu';
       refreshSaveUi();
-      console.log('[Pulau Nusantara] Dunia siap — silakan mulai menjelajah.');
+      console.log('[Aetheria] Dunia siap — silakan mulai menjelajah.');
       clock.start();
       animate();
       // Hook pengujian/otomasi

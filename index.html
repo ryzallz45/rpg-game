@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pulau Nusantara — Eksplorasi 3D</title>
+  <title>Aetheria: Legacy of the Dawn — Eksplorasi 3D</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -12,7 +12,7 @@
   <!-- HUD saat bermain -->
   <div id="hud" class="hidden">
     <div id="hud-top-left">
-      <div class="hud-game-title">PULAU NUSANTARA</div>
+      <div class="hud-game-title">AETHERIA<span>Legacy of the Dawn</span></div>
       <div id="hud-clock">--:--</div>
     </div>
     <div id="player-tag" class="hidden"><span id="v-level">Lv 1</span></div>
@@ -100,15 +100,95 @@
   </div>
 
   <!-- Menu utama -->
-  <div id="menu" class="overlay hidden">
-    <div class="panel">
-      <h1>PULAU NUSANTARA</h1>
-      <p class="subtitle" data-i18n="menu.subtitle">Eksplorasi dunia 3D low-poly — pulau prosedural, desa &amp; penduduk, siklus siang–malam, dan laut bergelombang</p>
-      <button id="btn-continue" class="btn continue hidden" data-i18n="menu.continue">▶ Lanjutkan Perjalanan</button>
+  <div id="menu" class="overlay menu-overlay hidden">
+    <div class="menu-embers" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="panel rpg-panel menu-panel">
+      <span class="menu-corner tl" aria-hidden="true"></span>
+      <span class="menu-corner tr" aria-hidden="true"></span>
+      <span class="menu-corner bl" aria-hidden="true"></span>
+      <span class="menu-corner br" aria-hidden="true"></span>
+
+      <div class="menu-crest" aria-hidden="true">
+        <svg viewBox="0 0 140 120" role="presentation" focusable="false">
+          <defs>
+            <linearGradient id="crestGold" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#fff0bd"></stop>
+              <stop offset=".42" stop-color="#d9b36a"></stop>
+              <stop offset=".72" stop-color="#9a7134"></stop>
+              <stop offset="1" stop-color="#f0d493"></stop>
+            </linearGradient>
+            <radialGradient id="crestGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0" stop-color="#e8be6a" stop-opacity=".34"></stop>
+              <stop offset="1" stop-color="#e8be6a" stop-opacity="0"></stop>
+            </radialGradient>
+          </defs>
+          <circle cx="70" cy="60" r="54" fill="url(#crestGlow)"></circle>
+          <circle cx="70" cy="60" r="45" fill="none" stroke="url(#crestGold)" stroke-width="1.5"></circle>
+          <circle cx="70" cy="60" r="39" fill="none" stroke="#8f6b34" stroke-width=".8" stroke-dasharray="1 5" opacity=".8"></circle>
+          <g fill="none" stroke="url(#crestGold)" stroke-linecap="round">
+            <path d="M70 18v-8M48 26l-5-6M92 26l5-6M35 42l-7-3M105 42l7-3" stroke-width="1.2" opacity=".8"></path>
+            <path d="M52 67a18 18 0 0 1 36 0" stroke-width="2"></path>
+            <path d="M43 72h54" stroke-width="1.1" opacity=".7"></path>
+            <path d="M31 83c7-5 14 5 21 0s14 5 21 0 14 5 21 0 14 5 21 0" stroke-width="1.5"></path>
+            <path d="M37 91c6-4 12 4 18 0s12 4 18 0 12 4 18 0 12 4 18 0" stroke-width="1" opacity=".55"></path>
+          </g>
+          <path d="M28 79l16-22 10 12 9-14 16 20 11-8 14 12" fill="#17120d" stroke="#b68b47" stroke-width="1.3" stroke-linejoin="round"></path>
+          <path d="M70 40v16" stroke="url(#crestGold)" stroke-width="1.5" stroke-linecap="round"></path>
+          <path d="m70 34 3.5 6-3.5 6-3.5-6z" fill="#f3d995"></path>
+        </svg>
+      </div>
+
+      <h1 class="menu-title">AETHERIA</h1>
+      <div class="menu-legacy">Legacy of the Dawn</div>
+      <div class="menu-divider" aria-hidden="true"><span></span><b></b><span></span></div>
+      <p class="subtitle menu-subtitle" data-i18n="menu.subtitle">Di bawah fajar terakhir, bangkitlah dari pantai Aetheria — jelajahi pulau, desa, dan lautan terbuka.</p>
+
+      <button id="btn-continue" type="button" class="btn continue menu-btn hidden">
+        <span class="btn-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M7 4h9a2 2 0 0 1 2 2v12a2 2 0 0 0 2 2H8a2 2 0 0 1-2-2V6a2 2 0 0 1 1-2Z"></path>
+            <path d="M9 8h6M9 12h6M9 16h4"></path>
+          </svg>
+        </span>
+        <span class="btn-label" data-i18n="menu.continue">Lanjutkan Perjalanan</span>
+        <span class="btn-glyph" aria-hidden="true">›</span>
+      </button>
       <p id="menu-save-info" class="save-info hidden"></p>
-      <button id="btn-start" class="btn primary" data-i18n="menu.play">Mulai Menjelajah</button>
-      <button id="btn-settings" class="btn" data-i18n="menu.settings">Pengaturan</button>
-      <button id="btn-exit" class="btn danger" data-i18n="menu.exit">Keluar</button>
+
+      <button id="btn-start" type="button" class="btn primary menu-btn">
+        <span class="btn-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3.6"></circle>
+            <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.2 5.2l2.1 2.1M16.7 16.7l2.1 2.1M5.2 18.8l2.1-2.1M16.7 7.3l2.1-2.1"></path>
+          </svg>
+        </span>
+        <span class="btn-label" data-i18n="menu.play">Mulai Menjelajah</span>
+        <span class="btn-glyph" aria-hidden="true">›</span>
+      </button>
+      <button id="btn-settings" type="button" class="btn menu-btn">
+        <span class="btn-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3.2"></circle>
+            <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21H9.6v-.1A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.86-2.86.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3V9.6h.1A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06L7.06 3.8l.06.06A1.7 1.7 0 0 0 9 4.2a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V2.4h4v.1A1.7 1.7 0 0 0 15.4 4.2a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.86 2.86-.06.06A1.7 1.7 0 0 0 19.4 8.6a1.7 1.7 0 0 0 .6 1 1.7 1.7 0 0 0 1.1.4h.1v4h-.1a1.7 1.7 0 0 0-1.7 1Z"></path>
+          </svg>
+        </span>
+        <span class="btn-label" data-i18n="menu.settings">Pengaturan</span>
+        <span class="btn-glyph" aria-hidden="true">›</span>
+      </button>
+      <button id="btn-exit" type="button" class="btn danger menu-btn">
+        <span class="btn-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h8"></path>
+            <path d="M10 12h11m-4-4 4 4-4 4"></path>
+          </svg>
+        </span>
+        <span class="btn-label" data-i18n="menu.exit">Keluar</span>
+        <span class="btn-glyph" aria-hidden="true">›</span>
+      </button>
+
       <p class="menu-links"><a href="#" id="btn-how" data-i18n="menu.how">Cara Bermain</a></p>
       <div id="how-to" class="how-to hidden">
         <ul>
@@ -134,8 +214,8 @@
   </div>
 
   <!-- Pengaturan: Audio / Grafik / Bahasa -->
-  <div id="settings" class="overlay hidden">
-    <div class="panel">
+  <div id="settings" class="overlay rpg-overlay hidden">
+    <div class="panel rpg-panel">
       <h1 class="panel-title" data-i18n="set.title">PENGATURAN</h1>
       <div class="set-tabs">
         <button class="set-tab active" data-tab="audio" data-i18n="set.tab.audio">Audio</button>
@@ -177,16 +257,16 @@
   </div>
 
   <!-- Keluar -->
-  <div id="exitdlg" class="overlay hidden">
-    <div class="panel" id="exit-ask">
+  <div id="exitdlg" class="overlay rpg-overlay hidden">
+    <div class="panel rpg-panel" id="exit-ask">
       <h1 class="panel-title" data-i18n="exit.title">KELUAR?</h1>
       <p class="subtitle" data-i18n="exit.text">Terima kasih sudah bermain. Yakin ingin menutup permainan?</p>
       <button id="btn-exit-yes" class="btn danger" data-i18n="exit.yes">Ya, keluar</button>
       <button id="btn-exit-no" class="btn primary" data-i18n="exit.no">Batal</button>
     </div>
-    <div class="panel hidden" id="exit-bye">
+    <div class="panel rpg-panel hidden" id="exit-bye">
       <h1 class="panel-title" data-i18n="bye.title">SAMPAI JUMPA</h1>
-      <p class="subtitle" data-i18n="bye.text">Terima kasih sudah bermain Pulau Nusantara! Tutup tab ini untuk keluar.</p>
+      <p class="subtitle" data-i18n="bye.text">Terima kasih sudah bermain Aetheria: Legacy of the Dawn! Tutup tab ini untuk keluar.</p>
       <button id="btn-bye-back" class="btn primary" data-i18n="bye.back">Kembali ke Menu</button>
     </div>
   </div>
@@ -204,14 +284,14 @@
   <div id="fade"></div>
 
   <!-- Menu jeda -->
-  <div id="pause" class="overlay hidden">
-    <div class="panel">
+  <div id="pause" class="overlay rpg-overlay hidden">
+    <div class="panel rpg-panel">
       <h1 data-i18n="pause.title">JEDA</h1>
       <p class="subtitle" data-i18n="pause.subtitle">Perjalanan dihentikan sebentar.</p>
       <button id="btn-resume" class="btn primary" data-i18n="pause.resume">Lanjutkan</button>
       <div class="pause-save-row">
-        <button id="btn-save" class="btn" data-i18n="pause.save">💾 Simpan</button>
-        <button id="btn-load" class="btn" data-i18n="pause.load">📂 Muat</button>
+        <button id="btn-save" class="btn" data-i18n="pause.save">Simpan</button>
+        <button id="btn-load" class="btn" data-i18n="pause.load">Muat</button>
       </div>
       <p id="pause-save-info" class="save-info">Belum ada simpanan</p>
       <button id="btn-pause-settings" class="btn" data-i18n="pause.settings">Pengaturan</button>
@@ -225,7 +305,7 @@
     <div class="wm-panel">
       <div class="wm-head">
         <div class="wm-title-wrap">
-          <h1 id="wm-title" class="wm-title" data-i18n="map.title">PETA NUSANTARA</h1>
+          <h1 id="wm-title" class="wm-title" data-i18n="map.title">PETA AETHERIA</h1>
           <div class="wm-sub" data-i18n="map.subtitle">Peta dunia — klik lokasi untuk menandai tujuan</div>
         </div>
         <div class="wm-head-right">
@@ -239,7 +319,7 @@
         · <span data-i18n="map.locked">gerak &amp; serangan terkunci</span>
       </div>
       <div class="wm-map-wrap">
-        <canvas id="worldmap-canvas" width="1024" height="1024" aria-label="Peta Nusantara"></canvas>
+        <canvas id="worldmap-canvas" width="1024" height="1024" aria-label="Peta Aetheria"></canvas>
       </div>
       <div class="wm-foot">
         <div id="wm-target" class="wm-target">Belum ada tujuan — klik lokasi di peta</div>
@@ -270,9 +350,10 @@
   </div>
 
   <!-- Layar pemuatan -->
-  <div id="loading" class="overlay">
-    <div class="panel">
-      <h1>PULAU NUSANTARA</h1>
+  <div id="loading" class="overlay rpg-overlay">
+    <div class="panel rpg-panel loading-panel">
+      <h1 class="brand-title">AETHERIA</h1>
+      <div class="brand-sub">Legacy of the Dawn</div>
       <div id="loading-text" data-i18n="loading.init">Menyiapkan mesin 3D...</div>
       <div class="loading-bar"><div id="loading-fill"></div></div>
     </div>

@@ -353,7 +353,7 @@ if (Lang) {
   Lang.set('id');
   var back = Lang.tx('menu.play', 'Mulai Menjelajah');
   console.log('  Terjemahan: id="' + before + '" → en="' + after + '" → id="' + back + '", label memuat (en): "' + loadLabel + '" → ' +
-    (before === 'Mulai Menjelajah' && after === '▶ Play' && back === 'Mulai Menjelajah' && langLabelOk(loadLabel) ? 'OK ✓' : 'PERIKSA!'));
+    (before === 'Mulai Menjelajah' && after === 'Begin Adventure' && back === 'Mulai Menjelajah' && langLabelOk(loadLabel) ? 'OK ✓' : 'PERIKSA!'));
 } else {
   console.log('  Terjemahan: GAGAL!');
 }

@@ -48,7 +48,7 @@
       try {
         if (typeof location !== 'undefined' && location.protocol === 'file:') {
           self.error = 'file';
-          console.warn('[Pulau Nusantara] Mode file:// — model 3D dilewati. Jalankan jalankan.bat untuk grafis penuh.');
+          console.warn('[Aetheria] Mode file:// — model 3D dilewati. Jalankan jalankan.bat untuk grafis penuh.');
           resolve(self);
           return;
         }
@@ -59,7 +59,7 @@
         var step = function () {
           if (--pending > 0) return;
           self.ready = true;
-          console.log('[Pulau Nusantara] Model 3D siap: ' + Object.keys(self.models).length + '/' + names.length +
+          console.log('[Aetheria] Model 3D siap: ' + Object.keys(self.models).length + '/' + names.length +
             (self.failed.length ? ' (gagal: ' + self.failed.join(', ') + ')' : ''));
           resolve(self);
         };
@@ -82,7 +82,7 @@
         });
       } catch (e) {
         self.error = (e && e.message) || 'gagal';
-        if (global.console) console.warn('[Pulau Nusantara] Model 3D gagal dimuat:', self.error);
+        if (global.console) console.warn('[Aetheria] Model 3D gagal dimuat:', self.error);
         resolve(self);
       }
     });

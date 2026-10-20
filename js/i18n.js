@@ -10,11 +10,11 @@
   /* ---------- Kamus kunci (elemen ber-atribut data-i18n) ---------- */
   var EN = {
     /* Menu utama */
-    'menu.subtitle': 'A low-poly 3D world to explore — procedural island, village & villagers, day–night cycle, and rolling seas',
-    'menu.continue': '▶ Continue Journey',
-    'menu.play': '▶ Play',
-    'menu.settings': '⚙ Settings',
-    'menu.exit': '✕ Exit',
+    'menu.subtitle': 'Beneath the last dawn, rise from the shores of Aetheria — explore its isles, villages, and open seas.',
+    'menu.continue': 'Continue Journey',
+    'menu.play': 'Begin Adventure',
+    'menu.settings': 'Settings',
+    'menu.exit': 'Exit',
     'menu.how': 'How to Play',
     'menu.footnote': 'Built with Three.js — procedural world, textures & story (no internet). 3D models (CC0) load when launched via jalankan.bat; double-click mode stays procedural.',
 
@@ -46,7 +46,7 @@
     'set.audio.music': 'Music & ambience',
     'set.audio.sfx': 'Sound effects',
     'set.audio.note': 'All audio is synthesized inside the game — no audio files needed.',
-    'set.audio.test': '🔊 Play a sample',
+    'set.audio.test': 'Play a sample',
     'set.graphics.title': 'Graphics quality',
     'set.graphics.note': 'HD & Ultra: sharper image, soft shadows, textures, effects & 3D character models. Fast is for weaker devices.',
     'q.cepat': 'Fast',
@@ -61,16 +61,16 @@
     'exit.yes': 'Yes, exit',
     'exit.no': 'Cancel',
     'bye.title': 'SEE YOU SOON',
-    'bye.text': 'Thanks for playing Pulau Nusantara! Close this tab to exit.',
+    'bye.text': 'Thanks for playing Aetheria: Legacy of the Dawn! Close this tab to exit.',
     'bye.back': 'Back to Menu',
 
     /* Jeda */
     'pause.title': 'PAUSED',
     'pause.subtitle': 'Your journey is on hold for a moment.',
     'pause.resume': 'Resume',
-    'pause.save': '💾 Save',
-    'pause.load': '📂 Load',
-    'pause.settings': '⚙ Settings',
+    'pause.save': 'Save',
+    'pause.load': 'Load',
+    'pause.settings': 'Settings',
     'pause.menu': 'Back to Menu',
     'pause.footnote': 'Save/load is available above. Hold the right mouse button to orbit the camera.',
 
@@ -102,7 +102,7 @@
     'map.local': 'LOCAL',
 
     /* Peta besar & tujuan (Fase 5 lanjutan) */
-    'map.title': 'NUSANTARA MAP',
+    'map.title': 'AETHERIA MAP',
     'map.subtitle': 'World map — click a location to mark your destination',
     'map.running': 'The world keeps running',
     'map.hint': 'Click a location to mark your destination',
@@ -110,7 +110,7 @@
     'map.noTarget': 'No destination yet — click a location on the map',
     'map.targetPrefix': 'Destination',
     'map.freeTarget': 'Custom point',
-    'map.poi.village': 'Nusantara Village',
+    'map.poi.village': 'Aetheria Village',
     'map.poi.harbor': 'Harbour',
     'map.poi.hut': "Paman Dera's Hut",
     'map.poi.hut2': 'Island Hut',
@@ -138,16 +138,16 @@
 
     /* Trailer */
     'trailer.skip': 'Click / press any key to skip',
-    'trailer.c1t': 'PULAU NUSANTARA',
-    'trailer.c1s': 'A 3D adventure across the islands of the archipelago',
+    'trailer.c1t': 'AETHERIA',
+    'trailer.c1s': 'Legacy of the Dawn — a 3D adventure across the isles of Aetheria',
     'trailer.c2t': 'Beaches & forests',
     'trailer.c2s': 'Follow the coast, forests and harbour — sail out and explore the isles',
     'trailer.c3t': 'Meet the villagers',
     'trailer.c3s': 'Help them with their little quests',
     'trailer.c4t': 'Face the wild',
     'trailer.c4s': 'Boars, bandits and slimes — collect loot, level up',
-    'trailer.c5t': 'Pulau Nusantara',
-    'trailer.c5s': 'happy exploring!'
+    'trailer.c5t': 'AETHERIA',
+    'trailer.c5s': 'Legacy of the Dawn — the dawn awaits'
   };
 
   /* ---------- Kamus untai dinamis (teks Indonesia → Inggris) ---------- */

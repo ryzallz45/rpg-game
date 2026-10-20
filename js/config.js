@@ -1,4 +1,4 @@
-/* Konfigurasi global game — "Pulau Nusantara" (Low-Poly).
+/* Konfigurasi global game — "Aetheria: Legacy of the Dawn" (Low-Poly).
    Seluruh dunia dibuat prosedural: tanpa berkas aset, tanpa server. */
 (function (global) {
   'use strict';
@@ -10,7 +10,7 @@
   var WORLD_SIZE = 3240;
 
   var CONFIG = {
-    GAME_TITLE: 'Pulau Nusantara',
+    GAME_TITLE: 'Aetheria: Legacy of the Dawn',
     PHASE: 'Low-Poly',
 
     RENDER: {

@@ -1,4 +1,4 @@
-# Pulau Nusantara — Eksplorasi 3D Low-Poly
+# Aetheria: Legacy of the Dawn — Eksplorasi 3D Low-Poly
 
 Game eksplorasi 3D open-world (mini RPG) berbasis Three.js r128. Seluruh dunia,
 vegetasi, langit, dan karakter dibuat **prosedural** — cukup dobel-klik
@@ -28,6 +28,11 @@ dilewati dengan klik/tombol apa pun — lalu masuk game), **Pengaturan**, dan
 **Keluar**. Bila ada simpanan, tombol emas **Lanjutkan Perjalanan** muncul di
 atas beserta ringkasan level, jam dunia, dan waktu simpan. Menu **Pengaturan**
 (juga bisa dibuka dari menu jeda) berisi tiga tab:
+
+Tampilan menu memakai tema **medieval tavern** — panel kulit gelap, bingkai besi
+dan emas, emblem fajar SVG, tombol plakat berikon, serta font lokal
+**Cinzel Decorative / Cinzel / Alegreya**. Semua font disimpan di repo, jadi menu
+tetap tampil penuh saat dibuka lewat `file://` tanpa internet.
 
 - **Audio** — slider musik/suasana & efek suara. Semua suara dibuat **prosedural
   dengan Web Audio** (ombak, pad lembut, desis malam, tebasan, jarahan, naik
@@ -91,7 +96,7 @@ gerak & serangan dikunci, dan peta menutup otomatis bila pemain diserang.
   potongan aktif ±90 m, 2 potongan per frame) — ±1.400 rumpun + ±200 bunga instanced
   di sekitar pemain, bergoyang tertiup angin (shader), hanya di daratan berumput.
   Dengan dunia 10×, biaya gambar rumput tetap konstan
-- **Desa Nusantara (utama)**: alun-alun besar, 10 rumah panggung yang **bisa
+- **Desa Aetheria (utama)**: alun-alun besar, 10 rumah panggung yang **bisa
   dimasuki** (pintu terbuka 1,5×2,15 m, tangga depan, lantai rendah), **balai
   desa** terbesar (pintu 1,8×2,3 m), sumur batu, pagar kayu, dan **3 tiang
   lampu alun-alun** — ukuran rumah **normal untuk manusia**, langit-langit dalam
@@ -157,7 +162,7 @@ gerak & serangan dikunci, dan peta menutup otomatis bila pemain diserang.
   plus panah tepi bila sasaran jauh.
 - **Peta besar & tujuan (Fase 5 lanjutan)**: klik peta mini atau tombol 🗺️
   membuka peta seluruh dunia (kanvas 1024² dari peta dasar 512² yang sama) dengan
-  ikon & label **Desa Nusantara**, **Pelabuhan**, **Pondok Paman Dera**, dan
+  ikon & label **Desa Aetheria**, **Pelabuhan**, **Pondok Paman Dera**, dan
   **Pondok Pulau**. Klik ikon/label — tujuan menempel otomatis — atau titik bebas;
   footer menampilkan label & jarak, tombol **Hapus Tujuan** dan **Tutup & Jalan**
   (atau ✕/Esc). Setelah ditutup: **panah kompas** di HUD berputar relatif kamera,
@@ -251,6 +256,7 @@ js/boat.js              pelabuhan (dermaga) + perahu cadik: naik/turun, kemudi, 
 js/enemies.js           makhluk (babi/bandit/slime), AI, pertarungan, jarahan, bilah HP
 js/main.js              game loop, pemuatan bertahap, menu/pengaturan/keluar, trailer, kamera, HUD, simpan/muat, peta besar & tujuan, efek
 assets/models/*.glb     model karakter 3D CC0 (KayKit + Quaternius)
+assets/fonts/*.woff2    font menu lokal (Cinzel Decorative, Cinzel, Alegreya) + lisensi OFL
 server.js               server statis opsional (tanpa dependensi)
 jalankan.bat            peluncur opsional untuk pemain (server + browser)
 tools/                  uji & alat (Node)
@@ -263,6 +269,8 @@ tools/                  uji & alat (Node)
   `lib/postprocessing`, `lib/shaders`).
 - Model karakter 3D — CC0 1.0 / domain publik: KayKit Character Pack Adventures
   (Kay Lousberg) dan Quaternius (babi hutan) — rincian di `assets/LICENSE.txt`.
+- Font menu — **Cinzel**, **Cinzel Decorative**, dan **Alegreya**, dilisensikan
+  SIL Open Font License 1.1; berkas lisensi ada di `assets/fonts/`.
 
 ## Peta jalan
 
@@ -279,5 +287,6 @@ tools/                  uji & alat (Node)
 - [x] **Grafis G4** — Post-processing: bloom + FXAA (pustaka r128 lokal)
 - [x] **Grafis G5** — Model karakter 3D CC0 (KayKit & Quaternius) + fallback prosedural
 - [x] **Menu M1** — Menu utama (Mulai/Pengaturan/Keluar), trailer sinematik pra-game, pengaturan audio prosedural / grafis / bahasa ID–EN
+- [x] **Menu M2** — Redesign medieval tavern: panel kulit/emas, emblem fajar, tombol plakat berikon, font Cinzel/Alegreya lokal, partikel debu emas, branding Aetheria
 - [x] **Grafis G6** — Lingkungan: terrain lebih halus + tekstur tanah, pohon lebih tinggi + cemara, rumah besar yang bisa dimasuki + lampu malam
 - [x] **Grafis G7** — Pohon lebih tinggi (kelapa melengkung + pelepah 3D), hotbar item + panel tas besar, label level di atas kepala, instruksi/FPS disembunyikan

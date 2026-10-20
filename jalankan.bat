@@ -1,5 +1,5 @@
 @echo off
-title Pulau Nusantara - Server Lokal
+title Aetheria - Legacy of the Dawn - Server Lokal
 cd /d "%~dp0"
 
 where node >nul 2>nul
@@ -13,7 +13,7 @@ if errorlevel 1 (
 )
 
 echo ================================================
-echo    PULAU NUSANTARA - menyalakan server lokal
+echo    AETHERIA - Legacy of the Dawn - menyalakan server lokal
 echo    Alamat: http://localhost:8317/
 echo    Biarkan jendela ini terbuka selama bermain.
 echo ================================================

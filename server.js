@@ -1,4 +1,4 @@
-/* Server statis mini untuk "Pulau Nusantara" — tanpa dependensi (Node saja). */
+/* Server statis mini untuk "Aetheria: Legacy of the Dawn" — tanpa dependensi (Node saja). */
 'use strict';
 var http = require('http');
 var fs = require('fs');
@@ -18,6 +18,8 @@ var MIME = {
   '.png': 'image/png',
   '.webp': 'image/webp',
   '.hdr': 'application/octet-stream',
+  '.woff2': 'font/woff2',
+  '.woff': 'font/woff',
   '.glb': 'model/gltf-binary',
   '.gltf': 'model/gltf+json',
   '.bin': 'application/octet-stream',
@@ -50,7 +52,7 @@ http.createServer(function (req, res) {
   });
 }).listen(PORT, function () {
   console.log('================================================');
-  console.log('  PULAU NUSANTARA - server lokal berjalan');
+  console.log('  AETHERIA - Legacy of the Dawn');
   console.log('  Buka   : http://localhost:' + PORT + '/');
   console.log('  Tutup jendela ini untuk mematikan server.');
   console.log('================================================');

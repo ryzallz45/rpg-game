@@ -225,7 +225,7 @@
       if (this.onEnvReady) this.onEnvReady(this.envTexture);
     } catch (e) {
       this._envEnabled = false; // jangan coba lagi kalau gagal
-      if (window.console) console.warn('[Pulau Nusantara] Env map gagal:', e && e.message);
+      if (window.console) console.warn('[Aetheria] Env map gagal:', e && e.message);
     }
   };
 

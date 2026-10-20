@@ -1,8 +1,44 @@
-/* Tampilan UI "Pulau Nusantara" — tema laut & senja. */
+/* Tampilan UI "Aetheria: Legacy of the Dawn" — tema laut, senja & fantasi. */
+@font-face {
+  font-family: "Cinzel Decorative";
+  src: url("../assets/fonts/cinzel-decorative-700.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Cinzel";
+  src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Alegreya";
+  src: url("../assets/fonts/alegreya-latin.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Alegreya";
+  src: url("../assets/fonts/alegreya-italic-latin.woff2") format("woff2");
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+}
+
 :root {
   --accent: #ffd166;
   --accent2: #7bd5e6;
   --text: #eaf6ff;
+  --rpg-gold: #c9a35e;
+  --rpg-gold-bright: #f1d99a;
+  --rpg-gold-dim: #8f6b3a;
+  --rpg-cream: #e7d4ad;
+  --rpg-ink: #120e0a;
+  --rpg-leather: #241b13;
+  --rpg-iron: #191613;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1284,21 +1320,23 @@ h1 {
 #trailer-card.show { opacity: 1; transform: translate(-50%, -50%) translateY(0); }
 
 #trailer-card .t-title {
+  font-family: "Cinzel Decorative", "Cinzel", Georgia, serif;
   font-size: 42px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 8px;
   line-height: 1.25;
-  background: linear-gradient(90deg, var(--accent2), var(--accent));
+  background: linear-gradient(180deg, #fff6d7 0%, #efd28d 35%, #b17f36 70%, #f2dfa5 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.65));
+  filter: drop-shadow(0 3px 0 rgba(22, 13, 5, 0.8)) drop-shadow(0 4px 16px rgba(0, 0, 0, 0.7));
 }
 #trailer-card .t-sub {
   margin-top: 12px;
+  color: #efdfbd;
+  font-family: "Alegreya", Georgia, serif;
   font-size: 17px;
-  color: #eaf6ff;
-  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.85);
 }
 
 #trailer-skip {
@@ -1306,12 +1344,13 @@ h1 {
   bottom: calc(9vh + 16px);
   left: 50%;
   transform: translateX(-50%);
-  font-size: 13px;
-  color: rgba(234, 246, 255, 0.9);
-  background: rgba(8, 20, 30, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
   padding: 7px 18px;
+  border: 1px solid rgba(198, 158, 96, 0.36);
+  border-radius: 999px;
+  background: rgba(24, 18, 12, 0.72);
+  color: rgba(236, 219, 184, 0.92);
+  font-family: "Alegreya", Georgia, serif;
+  font-size: 13px;
   animation: skipPulse 2.2s ease-in-out infinite;
 }
 
@@ -1343,5 +1382,651 @@ h1 {
 @media (max-width: 620px) {
   #trailer-card .t-title { font-size: 28px; letter-spacing: 5px; }
   #trailer-card .t-sub { font-size: 14px; }
+}
+
+/* ============================================================
+   Menu RPG "Medieval Tavern" — kulit gelap, besi, emas tua
+   ============================================================ */
+
+/* Overlay & panel dasar untuk menu, jeda, pengaturan, keluar, pemuatan */
+.rpg-overlay {
+  background:
+    radial-gradient(ellipse at 50% 24%, rgba(128, 91, 48, 0.26), transparent 55%),
+    radial-gradient(ellipse at 50% 50%, rgba(25, 18, 12, 0.72), rgba(5, 4, 3, 0.95));
+}
+
+.rpg-panel {
+  position: relative;
+  border: 1px solid rgba(198, 158, 96, 0.48);
+  border-radius: 5px;
+  background:
+    radial-gradient(ellipse at 18% 0%, rgba(255, 225, 163, 0.07), transparent 35%),
+    repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.014) 0 1px, transparent 1px 5px),
+    linear-gradient(160deg, #2b2118 0%, #1b1510 52%, #0f0c09 100%);
+  color: var(--rpg-cream);
+  box-shadow:
+    0 28px 72px rgba(0, 0, 0, 0.72),
+    0 0 0 5px rgba(10, 8, 6, 0.58),
+    0 0 0 6px rgba(183, 143, 82, 0.17),
+    inset 0 1px 0 rgba(255, 231, 177, 0.12),
+    inset 0 0 48px rgba(0, 0, 0, 0.3);
+  scrollbar-color: rgba(185, 143, 80, 0.46) transparent;
+}
+
+.rpg-panel::before {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border: 1px solid rgba(196, 158, 98, 0.2);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.rpg-panel::-webkit-scrollbar-thumb { background: rgba(185, 143, 80, 0.42); }
+
+.rpg-panel h1,
+.rpg-panel .panel-title {
+  font-family: "Cinzel Decorative", "Cinzel", Georgia, serif;
+  font-weight: 700;
+  background: linear-gradient(180deg, #fff2c9 0%, #e3c173 38%, #a5762f 70%, #eed79a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 0 rgba(28, 18, 8, 0.85));
+}
+
+.rpg-panel .panel-title {
+  font-size: 25px;
+  letter-spacing: 5px;
+  margin-bottom: 14px;
+}
+
+.rpg-panel .subtitle {
+  color: #cbb692;
+  font-family: "Alegreya", Georgia, serif;
+  font-size: 14.5px;
+  line-height: 1.62;
+}
+
+.rpg-panel .btn {
+  border: 1px solid rgba(177, 137, 76, 0.44);
+  border-radius: 3px;
+  background: linear-gradient(180deg, rgba(54, 43, 31, 0.96), rgba(24, 19, 14, 0.98));
+  color: #ddc9a3;
+  font-family: "Cinzel", Georgia, serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 232, 178, 0.1),
+    0 3px 10px rgba(0, 0, 0, 0.26);
+  transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+
+.rpg-panel .btn:hover {
+  border-color: rgba(225, 187, 114, 0.72);
+  background: linear-gradient(180deg, rgba(67, 53, 38, 0.99), rgba(31, 24, 17, 0.99));
+  color: #fff0c8;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 239, 191, 0.17),
+    0 5px 16px rgba(0, 0, 0, 0.32),
+    0 0 16px rgba(194, 149, 77, 0.12);
+}
+
+.rpg-panel .btn.primary {
+  border-color: #e7c984;
+  background: linear-gradient(180deg, #e5c47b 0%, #c69b51 46%, #976b2a 100%);
+  color: #211506;
+  font-weight: 700;
+  text-shadow: 0 1px 0 rgba(255, 243, 201, 0.4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 219, 0.68),
+    inset 0 -2px 6px rgba(77, 44, 10, 0.34),
+    0 5px 16px rgba(0, 0, 0, 0.34),
+    0 0 20px rgba(202, 157, 78, 0.15);
+}
+
+.rpg-panel .btn.primary:hover {
+  border-color: #ffe6a7;
+  background: linear-gradient(180deg, #f4d995 0%, #dab168 46%, #aa7a34 100%);
+  color: #160e04;
+}
+
+.rpg-panel .btn.continue {
+  border-color: rgba(201, 163, 94, 0.62);
+  background: linear-gradient(180deg, #3c3123, #211a12 62%, #15110c);
+  color: #efdbae;
+}
+
+.rpg-panel .btn.danger {
+  border-color: rgba(148, 91, 76, 0.5);
+  background: linear-gradient(180deg, rgba(45, 31, 26, 0.98), rgba(25, 16, 13, 0.98));
+  color: #ceb1a2;
+}
+
+.rpg-panel .btn.danger:hover {
+  border-color: rgba(187, 110, 89, 0.8);
+  background: linear-gradient(180deg, #462a22, #271713);
+  color: #ffd9c7;
+}
+
+.rpg-panel .btn:focus-visible,
+.rpg-panel .set-tab:focus-visible {
+  outline: 2px solid rgba(239, 207, 144, 0.92);
+  outline-offset: 3px;
+}
+
+.rpg-panel .save-info,
+.rpg-panel .set-note,
+.rpg-panel .q-hint,
+.rpg-panel .footnote {
+  color: #9d8867;
+  font-family: "Alegreya", Georgia, serif;
+}
+
+.rpg-panel .set-label { color: #d9c6a4; font-family: "Alegreya", Georgia, serif; }
+.rpg-panel .set-val { color: #e1c078; }
+.rpg-panel .set-row input[type="range"] { accent-color: #c9a35e; }
+
+.rpg-panel .set-tab {
+  border-color: rgba(177, 137, 76, 0.36);
+  border-radius: 3px;
+  background: rgba(32, 25, 18, 0.72);
+  color: #cdb993;
+  font-family: "Cinzel", Georgia, serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.rpg-panel .set-tab:hover {
+  border-color: rgba(215, 178, 108, 0.58);
+  background: rgba(55, 43, 29, 0.9);
+  color: #f5e4bd;
+}
+
+.rpg-panel .set-tab.active,
+.rpg-panel .q-btn.active,
+.rpg-panel .lang-btn.active {
+  border-color: #e4c37c;
+  background: linear-gradient(180deg, #d9b66f, #a97c37 58%, #835b24);
+  color: #1c1206;
+  font-weight: 700;
+  text-shadow: 0 1px 0 rgba(255, 243, 201, 0.35);
+}
+
+.rpg-panel .q-title { color: #cbb38b; font-family: "Cinzel", Georgia, serif; font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase; }
+
+/* ---------- Panel menu utama ---------- */
+#menu.menu-overlay {
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(117, 82, 43, 0.24), transparent 48%),
+    radial-gradient(ellipse at 50% 112%, rgba(159, 112, 50, 0.18), transparent 58%),
+    radial-gradient(ellipse at 50% 50%, rgba(23, 17, 12, 0.7), rgba(5, 4, 3, 0.95));
+}
+
+#menu .menu-panel {
+  width: min(92vw, 590px);
+  min-width: 0;
+  max-width: 590px;
+  padding: 24px 46px 22px;
+  overflow-x: hidden;
+  border-radius: 5px;
+  border-color: rgba(210, 169, 103, 0.56);
+  background:
+    radial-gradient(ellipse at 50% -4%, rgba(255, 224, 160, 0.11), transparent 38%),
+    radial-gradient(ellipse at 50% 105%, rgba(139, 95, 43, 0.12), transparent 42%),
+    repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.016) 0 1px, transparent 1px 5px),
+    linear-gradient(160deg, #30251a 0%, #1e1711 48%, #100c09 100%);
+  box-shadow:
+    0 32px 84px rgba(0, 0, 0, 0.78),
+    0 0 0 5px rgba(9, 7, 5, 0.64),
+    0 0 0 6px rgba(203, 161, 95, 0.2),
+    0 0 42px rgba(171, 124, 57, 0.1),
+    inset 0 1px 0 rgba(255, 235, 186, 0.14),
+    inset 0 0 56px rgba(0, 0, 0, 0.34);
+}
+
+#menu .menu-panel::-webkit-scrollbar { width: 7px; }
+#menu .menu-panel::-webkit-scrollbar-thumb { background: rgba(185, 143, 80, 0.42); border-radius: 99px; }
+
+.menu-corner {
+  position: absolute;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  color: rgba(210, 171, 104, 0.68);
+  pointer-events: none;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.75));
+}
+.menu-corner.tl { top: 10px; left: 10px; border-top: 2px solid currentColor; border-left: 2px solid currentColor; }
+.menu-corner.tr { top: 10px; right: 10px; border-top: 2px solid currentColor; border-right: 2px solid currentColor; }
+.menu-corner.bl { bottom: 10px; left: 10px; border-bottom: 2px solid currentColor; border-left: 2px solid currentColor; }
+.menu-corner.br { bottom: 10px; right: 10px; border-bottom: 2px solid currentColor; border-right: 2px solid currentColor; }
+
+.menu-crest {
+  width: 86px;
+  margin: 0 auto 3px;
+  filter: drop-shadow(0 7px 14px rgba(0, 0, 0, 0.48));
+}
+.menu-crest svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+#menu .menu-title {
+  display: block;
+  margin: 7px 0 0;
+  padding-left: 0.14em;
+  font-family: "Cinzel Decorative", "Cinzel", Georgia, serif;
+  font-size: clamp(38px, 5.4vw, 54px);
+  font-weight: 700;
+  line-height: 1.06;
+  letter-spacing: 0.14em;
+  text-align: center;
+  background: linear-gradient(180deg, #fff7d9 0%, #eed28a 32%, #ad7c34 66%, #f1dca1 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 3px 0 rgba(31, 19, 8, 0.9)) drop-shadow(0 0 20px rgba(222, 177, 94, 0.24));
+}
+
+.menu-legacy {
+  margin-top: 2px;
+  padding-left: 0.42em;
+  font-family: "Cinzel", Georgia, serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.42em;
+  line-height: 1.4;
+  text-align: center;
+  text-transform: uppercase;
+  color: #b7945b;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.menu-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(300px, 78%);
+  margin: 12px auto 15px;
+}
+.menu-divider span { flex: 1; height: 1px; }
+.menu-divider span:first-child { background: linear-gradient(90deg, transparent, rgba(194, 153, 89, 0.7)); }
+.menu-divider span:last-child { background: linear-gradient(90deg, rgba(194, 153, 89, 0.7), transparent); }
+.menu-divider b {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  background: #cba35e;
+  transform: rotate(45deg);
+  box-shadow: 0 0 9px rgba(225, 183, 100, 0.38);
+}
+
+#menu .menu-subtitle {
+  max-width: 415px;
+  margin: 0 auto 21px;
+  color: #cbb692;
+  font-family: "Alegreya", Georgia, serif;
+  font-size: 14.5px;
+  font-style: italic;
+  line-height: 1.62;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+}
+
+/* ---------- Tombol menu: plakat kulit & logam ---------- */
+#menu .menu-btn {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px 1fr 18px;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 50px;
+  margin: 9px 0;
+  padding: 9px 16px;
+  overflow: hidden;
+  border: 1px solid rgba(177, 137, 76, 0.44);
+  border-radius: 3px;
+  background:
+    linear-gradient(180deg, rgba(49, 39, 28, 0.97), rgba(20, 16, 12, 0.99));
+  color: #d8c29a;
+  font-family: "Cinzel", Georgia, serif;
+  font-size: 12.8px;
+  font-weight: 600;
+  letter-spacing: 0.085em;
+  text-align: left;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 234, 185, 0.09),
+    inset 0 0 20px rgba(0, 0, 0, 0.26),
+    0 4px 12px rgba(0, 0, 0, 0.26);
+  transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+
+#menu .menu-btn::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgba(255, 226, 164, 0.07);
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+#menu .menu-btn::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 42%;
+  background: linear-gradient(90deg, transparent, rgba(255, 243, 204, 0.15), transparent);
+  transform: skewX(-18deg);
+  opacity: 0;
+  pointer-events: none;
+}
+
+#menu .menu-btn:hover::after { animation: menuSheen 0.75s ease; }
+
+@keyframes menuSheen {
+  0% { left: -60%; opacity: 0; }
+  18% { opacity: 1; }
+  100% { left: 120%; opacity: 0; }
+}
+
+#menu .menu-btn .btn-ico {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a98750;
+  transition: color 0.2s, transform 0.2s;
+}
+#menu .menu-btn .btn-ico svg { display: block; width: 19px; height: 19px; }
+#menu .menu-btn .btn-label { display: block; min-width: 0; text-align: center; }
+#menu .menu-btn .btn-glyph {
+  color: #8f6f3e;
+  font-family: "Alegreya", Georgia, serif;
+  font-size: 23px;
+  font-weight: 400;
+  line-height: 1;
+  text-align: right;
+  transform: translateX(-2px);
+  transition: color 0.2s, transform 0.2s;
+}
+
+#menu .menu-btn:hover {
+  border-color: rgba(227, 189, 117, 0.72);
+  background: linear-gradient(180deg, rgba(66, 52, 37, 0.99), rgba(29, 23, 17, 0.99));
+  color: #fff0c8;
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 239, 191, 0.16),
+    inset 0 0 22px rgba(0, 0, 0, 0.22),
+    0 6px 18px rgba(0, 0, 0, 0.34),
+    0 0 17px rgba(194, 149, 77, 0.14);
+}
+#menu .menu-btn:hover .btn-ico { color: #e3c37d; transform: scale(1.06); }
+#menu .menu-btn:hover .btn-glyph { color: #e3c37d; transform: translateX(1px); }
+#menu .menu-btn:active { transform: translateY(0); }
+#menu .menu-btn:focus-visible { outline: 2px solid rgba(239, 207, 144, 0.94); outline-offset: 3px; }
+
+#menu .menu-btn.primary {
+  border-color: #e8cb87;
+  background: linear-gradient(180deg, #e6c67d 0%, #c69b51 44%, #976b2a 100%);
+  color: #211506;
+  font-weight: 700;
+  text-shadow: 0 1px 0 rgba(255, 243, 201, 0.42);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 219, 0.7),
+    inset 0 -2px 7px rgba(77, 44, 10, 0.35),
+    0 5px 18px rgba(0, 0, 0, 0.35),
+    0 0 24px rgba(202, 157, 78, 0.16);
+}
+#menu .menu-btn.primary .btn-ico,
+#menu .menu-btn.primary .btn-glyph { color: #604112; }
+#menu .menu-btn.primary:hover {
+  border-color: #ffe7aa;
+  background: linear-gradient(180deg, #f5db98 0%, #dbb269 44%, #a97a34 100%);
+  color: #160e04;
+}
+#menu .menu-btn.primary:hover .btn-ico,
+#menu .menu-btn.primary:hover .btn-glyph { color: #3d270a; }
+
+#menu .menu-btn.continue {
+  border-color: rgba(204, 168, 104, 0.66);
+  background: linear-gradient(180deg, #3c3123 0%, #211a12 62%, #15110c 100%);
+  color: #f0ddb2;
+}
+#menu .menu-btn.continue .btn-ico,
+#menu .menu-btn.continue .btn-glyph { color: #d3aa63; }
+
+#menu .menu-btn.danger {
+  border-color: rgba(148, 91, 76, 0.48);
+  background: linear-gradient(180deg, #2d211d 0%, #1a1210 100%);
+  color: #cbb09f;
+}
+#menu .menu-btn.danger .btn-ico,
+#menu .menu-btn.danger .btn-glyph { color: #9b6b5a; }
+#menu .menu-btn.danger:hover {
+  border-color: rgba(187, 110, 89, 0.78);
+  background: linear-gradient(180deg, #44281f, #251612);
+  color: #ffd9c7;
+}
+#menu .menu-btn.danger:hover .btn-ico,
+#menu .menu-btn.danger:hover .btn-glyph { color: #e2a88e; }
+
+#menu .save-info {
+  margin: 2px 0 8px;
+  color: #a88c62;
+  font-family: "Alegreya", Georgia, serif;
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+}
+#menu-save-info::before {
+  content: "✦";
+  margin-right: 7px;
+  color: #8d6b3a;
+  font-size: 9px;
+}
+
+/* ---------- Tautan cara bermain, bantuan, catatan ---------- */
+#menu .menu-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 15px 0 2px;
+}
+#menu .menu-links::before,
+#menu .menu-links::after {
+  content: "✦";
+  color: #7f622f;
+  font-size: 8px;
+}
+#menu .menu-links a {
+  padding: 0;
+  border: 0;
+  color: #b39059;
+  font-family: "Cinzel", Georgia, serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1.6;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: color 0.18s, text-shadow 0.18s;
+}
+#menu .menu-links a:hover {
+  color: #f0d391;
+  text-shadow: 0 0 12px rgba(226, 183, 101, 0.28);
+}
+
+#menu .how-to {
+  margin: 13px 0 3px;
+  padding: 11px 16px 9px;
+  border: 1px solid rgba(190, 153, 89, 0.24);
+  border-radius: 2px;
+  background: rgba(8, 6, 4, 0.36);
+  box-shadow: inset 0 1px 12px rgba(0, 0, 0, 0.24);
+}
+#menu .how-to ul {
+  margin: 0;
+  color: #cbb894;
+  font-family: "Alegreya", Georgia, serif;
+  font-size: 12.5px;
+  line-height: 1.9;
+}
+#menu .how-to li + li { border-top: 1px solid rgba(190, 153, 89, 0.09); }
+#menu .key {
+  border-color: rgba(177, 137, 76, 0.36);
+  background: #1d1711;
+  color: #d9bd87;
+  font-family: "Cinzel", Consolas, serif;
+  font-size: 9.5px;
+  letter-spacing: 0.02em;
+}
+
+#menu .footnote {
+  margin-top: 15px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(190, 153, 89, 0.14);
+  color: #827157;
+  font-family: "Alegreya", Georgia, serif;
+  font-size: 11.5px;
+  line-height: 1.65;
+}
+
+/* ---------- Branding saat memuat ---------- */
+.rpg-panel .brand-title {
+  margin-bottom: 0;
+  font-family: "Cinzel Decorative", "Cinzel", Georgia, serif;
+  font-size: 32px;
+  letter-spacing: 0.15em;
+  padding-left: 0.15em;
+}
+.brand-sub {
+  margin: 3px 0 22px;
+  padding-left: 0.34em;
+  color: #ad8b54;
+  font-family: "Cinzel", Georgia, serif;
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+}
+
+/* ---------- Debu emas di sekitar menu ---------- */
+.menu-embers {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.menu-embers span {
+  position: absolute;
+  bottom: -12px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #e8c276;
+  box-shadow: 0 0 8px 2px rgba(230, 184, 90, 0.3);
+  opacity: 0;
+  animation: menuEmber 10s linear infinite;
+}
+.menu-embers span:nth-child(1) { left: 10%; animation-delay: -1s; animation-duration: 11s; }
+.menu-embers span:nth-child(2) { left: 19%; animation-delay: -7s; animation-duration: 13s; }
+.menu-embers span:nth-child(3) { left: 28%; animation-delay: -4s; animation-duration: 9s; }
+.menu-embers span:nth-child(4) { left: 39%; animation-delay: -9s; animation-duration: 14s; }
+.menu-embers span:nth-child(5) { left: 52%; animation-delay: -2s; animation-duration: 12s; }
+.menu-embers span:nth-child(6) { left: 62%; animation-delay: -6s; animation-duration: 10s; }
+.menu-embers span:nth-child(7) { left: 71%; animation-delay: -10s; animation-duration: 15s; }
+.menu-embers span:nth-child(8) { left: 80%; animation-delay: -3s; animation-duration: 11s; }
+.menu-embers span:nth-child(9) { left: 88%; animation-delay: -8s; animation-duration: 13s; }
+.menu-embers span:nth-child(10) { left: 94%; animation-delay: -5s; animation-duration: 9s; }
+
+@keyframes menuEmber {
+  0% { opacity: 0; transform: translate3d(0, 0, 0) scale(0.6); }
+  12% { opacity: 0.58; }
+  68% { opacity: 0.36; }
+  100% { opacity: 0; transform: translate3d(24px, -88vh, 0) scale(1.05); }
+}
+
+/* ---------- HUD: judul game ---------- */
+.hud-game-title {
+  font-family: "Cinzel", Georgia, serif;
+  font-size: 14px;
+  letter-spacing: 3.5px;
+  color: rgba(236, 246, 252, 0.96);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 12px rgba(0, 0, 0, 0.7);
+}
+.hud-game-title span {
+  display: block;
+  margin-top: 2px;
+  color: rgba(239, 207, 143, 0.9);
+  font-family: "Cinzel", Georgia, serif;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 2.3px;
+  text-transform: uppercase;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.98), 0 0 8px rgba(0, 0, 0, 0.85);
+}
+
+@keyframes menuPrimaryPulse {
+  0%, 100% { box-shadow: inset 0 1px 0 rgba(255, 250, 219, 0.7), inset 0 -2px 7px rgba(77, 44, 10, 0.35), 0 5px 18px rgba(0, 0, 0, 0.35), 0 0 16px rgba(202, 157, 78, 0.1); }
+  50% { box-shadow: inset 0 1px 0 rgba(255, 250, 219, 0.7), inset 0 -2px 7px rgba(77, 44, 10, 0.35), 0 5px 18px rgba(0, 0, 0, 0.35), 0 0 28px rgba(220, 173, 88, 0.2); }
+}
+
+@media (min-width: 900px) {
+  #menu .menu-btn.primary { animation: menuPrimaryPulse 4.5s ease-in-out infinite; }
+  #menu .menu-btn.primary:hover { animation: none; }
+}
+
+@media (max-width: 620px) {
+  #menu .menu-panel { width: 92vw; padding: 21px 20px 18px; }
+  #menu .menu-title { font-size: 36px; letter-spacing: 0.1em; padding-left: 0.1em; }
+  #menu .menu-legacy { font-size: 9px; letter-spacing: 0.29em; padding-left: 0.29em; }
+  .menu-crest { width: 72px; }
+  .menu-divider { margin: 10px auto 12px; }
+  #menu .menu-subtitle { font-size: 13px; line-height: 1.55; margin-bottom: 17px; }
+  #menu .menu-btn { grid-template-columns: 18px 1fr 16px; gap: 8px; min-height: 47px; padding: 8px 11px; font-size: 11.5px; }
+  #menu .menu-btn .btn-ico svg { width: 17px; height: 17px; }
+  #menu .menu-btn .btn-glyph { font-size: 20px; }
+  #menu .menu-links { margin-top: 13px; }
+  #menu .menu-links a { font-size: 9.5px; }
+  #menu .how-to { padding: 9px 12px 7px; }
+  #menu .how-to ul { font-size: 11.5px; }
+  #menu .footnote { font-size: 10.5px; }
+  .menu-corner { width: 16px; height: 16px; }
+  .rpg-panel .panel-title { font-size: 21px; letter-spacing: 4px; }
+  .rpg-panel .brand-title { font-size: 27px; }
+}
+
+@media (max-width: 380px) {
+  #menu .menu-title { font-size: 31px; }
+  #menu .menu-subtitle { font-size: 12px; }
+  #menu .menu-btn { font-size: 10.5px; }
+}
+
+@media (max-height: 720px) and (min-width: 621px) {
+  #menu .menu-panel { padding-top: 18px; padding-bottom: 16px; }
+  .menu-crest { width: 66px; }
+  #menu .menu-title { font-size: 42px; }
+  .menu-divider { margin: 8px auto 10px; }
+  #menu .menu-subtitle { margin-bottom: 13px; font-size: 13px; }
+  #menu .menu-btn { min-height: 45px; margin: 7px 0; }
+  #menu .menu-links { margin-top: 10px; }
+  #menu .footnote { margin-top: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-embers span { animation: none; opacity: 0.16; }
+  #menu .menu-btn.primary { animation: none; }
+  #menu .menu-btn::after { display: none; }
+  .rpg-panel .btn,
+  #menu .menu-btn { transition: none; }
 }
 
