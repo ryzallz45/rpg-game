@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pulau Nusantara — Eksplorasi 3D</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <canvas id="scene"></canvas>
+
+  <!-- HUD saat bermain -->
+  <div id="hud" class="hidden">
+    <div id="hud-top-left">
+      <div class="hud-game-title">PULAU NUSANTARA</div>
+      <div id="hud-clock">--:--</div>
+    </div>
+    <div id="player-tag" class="hidden"><span id="v-level">Lv 1</span></div>
+
+    <!-- Peta mini (Fase 4; Fase 5: klik = peta besar, M = mode Dunia/Sekitar/Lokal/Sembunyi) -->
+    <div id="minimap" class="hidden" title="Buka peta besar">
+      <canvas id="minimap-canvas" width="352" height="352"></canvas>
+      <span class="mm-north" data-i18n="hud.north">U</span>
+      <span class="mm-key">M</span>
+      <span id="mm-mode" class="mm-mode">DUNIA</span>
+    </div>
+
+    <!-- Fase 5 lanjutan: kompas tujuan (muncul saat ada tujuan peta) -->
+    <div id="waypoint" class="hidden" role="status">
+      <div class="wp-compass" aria-hidden="true">
+        <svg id="wp-arrow" viewBox="0 0 24 24" width="22" height="22">
+          <path d="M12 2 L20 22 L12 17.4 L4 22 Z" fill="currentColor"
+                stroke="rgba(8,20,30,.85)" stroke-width="1.2" stroke-linejoin="round"></path>
+        </svg>
+      </div>
+      <div class="wp-text"><span id="wp-label">Tujuan</span><b id="wp-dist">0 m</b></div>
+      <button id="wp-clear" type="button" aria-label="Hapus tujuan" title="Hapus tujuan">✕</button>
+    </div>
+
+    <!-- Tombol HUD (Fase 5) — peta, tugas, tas, jeda; selalu bisa diklik -->
+    <div id="hud-btns">
+      <button id="btn-hud-map" type="button" class="hud-btn" title="Buka peta besar">🗺️</button>
+      <button id="btn-hud-quest" type="button" class="hud-btn" title="Daftar tugas">📜</button>
+      <button id="btn-hud-bag" type="button" class="hud-btn" title="Tas (I)">🎒</button>
+      <button id="btn-hud-pause" type="button" class="hud-btn" title="Jeda (Esc)">⏸️</button>
+    </div>
+
+    <div id="quest" class="hud-panel hidden">
+      <div id="quest-lines"></div>
+    </div>
+    <div id="debug" class="hud-panel hidden">
+      <div id="dbg-fps">FPS: --</div>
+      <div id="dbg-pos">Posisi: --</div>
+      <div id="dbg-info" class="dbg-hint" data-i18n="dbg.hint">F3 = sembunyikan panel</div>
+    </div>
+
+    <!-- Bilah HP & XP di atas hotbar, hotbar item di tengah bawah -->
+    <div id="hotbar">
+      <div id="hotbar-vitals">
+        <div class="hb-row">
+          <span class="hb-ic">❤️</span>
+          <div class="hb-bar hp"><div id="v-hp-fill" class="fill"></div></div>
+          <span id="v-hp-text" class="hb-text">100/100</span>
+        </div>
+        <div class="hb-row">
+          <span class="hb-ic">✦</span>
+          <div class="hb-bar xp"><div id="v-xp-fill" class="fill"></div></div>
+          <span id="v-xp-text" class="hb-text">0/40 XP</span>
+        </div>
+      </div>
+      <div id="hotbar-row">
+        <div id="hotbar-slots"></div>
+        <button id="bag-btn" type="button" title="Tas (I)">
+          <span class="bag-ic">🎒</span><span class="bag-key">I</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Tas besar di tengah layar -->
+    <div id="inventory" class="hidden">
+      <div class="inv-box">
+        <div class="inv-head">
+          <div class="inv-title" data-i18n-html="hud.bag">TAS <span class="inv-key">I</span></div>
+          <button id="inv-close" type="button" aria-label="Tutup" title="Tutup">✕</button>
+        </div>
+        <div id="inv-grid"></div>
+        <div id="inv-stats"></div>
+        <div class="inv-hint" data-i18n="hud.bagHint">Tekan I atau Esc untuk menutup</div>
+      </div>
+    </div>
+    <div id="lowhp"></div>
+    <div id="dmg-flash"></div>
+    <div id="prompt" class="hidden"></div>
+    <div id="toast" class="hidden"></div>
+    <div id="dialog" class="hidden">
+      <div id="dlg-name"></div>
+      <div id="dlg-text"></div>
+      <div class="dlg-hint">E / Klik — lanjut</div>
+    </div>
+  </div>
+
+  <!-- Menu utama -->
+  <div id="menu" class="overlay hidden">
+    <div class="panel">
+      <h1>PULAU NUSANTARA</h1>
+      <p class="subtitle" data-i18n="menu.subtitle">Eksplorasi dunia 3D low-poly — pulau prosedural, desa &amp; penduduk, siklus siang–malam, dan laut bergelombang</p>
+      <button id="btn-continue" class="btn continue hidden" data-i18n="menu.continue">▶ Lanjutkan Perjalanan</button>
+      <p id="menu-save-info" class="save-info hidden"></p>
+      <button id="btn-start" class="btn primary" data-i18n="menu.play">Mulai Menjelajah</button>
+      <button id="btn-settings" class="btn" data-i18n="menu.settings">Pengaturan</button>
+      <button id="btn-exit" class="btn danger" data-i18n="menu.exit">Keluar</button>
+      <p class="menu-links"><a href="#" id="btn-how" data-i18n="menu.how">Cara Bermain</a></p>
+      <div id="how-to" class="how-to hidden">
+        <ul>
+          <li><span class="key">W A S D</span> — <span data-i18n="help.wasd">berjalan / mengemudikan perahu</span></li>
+          <li><span class="key">Shift</span> — <span data-i18n="help.shift">berlari / berenang lebih cepat</span></li>
+          <li><span class="key">Spasi</span> — <span data-i18n="help.space">melompat</span></li>
+          <li><span class="key">🌊 Laut</span> — <span data-i18n="help.swim">air dalam otomatis berenang — seluruh lautan bebas dijelajahi</span></li>
+          <li><span class="key">Klik Kiri</span> / <span class="key">F</span> — <span data-i18n="help.attack">ayunkan pedang (kombo 3 gerakan)</span></li>
+          <li><span class="key">E</span> — <span data-i18n="help.e">bicara dengan penduduk / ambil benda / naiki &amp; turuni perahu</span></li>
+          <li><span class="key">I</span> — <span data-i18n="help.i">buka/tutup tas besar (jarahan hasil bertarung)</span></li>
+          <li><span class="key">H</span> — <span data-i18n="help.h">makan daging babi (+30 HP)</span></li>
+          <li><span class="key">M</span> — <span data-i18n="help.m">ganti mode peta: Dunia → Sekitar → Lokal → Sembunyi</span></li>
+          <li><span class="key">Klik peta</span> — <span data-i18n="help.map">buka peta besar &amp; tandai tujuan</span></li>
+          <li><span class="key">Ctrl + S</span> — <span data-i18n="help.save">simpan cepat (muat dari menu jeda)</span></li>
+          <li><span class="key">Mouse</span> — <span data-i18n="help.mouse">tahan Klik Kanan untuk memutar kamera</span></li>
+          <li><span class="key">Roda mouse</span> — <span data-i18n="help.wheel">zoom jarak kamera</span></li>
+          <li><span class="key">Esc</span> — <span data-i18n="help.esc">tutup tas/dialog, atau jeda/lanjutkan</span></li>
+          <li><span class="key">F3</span> — <span data-i18n="help.f3">panel info performa</span></li>
+        </ul>
+      </div>
+      <p class="footnote" data-i18n="menu.footnote">Dibuat dengan Three.js — dunia, tekstur &amp; cerita prosedural (tanpa internet). Model 3D (CC0) aktif bila dijalankan lewat jalankan.bat; mode klik-ganda tetap berjalan dengan bentuk prosedural.</p>
+    </div>
+  </div>
+
+  <!-- Pengaturan: Audio / Grafik / Bahasa -->
+  <div id="settings" class="overlay hidden">
+    <div class="panel">
+      <h1 class="panel-title" data-i18n="set.title">PENGATURAN</h1>
+      <div class="set-tabs">
+        <button class="set-tab active" data-tab="audio" data-i18n="set.tab.audio">Audio</button>
+        <button class="set-tab" data-tab="graphics" data-i18n="set.tab.graphics">Grafik</button>
+        <button class="set-tab" data-tab="language" data-i18n="set.tab.language">Bahasa</button>
+      </div>
+      <div class="set-pane" id="pane-audio">
+        <label class="set-row">
+          <span class="set-label" data-i18n="set.audio.music">Musik &amp; suasana</span>
+          <input type="range" id="vol-music" min="0" max="100" step="5" value="60">
+          <span class="set-val" id="vol-music-val">60%</span>
+        </label>
+        <label class="set-row">
+          <span class="set-label" data-i18n="set.audio.sfx">Efek suara</span>
+          <input type="range" id="vol-sfx" min="0" max="100" step="5" value="80">
+          <span class="set-val" id="vol-sfx-val">80%</span>
+        </label>
+        <p class="set-note" data-i18n="set.audio.note">Semua suara disintesis di dalam game — tanpa berkas audio.</p>
+        <button id="btn-sfx-test" class="btn small" data-i18n="set.audio.test">Dengar contoh efek</button>
+      </div>
+      <div class="set-pane hidden" id="pane-graphics">
+        <span class="q-title" data-i18n="set.graphics.title">Kualitas grafis</span>
+        <div class="q-btns">
+          <button class="btn q-btn" data-q="cepat" data-i18n="q.cepat">Cepat</button>
+          <button class="btn q-btn" data-q="hd">HD</button>
+          <button class="btn q-btn" data-q="ultra">Ultra</button>
+        </div>
+        <span class="q-hint" data-i18n="set.graphics.note">HD &amp; Ultra: lebih tajam, bayangan halus, tekstur, efek &amp; model karakter 3D. Cepat untuk perangkat lemah.</span>
+      </div>
+      <div class="set-pane hidden" id="pane-language">
+        <div class="lang-btns">
+          <button class="btn lang-btn active" data-lang="id">Bahasa Indonesia</button>
+          <button class="btn lang-btn" data-lang="en">English</button>
+        </div>
+        <p class="set-note" data-i18n="set.lang.note">Antarmuka &amp; menu diterjemahkan; dialog cerita tetap Bahasa Indonesia.</p>
+      </div>
+      <button id="btn-settings-back" class="btn primary" data-i18n="set.back">Kembali</button>
+    </div>
+  </div>
+
+  <!-- Keluar -->
+  <div id="exitdlg" class="overlay hidden">
+    <div class="panel" id="exit-ask">
+      <h1 class="panel-title" data-i18n="exit.title">KELUAR?</h1>
+      <p class="subtitle" data-i18n="exit.text">Terima kasih sudah bermain. Yakin ingin menutup permainan?</p>
+      <button id="btn-exit-yes" class="btn danger" data-i18n="exit.yes">Ya, keluar</button>
+      <button id="btn-exit-no" class="btn primary" data-i18n="exit.no">Batal</button>
+    </div>
+    <div class="panel hidden" id="exit-bye">
+      <h1 class="panel-title" data-i18n="bye.title">SAMPAI JUMPA</h1>
+      <p class="subtitle" data-i18n="bye.text">Terima kasih sudah bermain Pulau Nusantara! Tutup tab ini untuk keluar.</p>
+      <button id="btn-bye-back" class="btn primary" data-i18n="bye.back">Kembali ke Menu</button>
+    </div>
+  </div>
+
+  <!-- Trailer sinematik (diputar setelah menekan Mulai, sebelum masuk game) -->
+  <div id="trailer" class="hidden">
+    <div class="trailer-bar top"></div>
+    <div class="trailer-bar bottom"></div>
+    <div id="trailer-card">
+      <div id="trailer-card-title" class="t-title"></div>
+      <div id="trailer-card-sub" class="t-sub"></div>
+    </div>
+    <div id="trailer-skip" data-i18n="trailer.skip">Klik / tekan tombol apa pun — lewati</div>
+  </div>
+  <div id="fade"></div>
+
+  <!-- Menu jeda -->
+  <div id="pause" class="overlay hidden">
+    <div class="panel">
+      <h1 data-i18n="pause.title">JEDA</h1>
+      <p class="subtitle" data-i18n="pause.subtitle">Perjalanan dihentikan sebentar.</p>
+      <button id="btn-resume" class="btn primary" data-i18n="pause.resume">Lanjutkan</button>
+      <div class="pause-save-row">
+        <button id="btn-save" class="btn" data-i18n="pause.save">💾 Simpan</button>
+        <button id="btn-load" class="btn" data-i18n="pause.load">📂 Muat</button>
+      </div>
+      <p id="pause-save-info" class="save-info">Belum ada simpanan</p>
+      <button id="btn-pause-settings" class="btn" data-i18n="pause.settings">Pengaturan</button>
+      <button id="btn-menu" class="btn" data-i18n="pause.menu">Kembali ke Menu</button>
+      <p class="footnote" data-i18n="pause.footnote">Simpan/muat tersedia di atas. Kamera diputar dengan menahan tombol kanan mouse.</p>
+    </div>
+  </div>
+
+  <!-- Fase 5 lanjutan: peta besar + pemilihan tujuan -->
+  <div id="worldmap" class="hidden" role="dialog" aria-modal="true" aria-labelledby="wm-title">
+    <div class="wm-panel">
+      <div class="wm-head">
+        <div class="wm-title-wrap">
+          <h1 id="wm-title" class="wm-title" data-i18n="map.title">PETA NUSANTARA</h1>
+          <div class="wm-sub" data-i18n="map.subtitle">Peta dunia — klik lokasi untuk menandai tujuan</div>
+        </div>
+        <div class="wm-head-right">
+          <div id="wm-vitals" class="wm-vitals">❤️ 100/100 · ✦ 0/40 · 07:00</div>
+          <div class="wm-running"><span class="wm-dot"></span><span data-i18n="map.running">Dunia tetap berjalan</span></div>
+          <button id="wm-close" type="button" class="wm-x" title="Tutup peta" aria-label="Tutup peta">✕</button>
+        </div>
+      </div>
+      <div class="wm-hint">
+        <span data-i18n="map.hint">Klik lokasi untuk menandai tujuan</span>
+        · <span data-i18n="map.locked">gerak &amp; serangan terkunci</span>
+      </div>
+      <div class="wm-map-wrap">
+        <canvas id="worldmap-canvas" width="1024" height="1024" aria-label="Peta Nusantara"></canvas>
+      </div>
+      <div class="wm-foot">
+        <div id="wm-target" class="wm-target">Belum ada tujuan — klik lokasi di peta</div>
+        <div class="wm-actions">
+          <button id="wm-clear" type="button" class="wm-btn" disabled data-i18n="map.clear">Hapus Tujuan</button>
+          <button id="wm-go" type="button" class="wm-btn primary" data-i18n="map.closeGo">Tutup &amp; Jalan</button>
+        </div>
+      </div>
+      <div class="wm-legend">
+        <span>🏠 <b data-i18n="map.legend.village">Desa</b></span>
+        <span>⚓ <b data-i18n="map.legend.harbor">Pelabuhan</b></span>
+        <span>🛖 <b data-i18n="map.legend.hut">Pondok</b></span>
+        <span>▲ <b data-i18n="map.legend.you">Kamu</b></span>
+        <span>⛵ <b data-i18n="map.legend.boat">Perahu</b></span>
+        <span>📍 <b data-i18n="map.legend.target">Tujuan</b></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layar tumbang (Fase 3) -->
+  <div id="death" class="hidden">
+    <div class="panel">
+      <h1 data-i18n="death.title">KAU TUMBANG</h1>
+      <p class="subtitle" data-i18n="death.subtitle">Pulau ini keras… tapi kau pantang menyerah.</p>
+      <button id="btn-respawn" class="btn primary" data-i18n="death.respawn">Bangkit Kembali</button>
+      <p class="footnote" data-i18n="death.footnote">Kau akan bangkit di pantai tempat petualangan dimulai.</p>
+    </div>
+  </div>
+
+  <!-- Layar pemuatan -->
+  <div id="loading" class="overlay">
+    <div class="panel">
+      <h1>PULAU NUSANTARA</h1>
+      <div id="loading-text" data-i18n="loading.init">Menyiapkan mesin 3D...</div>
+      <div class="loading-bar"><div id="loading-fill"></div></div>
+    </div>
+  </div>
+
+  <script src="lib/three.min.js"></script>
+  <script src="lib/shaders/CopyShader.js"></script>
+  <script src="lib/shaders/LuminosityHighPassShader.js"></script>
+  <script src="lib/shaders/FXAAShader.js"></script>
+  <script src="lib/postprocessing/Pass.js"></script>
+  <script src="lib/postprocessing/EffectComposer.js"></script>
+  <script src="lib/postprocessing/RenderPass.js"></script>
+  <script src="lib/postprocessing/ShaderPass.js"></script>
+  <script src="lib/postprocessing/MaskPass.js"></script>
+  <script src="lib/postprocessing/UnrealBloomPass.js"></script>
+  <script src="lib/loaders/GLTFLoader.js"></script>
+  <script src="lib/utils/SkeletonUtils.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/textures.js"></script>
+  <script src="js/assets.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/rpg.js"></script>
+  <script src="js/save.js"></script>
+  <script src="js/sky.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/grass.js"></script>
+  <script src="js/village.js"></script>
+  <script src="js/boat.js"></script>
+  <script src="js/enemies.js"></script>
+  <script src="js/effects.js"></script>
+  <script src="js/minimap.js"></script>
+  <script src="js/trailer.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

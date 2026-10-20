@@ -1,0 +1,29 @@
+Pulau Nusantara — Aset pihak ketiga
+===================================
+
+Semua aset di folder ini berlisensi CC0 1.0 (domain publik) sehingga bebas
+dipakai, diubah, dan disebarkan — termasuk untuk keperluan komersial, tanpa
+wajib atribusi. Atribusi ditulis di sini sebagai bentuk terima kasih.
+
+1) KayKit — Character Pack: Adventures (1.0)
+   Pembuat : Kay Lousberg (https://kaylousberg.com — KayKit)
+   Lisensi : CC0 1.0 Universal
+   Sumber  : https://kaykit.itch.io/kaykit-adventurers
+             https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0
+   Berkas  : Barbarian.glb, Knight.glb, Mage.glb, Rogue.glb, Rogue_Hooded.glb
+   Isi     : karakter berig (rigged) + 75 animasi (idle, jalan, lari, serangan,
+             lompat, terluka, mati, dll). Tekstur tertanam di dalam .glb.
+
+2) Quaternius — Pig / Babi Hutan (dipakai sebagai "Babi Hutan" di game)
+   Pembuat : Quaternius (https://quaternius.com)
+   Lisensi : CC0 1.0 Universal (Public Domain)
+   Sumber  : https://poly.pizza/m/u35l6uP5vj
+   Berkas  : Boar.glb
+   Isi     : model berig + animasi (Idle, Walk, Run, Headbutt, Death, dll).
+
+3) three.js r128 — pustaka grafis + contoh resmi
+   Pembuat : mrdoob dan kontributor three.js
+   Lisensi : MIT
+   Berkas  : lib/three.min.js, lib/loaders/GLTFLoader.js,
+             lib/utils/SkeletonUtils.js, lib/postprocessing/*, lib/shaders/*
+   Sumber  : https://threejs.org
