@@ -10,9 +10,10 @@
   var CARDS = [
     { t0: 0.8, t1: 6.2, tk: 'trailer.c1t', sk: 'trailer.c1s', title: 'AETHERIA', sub: 'Legacy of the Dawn — sebuah petualangan 3D di kerajaan pesisir Aetheria' },
     { t0: 7.6, t1: 12.6, tk: 'trailer.c2t', sk: 'trailer.c2s', title: 'Hutan pinus & jalan tua', sub: 'Susuri pantai, hutan pinus, dan pelabuhan — naiki perahu, jelajahi kepulauan' },
-    { t0: 14.0, t1: 19.0, tk: 'trailer.c3t', sk: 'trailer.c3s', title: 'Temui warga Aldenmere', sub: 'Bantu mereka menyelesaikan tugas kerajaan' },
-    { t0: 20.4, t1: 25.4, tk: 'trailer.c4t', sk: 'trailer.c4s', title: 'Taklukkan alam liar', sub: 'Celeng hutan, penyamun & roh rawa — juga ksatria terkutuk di reruntuhan kastil' },
-    { t0: 26.8, t1: 32.4, tk: 'trailer.c5t', sk: 'trailer.c5s', title: 'AETHERIA', sub: 'Legacy of the Dawn — selamat menjelajah!' }
+    { t0: 14.0, t1: 18.4, tk: 'trailer.c3t', sk: 'trailer.c3s', title: 'Temui warga Aldenmere', sub: 'Bantu mereka menyelesaikan tugas kerajaan' },
+    { t0: 19.6, t1: 24.0, tk: 'trailer.c4t', sk: 'trailer.c4s', title: 'Taklukkan alam liar', sub: 'Celeng hutan, penyamun & roh rawa — juga ksatria terkutuk di reruntuhan kastil' },
+    { t0: 25.2, t1: 30.4, tk: 'trailer.c5t', sk: 'trailer.c5s', title: 'Kekaisaran di seberang', sub: 'Seratus atap di balik tembok raksasa — takhta Kekaisaran Aetheria' },
+    { t0: 37.6, t1: 42.4, tk: 'trailer.c6t', sk: 'trailer.c6s', title: 'AETHERIA', sub: 'Legacy of the Dawn — selamat menjelajah!' }
   ];
 
   function Trailer(camera, world) {
@@ -20,7 +21,7 @@
     this.world = world;
     this.active = false;
     this.elapsed = 0;
-    this.duration = 33;
+    this.duration = 42;
     this.onDone = null;
     this._posCurve = null;
     this._tgtCurve = null;
@@ -50,6 +51,12 @@
     // Lokasi kerajaan besar (dipilih saat buildEnvironment) — pusat perhatian trailer.
     var k = w.kingdomSite || { x: 0, z: 0, r: 60 };
     var kr = k.r || 60;
+    // Kekaisaran agung: puncak tur sinematik.
+    var e = w.empireSite || { x: k.x, z: k.z, r: 145 };
+    var er = e.r || 145;
+    // Arah masuk kekaisaran: dari arah gerbang utama (menghadap desa), sedikit miring.
+    var ea = Math.atan2(v.z - e.z, v.x - e.x) + 0.45;
+    var ecos = Math.cos(ea), esin = Math.sin(ea);
 
     var pts = [
       [spawn.x + 150 * S, 34 * S, spawn.z + 120 * S],       // laut lepas (pelabuhan)
@@ -59,7 +66,10 @@
       [k.x + (kr + 105) * 0.72, 62, k.z + (kr + 105) * 0.72], // terbang menuju kerajaan
       [k.x + kr * 1.15, 34, k.z + kr * 1.15],               // mengitari tembok kerajaan
       [k.x - kr * 0.55, 26, k.z - kr * 0.55],               // melintas di atas kastil
-      [v.x + 30 * S, 12.5 * S, v.z + 34 * S]                // rendah di tepi desa
+      [(k.x + e.x) / 2, 155, (k.z + e.z) / 2],              // terbang tinggi antar kota
+      [e.x + ecos * (er + 62), 58, e.z + esin * (er + 62)],  // menuju tembok kekaisaran
+      [e.x + ecos * (er * 0.82), 52, e.z + esin * (er * 0.82)], // melintasi tembok
+      [e.x + ecos * (er * 0.3), 74, e.z + esin * (er * 0.3)]    // menanjak di atas kastil
     ];
     var tgts = [
       [0, 16 * S, 0],
@@ -69,7 +79,10 @@
       [k.x, 12, k.z],
       [k.x, 14, k.z],
       [k.x, 20, k.z],
-      [v.x, 2.5, v.z]
+      [(k.x + e.x) / 2, 90, (k.z + e.z) / 2],
+      [e.x, 16, e.z],
+      [e.x, 22, e.z],
+      [e.x, 30, e.z]
     ];
 
     var P = [], T = [];

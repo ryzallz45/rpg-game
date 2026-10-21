@@ -107,6 +107,91 @@ t('tembok kerajaan menahan pemain (collider melingkar penuh)', function () {
   if (segs < 30) throw new Error('segmen tembok luar kurang: ' + segs);
   return segs;
 });
+
+// ---- Kekaisaran agung: 100 rumah, tembok raksasa, kastil megah ----
+t('kekaisaran agung dibangun (100 rumah + tembok raksasa)', function () {
+  var eb = world.empireBuilt;
+  if (!eb) throw new Error('empireBuilt tidak ada — kekaisaran tidak dibangun');
+  if (eb.houses !== 100) throw new Error('rumah kekaisaran ' + eb.houses + ', harus tepat 100');
+  if (eb.instances < 2000) throw new Error('instance kekaisaran terlalu sedikit: ' + eb.instances);
+  if (!(eb.r >= 120)) throw new Error('radius tembok kekaisaran terlalu kecil: ' + eb.r);
+  if (!(eb.plazaTop > eb.y)) throw new Error('pelataran kekaisaran tidak lebih tinggi dari tanah');
+  var lm = (world.landmarks || []).filter(function (l) { return l.id === 'empire'; });
+  if (!lm.length) throw new Error('landmark empire tidak terdaftar');
+  var box = new THREE.Box3();
+  var m = new THREE.Matrix4(), v = new THREE.Vector3(), nan = 0;
+  lm[0].group.traverse(function (o) {
+    if (!o.isInstancedMesh) return;
+    for (var i = 0; i < o.count; i++) {
+      o.getMatrixAt(i, m);
+      v.set(m.elements[12], m.elements[13], m.elements[14]);
+      if (!isFinite(v.x) || !isFinite(v.y) || !isFinite(v.z)) nan++;
+      box.expandByPoint(v);
+    }
+  });
+  if (nan) throw new Error('instance kekaisaran NaN: ' + nan);
+  var spanX = box.max.x - box.min.x, spanZ = box.max.z - box.min.z;
+  if (spanX < 250 || spanZ < 250) {
+    throw new Error('kekaisaran terlalu kecil: ' + spanX.toFixed(0) + '×' + spanZ.toFixed(0) + ' m');
+  }
+  // Tidak boleh tumpang tindih dengan kerajaan.
+  var kb = world.kingdomBuilt;
+  var dist = Math.hypot(kb.x - eb.x, kb.z - eb.z);
+  if (dist < kb.r + eb.r + 40) throw new Error('kekaisaran terlalu dekat dengan kerajaan: ' + dist.toFixed(0) + ' m');
+  // Seluruh kota harus di darat (tidak terendam).
+  var wet = 0;
+  for (var a = 0; a < 24; a++) {
+    for (var rr = 0; rr <= 3; rr++) {
+      var h = world.groundHeight(eb.x + Math.cos(a / 24 * Math.PI * 2) * eb.r * rr / 3,
+        eb.z + Math.sin(a / 24 * Math.PI * 2) * eb.r * rr / 3);
+      if (h < 2.0) wet++;
+    }
+  }
+  if (wet) throw new Error(wet + ' titik kota kekaisaran berada di air');
+  return eb;
+});
+t('platform rumah kekaisaran menapak tanah', function () {
+  var eb = world.empireBuilt;
+  var bad = 0, count = 0;
+  for (var i = 0; i < world.platforms.length; i++) {
+    var p = world.platforms[i];
+    if (Math.hypot(p.x - eb.x, p.z - eb.z) > eb.r) continue;
+    count++;
+    if (p.top < world.groundHeight(p.x, p.z) - 0.1) bad++;
+    if (p.top - world.groundHeight(p.x, p.z) > 2.4) bad++;
+  }
+  if (count < 100) throw new Error('platform kekaisaran hanya ' + count);
+  if (bad) throw new Error(bad + ' platform kekaisaran tidak menapak tanah');
+  return count;
+});
+t('tembok kekaisaran menahan pemain (collider melingkar penuh)', function () {
+  var eb = world.empireBuilt;
+  var segs = 0, gaps = 0, prev = null;
+  for (var i = 0; i < world.walls.length; i++) {
+    var w = world.walls[i];
+    var mx = (w.x1 + w.x2) / 2, mz = (w.z1 + w.z2) / 2;
+    var d = Math.hypot(mx - eb.x, mz - eb.z);
+    if (d > eb.r - 6 && d < eb.r + 6) segs++;
+  }
+  if (segs < 70) throw new Error('segmen tembok kekaisaran kurang: ' + segs);
+  return segs;
+});
+t('warga kota kekaisaran & kerajaan sudah ditempatkan', function () {
+  var spots = world.townSpots || [];
+  if (spots.length < 36) throw new Error('titik NPC kota hanya ' + spots.length);
+  var k = 0, e = 0, bad = 0;
+  for (var i = 0; i < spots.length; i++) {
+    var s = spots[i];
+    if (s.city === 'empire') e++; else k++;
+    if (Math.hypot(s.x - world.empireBuilt.x, s.z - world.empireBuilt.z) < world.empireBuilt.r) {
+      if (world.groundHeight(s.x, s.z) < 2.0) bad++;
+    }
+  }
+  if (k < 8) throw new Error('NPC kerajaan hanya ' + k);
+  if (e < 28) throw new Error('NPC kekaisaran hanya ' + e);
+  if (bad) throw new Error(bad + ' NPC kekaisaran berdiri di air');
+  return spots.length;
+});
 var village = t('new Village', function () { return new globalThis.Village(scene, world); });
 t('build village', function () { village.build(); });
 var boat = t('new Boat', function () { return new globalThis.Boat(scene, world); });

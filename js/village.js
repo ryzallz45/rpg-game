@@ -349,6 +349,9 @@
     for (var i = 0; i < this.npcs.length; i++) {
       var npc = this.npcs[i];
       if (npc.mixer) continue; // sudah memakai model 3D — jangan klon ulang
+      // Warga kota kerajaan/kekaisaran tetap low-poly: jumlahnya puluhan,
+      // model skinned sebanyak itu akan memberatkan.
+      if (npc.town) continue;
       var name = NPC_MODELS[i % NPC_MODELS.length];
       if (!lib.has(name)) continue;
       var def = NPC_DEFS[i % NPC_DEFS.length];
@@ -387,6 +390,36 @@
       ['Halo, pengembara! Aku menjaga pondok persinggahan pelaut kerajaan di pulau kecil ini.'],
       ['Ada perahu di dermaga pelabuhan. Naikilah - laut di sekitar Aetheria luas untuk dijelajahi!'],
       ['Pulau-pulau kecil di sekitar sini tak berpenghuni. Dulu para pelaut menyalakan api di sana.']
+    ],
+    warga: [
+      ['Kerajaan pusat tumbuh cepat sejak tembok besar selesai dibangun. Kini tak ada penyamun yang berani masuk.'],
+      ['Kau melihat kastil itu? Konon rajanya menyimpan peta jalan lama menuju kekaisaran di seberang perbukitan.'],
+      ['Pasar ramai setiap pagi. Bila kau butuh cerita, duduklah sebentar di dekat sumur alun-alun.']
+    ],
+    penjaga: [
+      ['Hentikan langkah sebentar, pengembara. Kota ini aman, tetapi tetap jaga pedangmu.'],
+      ['Aku berjaga di gerbang sejak fajar. Jalan ke timur menuju kekaisaran sedang ramai kafilah.'],
+      ['Bila melihat panji biru di kejauhan, itu benteng kekaisaran. Jangan mudah percaya pada bangsawan di sana.']
+    ],
+    prajurit: [
+      ['Kekaisaran agung berdiri di balik bukit itu. Temboknya lebih tinggi dari menara mana pun di kerajaan ini.'],
+      ['Seragamku berasal dari barak kekaisaran. Aku ditugaskan menjaga jalan antara dua kota.'],
+      ['Kaisar menambah seratus rumah tahun ini. Kotanya tumbuh, dan para prajurit ikut sibuk.']
+    ],
+    bangsawan: [
+      ['Kerajaan dan kekaisaran memang bersaudara, tetapi tidak selalu sejalan. Politik istana tak untuk telinga rakyat.'],
+      ['Kastil kekaisaran punya tiga tingkat menara. Dari puncaknya kau bisa melihat seluruh lembah.'],
+      ['Bawalah hasil bumi ke pelabuhan, dan kau akan mendapat harga yang layak. Itu nasihat dariku.']
+    ],
+    petani: [
+      ['Ladang di luar tembok cukup subur. Hanya saja jalan menanjaknya melelahkan.'],
+      ['Musim ini gandum tumbuh tinggi. Sebagian hasilnya kami kirim ke dapur kastil.'],
+      ['Kalau kau lewat jalan lingkar, hati-hati dengan gerobak petani di pagi hari.']
+    ],
+    'pandai besi': [
+      ['Bilah buatanku dipakai para penjaga gerbang. Bila perlu perbaikan, bawa besimu ke sini.'],
+      ['Besi dari lembah selatan paling kuat. Sayangnya kafilahnya jarang datang sejak jalan baru dibuka.'],
+      ['Dengar bunyi palu itu? Itulah jantung kota. Selama masih berdenting, kota ini hidup.']
     ]
   };
 
@@ -1916,6 +1949,26 @@
       this.scene.add(npc.group);
       this.npcs.push(npc);
     }
+    this._spawnTownNpcs();
+  };
+
+  /* Warga kota kerajaan & kekaisaran (low-poly, tetap bisa diajak bicara). */
+  Village.prototype._spawnTownNpcs = function () {
+    var spots = this.world.townSpots || [];
+    for (var i = 0; i < spots.length; i++) {
+      var t = spots[i];
+      var def = {
+        name: t.name, role: t.role,
+        home: { x: t.x, z: t.z },
+        wanderR: t.wanderR, speed: t.speed, pal: t.pal
+      };
+      // site {0,0} → home dipakai apa adanya (koordinat dunia).
+      var npc = new Npc(def, NPC_DEFS.length + i, this.world, { x: 0, z: 0 });
+      npc.town = t.city || true;
+      npc.city = t.city;
+      this.scene.add(npc.group);
+      this.npcs.push(npc);
+    }
   };
 
   /* ---------- Tugas ---------- */
@@ -2170,7 +2223,17 @@
         }
       }
     }
-    for (var n = 0; n < this.npcs.length; n++) this.npcs[n].update(dt, this.world, player);
+    var px = player && player.position ? player.position : null;
+    for (var n = 0; n < this.npcs.length; n++) {
+      var np = this.npcs[n];
+      // Warga kota yang jauh (kerajaan vs kekaisaran) dilewati: hemat ribuan
+      // pemeriksaan tabrakan per frame.
+      if (np.town && px) {
+        var ndx = np.group.position.x - px.x, ndz = np.group.position.z - px.z;
+        if (ndx * ndx + ndz * ndz > 110 * 110) continue;
+      }
+      np.update(dt, this.world, player);
+    }
   };
 
   global.Village = Village;

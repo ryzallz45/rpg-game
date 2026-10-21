@@ -37,7 +37,7 @@
   var waypoint = null; // { x, z, poi } — poi null untuk titik bebas
   var wmAcc = 0;
   var beacon = null, beaconBeam = null, beaconGem = null, beaconRing = null, beaconT = 0;
-  var MAP_POI = { village: 1, harbor: 1, hut: 1, hut2: 1, castle: 1, chapel: 1, stones: 1, kingdom: 1 };
+  var MAP_POI = { village: 1, harbor: 1, hut: 1, hut2: 1, castle: 1, chapel: 1, stones: 1, kingdom: 1, empire: 1 };
 
   /* Dwibahasa (i18n): pintasan terjemahan antarmuka. */
   function L(key, fb) { return window.Lang ? window.Lang.tx(key, fb) : fb; }
@@ -780,6 +780,12 @@
         label: L('map.poi.kingdom', 'Kerajaan Pusat Aetheria')
       });
     }
+    if (world && world.empireSite) {
+      list.push({
+        id: 'empire', x: world.empireSite.x, z: world.empireSite.z,
+        label: L('map.poi.empire', 'Kekaisaran Aetheria')
+      });
+    }
     if (world && world.landmarks) {
       var lmLabels = {
         castle: ['map.poi.castle', 'Reruntuhan Kastil'],
@@ -804,6 +810,7 @@
     if (waypoint.poi === 'hut2') return L('map.poi.hut2', 'Pondok Pulau');
     if (waypoint.poi === 'castle') return L('map.poi.castle', 'Reruntuhan Kastil');
     if (waypoint.poi === 'kingdom') return L('map.poi.kingdom', 'Kerajaan Pusat Aetheria');
+    if (waypoint.poi === 'empire') return L('map.poi.empire', 'Kekaisaran Aetheria');
     if (waypoint.poi === 'chapel') return L('map.poi.chapel', 'Kapel Tua');
     if (waypoint.poi === 'stones') return L('map.poi.stones', 'Lingkaran Batu');
     return L('map.freeTarget', 'Tujuan');

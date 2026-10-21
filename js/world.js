@@ -274,6 +274,11 @@
     this.harborSpot = null;    // pelabuhan di pesisir dekat desa utama (Fase 5)
     this.landmarkSites = [];   // situs bangunan batu tua (kastil, kapel, menara, batu berdiri)
     this.landmarks = [];       // grup bangunan yang sudah dibangun (dipakai peta)
+    this.kingdomSite = null;   // kerajaan pusat (Fase 6)
+    this.empireSite = null;    // kekaisaran agung (Fase 6)
+    this.kingdomBuilt = null;
+    this.empireBuilt = null;
+    this.townSpots = [];       // titik NPC warga kota (kerajaan + kekaisaran)
     this._placed = [];
     this._spawn = null;
     this._tmpColor = new THREE.Color();
@@ -834,6 +839,12 @@
         var kr = ks.r + 6;
         if (kdx * kdx + kdz * kdz < kr * kr) blocked = true;   // dalam tembok kerajaan
       }
+      if (!blocked && this.empireSite) {
+        var es = this.empireSite;
+        var edx = x - es.x, edz = z - es.z;
+        var er = es.r + 10;
+        if (edx * edx + edz * edz < er * er) blocked = true;   // dalam tembok kekaisaran
+      }
       if (blocked) continue;
       if (!this._spotFree(x, z, minDist)) continue;
       return { x: x, z: z, h: h };
@@ -907,6 +918,12 @@
         var kx = x - self.kingdomSite.x, kz = z - self.kingdomSite.z;
         var kl = r + self.kingdomSite.r + 8;
         if (kx * kx + kz * kz < kl * kl) return false;
+      }
+      // ...atau kekaisaran agung.
+      if (self.empireSite) {
+        var ex = x - self.empireSite.x, ez = z - self.empireSite.z;
+        var el = r + self.empireSite.r + 10;
+        if (ex * ex + ez * ez < el * el) return false;
       }
       return true;
     }
@@ -2008,6 +2025,97 @@
     return best;
   };
 
+  /* Titik kekaisaran: butuh lahan kering yang JAUH lebih luas (radius ~150 m)
+     dan cukup datar untuk tembok raksasa + 100 rumah. Pencarian dua tahap:
+     sapuan kasar seluruh peta, lalu penghalusan di sekitar kandidat terbaik. */
+  World.prototype.pickEmpireSite = function () {
+    var half = C.WORLD.size * 0.5;
+    var lim = half - 180;
+    var R = 150;
+    var self = this;
+
+    function blocked(x, z) {
+      var i;
+      var spots = self.villageSpots || [];
+      for (i = 0; i < spots.length; i++) {
+        if (Math.hypot(x - spots[i].x, z - spots[i].z) < 176 + (spots[i].r || 0)) return true;
+      }
+      if (self.harborSpot && Math.hypot(x - self.harborSpot.x, z - self.harborSpot.z) < 190) return true;
+      if (self.kingdomSite && Math.hypot(x - self.kingdomSite.x, z - self.kingdomSite.z) < 345) return true;
+      var isl = self.islandSites || [];
+      for (i = 0; i < isl.length; i++) {
+        if (Math.hypot(x - isl[i].x, z - isl[i].z) < 120) return true;
+      }
+      return false;
+    }
+
+    function measure(x, z, nAng, radii) {
+      var mn = Infinity, mx = -Infinity, wet = 0, sum = 0, n = 0;
+      for (var a = 0; a < nAng; a++) {
+        var ang = a / nAng * Math.PI * 2;
+        for (var ri = 0; ri < radii.length; ri++) {
+          var h = self.groundHeight(x + Math.cos(ang) * radii[ri], z + Math.sin(ang) * radii[ri]);
+          n++; sum += h;
+          if (h < 2.4) wet++;
+          if (h < mn) mn = h;
+          if (h > mx) mx = h;
+        }
+      }
+      return { diff: mx - mn, mn: mn, mx: mx, avg: sum / n, wet: wet };
+    }
+
+    // Fase 1 — sapuan kasar.
+    var cands = [];
+    for (var x = -lim; x <= lim; x += 96) {
+      for (var z = -lim; z <= lim; z += 96) {
+        if (blocked(x, z)) continue;
+        var m = measure(x, z, 8, [0, 75, 150]);
+        if (m.wet) continue;
+        cands.push({ x: x, z: z, diff: m.diff });
+      }
+    }
+    cands.sort(function (a, b) { return a.diff - b.diff; });
+
+    // Fase 2 — penghalusan.
+    var best = null, bestScore = Infinity;
+    var top = Math.min(10, cands.length);
+    for (var i = 0; i < top; i++) {
+      for (var ox = -48; ox <= 48; ox += 48) {
+        for (var oz = -48; oz <= 48; oz += 48) {
+          var cx2 = cands[i].x + ox, cz2 = cands[i].z + oz;
+          if (blocked(cx2, cz2)) continue;
+          var mm = measure(cx2, cz2, 16, [0, 40, 80, 110, 130, 150]);
+          if (mm.wet) continue;
+          var score = mm.diff + Math.hypot(cx2, cz2) * 0.012;
+          if (score < bestScore) {
+            bestScore = score;
+            best = { x: cx2, z: cz2, diff: mm.diff, minH: mm.mn, maxH: mm.mx, avg: mm.avg };
+          }
+        }
+      }
+    }
+    if (!best) {
+      // Longgar: kurangi radius dan izinkan sedikit air.
+      for (var x2 = -lim; x2 <= lim; x2 += 96) {
+        for (var z2 = -lim; z2 <= lim; z2 += 96) {
+          if (blocked(x2, z2)) continue;
+          var m2 = measure(x2, z2, 10, [0, 60, 120]);
+          var sc = m2.diff + m2.wet * 4;
+          if (sc < bestScore) { bestScore = sc; best = { x: x2, z: z2, diff: m2.diff, minH: m2.mn, maxH: m2.mx, avg: m2.avg }; }
+        }
+      }
+    }
+    if (!best) {
+      var ch = this.groundHeight(0, 0);
+      best = { x: 0, z: 0, diff: 0, minH: ch, maxH: ch, avg: ch };
+    }
+    best.id = 'empire';
+    best.r = R + 12;
+    best.yaw = 0;
+    best.y = this.groundHeight(best.x, best.z);
+    return best;
+  };
+
   /* Material + geometri untuk kerajaan (MegaKit bila ada, primitif bila tidak). */
   World.prototype._kingdomParts = function (assets) {
     var srgb = function (hex) { return new THREE.Color(hex).convertSRGBToLinear(); };
@@ -2021,7 +2129,10 @@
       // material dipakai ratusan instance). Bila dikalikan dua kali, atap dan
       // panji jadi hampir hitam.
       var m = new THREE.MeshStandardMaterial({
-        color: 0xFFFFFF, roughness: rough === undefined ? 0.95 : rough, metalness: 0.02
+        color: 0xFFFFFF, roughness: rough === undefined ? 0.95 : rough, metalness: 0.02,
+        // Model MegaKit (tembok, dinding rumah) hanya punya SATU sisi bidang —
+        // dari luar terlihat menembus. DoubleSide menutup semua sisi.
+        side: THREE.DoubleSide
       });
       if (tex && global.TexLib) global.TexLib.apply(m, tex, rx, ry);
       return m;
@@ -2034,9 +2145,14 @@
     }
 
     return {
-      wall: part('wall_unevenbrick_straight', box, 0xC8C2B0, 'stoneBrick', 2.4, 1.7),
-      plaster: part('wall_plaster_straight', box, 0xD6CEBB, 'plaster', 2, 1.5),
-      floor: part('floor_unevenbrick', box, 0x8E8678, 'cobble', 3, 3),
+      // Dinding & tembok memakai kotak pejal (bukan model fasad MegaKit yang
+      // hanya punya satu bidang) supaya tidak ada sisi yang tembus pandang.
+      wall: { geo: box, mat: mkMat(0xC8C2B0, 'stoneBrick', 2.4, 1.7) },
+      plaster: { geo: box, mat: mkMat(0xD6CEBB, 'plaster', 2, 1.5) },
+      // Kotak pejal + tekstur cobble. Model MegaKit 'floor_unevenbrick' memakai
+      // UV sisi yang memetakan ke bagian rumput di atlas → pita hijau di jalan
+      // bertingkat (lereng). Kotak pejal selalu sewarna batu.
+      floor: { geo: box, mat: mkMat(0x8E8678, 'cobble', 3, 3) },
       woodfloor: part('floor_woodlight', box, 0x9A7A4E, 'wood', 2, 2),
       roof: part('roof_roundtiles_4x4', pyramid, 0x6B4636, 'shingle', 3, 2),
       pyramidRoof: { geo: pyramid, mat: mkMat(0x5A3F32, 'shingle', 3, 2) },
@@ -2056,9 +2172,10 @@
     };
   };
 
-  /* Bangun kerajaan besar. assets boleh null (mode file:// / fallback). */
-  World.prototype.buildGreatKingdom = function (assets) {
-    var site = this.kingdomSite;
+  /* Bangun kota berbenteng generik (dipakai kerajaan & kekaisaran).
+     assets boleh null (mode file:// / fallback). */
+  World.prototype._buildCity = function (assets, cfg) {
+    var site = cfg.site;
     if (!site) return false;
     var self = this;
     var P = this._kingdomParts(assets);
@@ -2110,18 +2227,22 @@
     }
 
     /* ---------- parameter tata letak (meter) ---------- */
-    var R_WALL = 60;            // radius tembok luar
-    var WALL_H = 7.2;           // tinggi tembok
-    var WALL_T = 0.9;           // tebal tembok
-    var SEG = 48;               // jumlah segmen tembok
-    var GATE_W = 9;             // lebar gerbang utama
-    var PLAZA_R = 23;           // radius pelataran kastil
-    var RINGS = [30, 39.5, 49]; // radius cincin rumah
-    // Jumlah rumah per kuadran di tiap cincin → 10 + 8 + 12 = 30 rumah
-    var RING_COUNT = [[2, 3, 2, 3], [2, 2, 2, 2], [3, 3, 3, 3]];
-    var ROAD_W = 4.6;
+    var R_WALL = cfg.rWall || 60;       // radius tembok luar
+    var WALL_H = cfg.wallH || 7.2;      // tinggi tembok
+    var WALL_T = cfg.wallT || 0.9;      // tebal tembok
+    var SEG = cfg.seg || 48;            // jumlah segmen tembok
+    var GATE_W = cfg.gateW || 9;        // lebar gerbang utama
+    var SIDE_GATE_W = cfg.sideGateW || 5.4;
+    var PLAZA_R = cfg.plazaR || 23;     // radius pelataran kastil
+    var RINGS = cfg.rings || [30, 39.5, 49];
+    var RING_COUNT = cfg.ringCount || null;
+    var RING_HOUSES = cfg.ringHouses || null;
+    var ROAD_W = cfg.roadW || 4.6;
+    var TOWERS = cfg.towers || 8;
+    var TOWER_R = cfg.towerR || 3.4;
+    var HS = cfg.houseScale || 1;
 
-    var rng = U.mulberry32(C.WORLD.seed + 7777);
+    var rng = U.mulberry32(C.WORLD.seed + (cfg.seed || 7777));
     var cx = site.x, cz = site.z;
     var centerY = gh(cx, cz);
     var village = this.villageSpots && this.villageSpots[0];
@@ -2130,10 +2251,34 @@
     var gateAngles = [mainAng, mainAng + Math.PI / 2, mainAng + Math.PI, mainAng - Math.PI / 2];
     var QUAD = Math.PI / 2;
 
+    // Kekaisaran: gerbang utama jangan menghadap lereng curam — pilih arah yang
+    // paling datar di luar tembok supaya jalan masuk tetap bisa dilalui.
+    if (cfg.flatGate) {
+      var flatBest = 0, flatScore = Infinity;
+      for (var fgi = 0; fgi < 4; fgi++) {
+        var fga = gateAngles[fgi], fgs = 0;
+        for (var fgd = 0; fgd <= 6; fgd++) {
+          var fgr = R_WALL + 8 + fgd * 9;
+          fgs += Math.abs(gh(cx + Math.cos(fga) * fgr, cz + Math.sin(fga) * fgr) - centerY);
+        }
+        if (fgs < flatScore) { flatScore = fgs; flatBest = fgi; }
+      }
+      if (flatBest) {
+        var fgRot = flatBest * QUAD;
+        for (var fgk = 0; fgk < 4; fgk++) gateAngles[fgk] += fgRot;
+        mainAng = gateAngles[0];
+      }
+    }
+
+    // Lebar bukaan tembok per gerbang (busur, meter) supaya pilar gerbang
+    // benar-benar menutup ujung segmen tembok — dulu celahnya tembus pandang.
+    function gateArcHalf(gi) {
+      return (gi === 0 ? GATE_W : SIDE_GATE_W) / 2 + 3.1;
+    }
     function nearGate(a) {
       for (var i = 0; i < gateAngles.length; i++) {
         var d = Math.abs(((a - gateAngles[i] + Math.PI * 3) % (Math.PI * 2)) - Math.PI);
-        if (d < 0.13) return true;
+        if (d * R_WALL < gateArcHalf(i)) return true;
       }
       return false;
     }
@@ -2148,7 +2293,15 @@
       var x0 = cx + Math.cos(a0) * R_WALL, z0 = cz + Math.sin(a0) * R_WALL;
       var x1 = cx + Math.cos(a1) * R_WALL, z1 = cz + Math.sin(a1) * R_WALL;
       var mx = (x0 + x1) / 2, mz = (z0 + z1) / 2;
-      var base = Math.min(gh(x0, z0), gh(x1, z1)) - 0.8;
+      // Sampel beberapa titik di sepanjang segmen: di lereng, alas tembok harus
+      // mengikuti tanah TERENDAH supaya tidak menggantung.
+      var base = Infinity;
+      for (var gs = 0; gs <= 4; gs++) {
+        var gsx = x0 + (x1 - x0) * gs / 4, gsz = z0 + (z1 - z0) * gs / 4;
+        var gsh = gh(gsx, gsz);
+        if (gsh < base) base = gsh;
+      }
+      base -= 0.9;
       var top = Math.max(gh(x0, z0), gh(x1, z1)) + WALL_H;
       var ry = -Math.atan2(z1 - z0, x1 - x0);
       add('wall', mx, (base + top) / 2, mz, segLen * 1.06, top - base, WALL_T, 0xC6C0AE, ry);
@@ -2164,19 +2317,19 @@
       this.walls.push({ x1: x0, z1: z0, x2: x1, z2: z1, r: 0.55 });
     }
 
-    /* ---------- 2. MENARA (8 buah di tembok) ---------- */
+    /* ---------- 2. MENARA (mengelilingi tembok) ---------- */
     var towerAngles = [];
-    for (var t = 0; t < 8; t++) {
-      var ta = t / 8 * Math.PI * 2 + Math.PI / 8;
+    for (var t = 0; t < TOWERS; t++) {
+      var ta = t / TOWERS * Math.PI * 2 + Math.PI / TOWERS;
       if (nearGate(ta)) continue;
       towerAngles.push(ta);
     }
     for (var ti = 0; ti < towerAngles.length; ti++) {
       var aa = towerAngles[ti];
       var tx = cx + Math.cos(aa) * R_WALL, tz = cz + Math.sin(aa) * R_WALL;
-      var ty = gh(tx, tz) - 1.0;
+      var ty = gh(tx, tz) - 1.3;
       var th = WALL_H + 5.5;
-      var tr = 3.4;
+      var tr = TOWER_R;
       add('body', tx, ty, tz, tr * 2, th, tr * 2, 0xC2BCAA);
       add('towerRoof', tx, ty + th, tz, tr * 2.5, 6.2, tr * 2.5, 0x593E31);
       add('floor', tx, ty + th - 0.3, tz, tr * 1.9, 0.3, tr * 1.9, 0x9A9384);
@@ -2192,14 +2345,15 @@
       var isMain = gi === 0;
       var gx = cx + Math.cos(ga) * R_WALL, gz = cz + Math.sin(ga) * R_WALL;
       var gy = gh(gx, gz);
-      var tang = Math.atan2(Math.cos(ga), -Math.sin(ga));
-      var gw = isMain ? GATE_W : 5.4;
+      var tang = -(ga + Math.PI / 2);   // rotasi Three.js (X lokal → garis singgung)
+      var gw = isMain ? GATE_W : SIDE_GATE_W;
       var ghgt = isMain ? WALL_H + 3.4 : WALL_H + 1.6;
+      var openH = isMain ? 5.0 : 4.2;   // tinggi lubang gerbang
       // Pilar kiri/kanan
       for (var side = -1; side <= 1; side += 2) {
-        var px = gx + Math.cos(ga + Math.PI / 2) * side * (gw / 2 + 1.5);
-        var pz = gz + Math.sin(ga + Math.PI / 2) * side * (gw / 2 + 1.5);
-        add('stone', px, gy + ghgt / 2, pz, 2.6, ghgt, 2.6, 0xC6C0AE, tang);
+        var px = gx + Math.cos(ga + Math.PI / 2) * side * (gw / 2 + 1.7);
+        var pz = gz + Math.sin(ga + Math.PI / 2) * side * (gw / 2 + 1.7);
+        add('stone', px, gy + ghgt / 2, pz, 3.4, ghgt, 3.4, 0xC6C0AE, tang);
         if (isMain) {
           add('body', px, gy - 0.5, pz, 6.2, ghgt + 5.5, 6.2, 0xC2BCAA);
           add('towerRoof', px, gy + ghgt + 5.0, pz, 8.4, 6.4, 8.4, 0x593E31);
@@ -2207,17 +2361,24 @@
           // Obor gerbang
           addMat('fire', 'stone', fireMat, px - Math.cos(ga) * 3.4, gy + 4.6, pz - Math.sin(ga) * 3.4, 0.55, 0.7, 0.55);
         } else {
-          this.colliders.push({ x: px, z: pz, r: 1.8 });
+          this.colliders.push({ x: px, z: pz, r: 1.9 });
         }
       }
-      // Ambang atas gerbang
-      add('arch', gx, gy + ghgt - 1.1, gz, gw + 2.2, 2.4, 1.1, 0xA8A294, tang);
+      // Ambang atas gerbang (tepat di atas lubang, bukan menggantung di puncak).
+      // 'stone' (kotak pejal) — model 'arch' MegaKit berlubang sehingga tembus pandang.
+      add('stone', gx, gy + openH + 0.7, gz, gw + 6.8, 1.4, 1.2, 0xA8A294, tang);
+      // Dinding pengisi di atas ambang → tidak ada lagi lubang tembus pandang
+      var fillH = ghgt - openH - 1.4;
+      if (fillH > 0.15) {
+        add('wall', gx, gy + openH + 1.4 + fillH / 2, gz, gw + 6.8, fillH, 0.9, 0xC6C0AE, tang);
+        add('stone', gx, gy + openH + 1.4 + fillH / 2, gz, 0.9, fillH * 0.92, 1.15, 0xCAC4B2, tang);
+      }
       // Daun pintu (kayu) — gerbang utama tertutup separuh
       if (isMain) {
         for (var dside = -1; dside <= 1; dside += 2) {
-          var dx2 = gx + Math.cos(ga + Math.PI / 2) * dside * (gw / 4);
-          var dz2 = gz + Math.sin(ga + Math.PI / 2) * dside * (gw / 4);
-          add('timber', dx2, gy + 2.4, dz2, gw / 2 - 0.25, 4.8, 0.28, 0x4A3524, tang);
+          var dx2 = gx + Math.cos(ga + Math.PI / 2) * dside * (gw / 4 - 0.1);
+          var dz2 = gz + Math.sin(ga + Math.PI / 2) * dside * (gw / 4 - 0.1);
+          add('timber', dx2, gy + openH / 2, dz2, gw / 2 + 0.15, openH, 0.28, 0x4A3524, tang);
         }
         // Bumbung gerbang + panji
         add('pyramidRoof', gx, gy + ghgt + 0.5, gz, gw + 7, 5.4, gw + 7, 0x6B4636);
@@ -2225,9 +2386,35 @@
       }
     }
 
+    /* ---------- 3b. JALAN MASUK DARI LUAR TEMBOK ---------- */
+    // Tanpa ini gerbang tampak "menempel" di padang rumput. Ubin pendek supaya
+    // jalan ikut naik-turun mengikuti lereng.
+    for (var gpi = 0; gpi < gateAngles.length; gpi++) {
+      var gpa = gateAngles[gpi];
+      var gpw = gpi === 0 ? GATE_W + 1.5 : SIDE_GATE_W + 1.2;
+      for (var gps = 0; gps < 10; gps++) {
+        var gpd = R_WALL + 2.2 + gps * 3.4;
+        var gpx = cx + Math.cos(gpa) * gpd, gpz = cz + Math.sin(gpa) * gpd;
+        add('floor', gpx, gh(gpx, gpz) - 0.42, gpz, 4.4, 1.2, gpw, 0x8E8678, -gpa);
+      }
+    }
+
     /* ---------- 4. PELATARAN KASTIL ---------- */
-    var plazaTop = centerY + 1.1;
-    add('body', cx, centerY - 1.4, cz, PLAZA_R * 2, 2.5, PLAZA_R * 2, 0xA8A296);
+    // Pelataran harus lebih tinggi dari tanah tertinggi di dalam lingkarannya,
+    // kalau tidak ia terkubur di sisi bukit. Dasarnya turun sampai tanah terendah.
+    var plazaMn = Infinity, plazaMx = -Infinity;
+    for (var psa = 0; psa < 16; psa++) {
+      for (var psr = 0; psr <= 2; psr++) {
+        var prad = PLAZA_R * psr / 2;
+        var pval = gh(cx + Math.cos(psa / 16 * Math.PI * 2) * prad,
+          cz + Math.sin(psa / 16 * Math.PI * 2) * prad);
+        if (pval < plazaMn) plazaMn = pval;
+        if (pval > plazaMx) plazaMx = pval;
+      }
+    }
+    var plazaTop = Math.max(centerY + 0.6, plazaMx + 0.55);
+    var plazaBot = Math.min(centerY - 1.4, plazaMn - 1.8);
+    add('body', cx, plazaBot, cz, PLAZA_R * 2, plazaTop - plazaBot, PLAZA_R * 2, 0xA8A296);
     add('body', cx, plazaTop - 0.18, cz, PLAZA_R * 2 - 1.2, 0.36, PLAZA_R * 2 - 1.2, 0x8E8678);
     // Tangga masuk pelataran dari 4 jalan utama
     for (var pst = 0; pst < 4; pst++) {
@@ -2244,7 +2431,7 @@
       for (var rr2 = PLAZA_R + 3; rr2 < R_WALL - 2; rr2 += 4) {
         var rx = cx + Math.cos(ra) * rr2;
         var rz = cz + Math.sin(ra) * rr2;
-        add('floor', rx, gh(rx, rz) + 0.08, rz, 4.3, 0.22, ROAD_W, roadHex, -ra);
+        add('floor', rx, gh(rx, rz) - 0.32, rz, 4.3, 1.0, ROAD_W, roadHex, -ra);
       }
       // Tiang lampu di sisi jalan (tiap 12 m)
       for (var lp = PLAZA_R + 7; lp < R_WALL - 6; lp += 12) {
@@ -2258,8 +2445,16 @@
         }
       }
     }
-    // Jalan lingkar
-    var ringRoads = [25.5, 35, 44.5, 54.5];
+    // Jalan lingkar: satu di antara tiap pasang cincin rumah, plus satu di luar
+    // cincin terluar dan satu di tepi pelataran.
+    var ringRoads = [];
+    if (RINGS.length) {
+      ringRoads.push(Math.max(PLAZA_R + 2.6, RINGS[0] - (RINGS.length > 1 ? (RINGS[1] - RINGS[0]) / 2 : 5)));
+      for (var rgi = 1; rgi < RINGS.length; rgi++) {
+        ringRoads.push((RINGS[rgi - 1] + RINGS[rgi]) / 2);
+      }
+      ringRoads.push(Math.min(R_WALL - 4.5, RINGS[RINGS.length - 1] + 6));
+    }
     for (var rri = 0; rri < ringRoads.length; rri++) {
       var rad = ringRoads[rri];
       var nseg = Math.max(24, Math.round(rad * 0.9));
@@ -2269,7 +2464,7 @@
         var aa2 = s2 * stepA + stepA / 2;
         var rx2 = cx + Math.cos(aa2) * rad;
         var rz2 = cz + Math.sin(aa2) * rad;
-        add('floor', rx2, gh(rx2, rz2) + 0.08, rz2, chord * 1.08, 0.22, ROAD_W - 1.2, roadHex, -(aa2 + Math.PI / 2));
+        add('floor', rx2, gh(rx2, rz2) - 0.32, rz2, chord * 1.08, 1.0, ROAD_W - 1.2, roadHex, -(aa2 + Math.PI / 2));
       }
     }
 
@@ -2290,6 +2485,10 @@
       var hex = opts.hex || 0xD9CFB4;
       var floorTop = y0 + 0.72;
       var wallBase = floorTop + 0.08;
+      // Dinding dimulai sedikit di bawah bibir pondasi supaya tidak ada celah
+      // gelap antara dinding dan pondasi.
+      var wallMid = wallBase + wallH / 2 - 0.2;
+      var wallHt = wallH + 0.4;
       var doorW = opts.doorW || 1.5;
       var doorH = opts.doorH || 2.2;
 
@@ -2300,19 +2499,20 @@
 
       // Dinding belakang
       var bp = at(0, -hd);
-      add('plaster', bp.x, wallBase + wallH / 2, bp.z, hw * 2, wallH, 0.3, hex, ry);
-      // Dinding samping
+      add('plaster', bp.x, wallMid, bp.z, hw * 2, wallHt, 0.3, hex, ry);
+      // Dinding samping — model tembok memanjang di sumbu X, jadi diputar 90°
+      // agar bidang besarnya menghadap keluar (dulu terbalik → tembok tembus).
       var lp2 = at(-hw, 0);
-      add('plaster', lp2.x, wallBase + wallH / 2, lp2.z, 0.3, wallH, hd * 2, hex, ry);
+      add('plaster', lp2.x, wallMid, lp2.z, hd * 2, wallHt, 0.3, hex, ry + Math.PI / 2);
       var rp2 = at(hw, 0);
-      add('plaster', rp2.x, wallBase + wallH / 2, rp2.z, 0.3, wallH, hd * 2, hex, ry);
+      add('plaster', rp2.x, wallMid, rp2.z, hd * 2, wallHt, 0.3, hex, ry + Math.PI / 2);
 
       // Dinding depan dengan lubang pintu
       var panelW = hw - doorW / 2 - 0.15;
       var fl = at(-(doorW / 2 + 0.15 + panelW / 2), hd);
       var fr = at(doorW / 2 + 0.15 + panelW / 2, hd);
-      add('plaster', fl.x, wallBase + wallH / 2, fl.z, panelW, wallH, 0.3, hex, ry);
-      add('plaster', fr.x, wallBase + wallH / 2, fr.z, panelW, wallH, 0.3, hex, ry);
+      add('plaster', fl.x, wallMid, fl.z, panelW, wallHt, 0.3, hex, ry);
+      add('plaster', fr.x, wallMid, fr.z, panelW, wallHt, 0.3, hex, ry);
       var lint = at(0, hd);
       add('plaster', lint.x, wallBase + doorH + (wallH - doorH) / 2, lint.z, doorW + 0.3, wallH - doorH, 0.3, hex, ry);
 
@@ -2327,6 +2527,9 @@
 
       // Atap + cerobong + lis
       add('roof', hx, wallBase + wallH, hz, hw * 2 + 1.6, roofH, hd * 2 + 1.6, opts.roofHex || 0x6B4636, ry);
+      // Langit-langit: atap MegaKit berbentuk cangkang terbuka, tanpa ini
+      // pemain melihat menembus atap dari dalam rumah.
+      add('woodfloor', hx, wallBase + wallH - 0.04, hz, hw * 2 - 0.1, 0.1, hd * 2 - 0.1, 0x8C6C4E, ry);
       var chp = at(hw * 0.52, -hd * 0.42);
       add('chimney', chp.x, wallBase + wallH - 0.4, chp.z, 0.75, 3.4, 0.75, 0x8B8577, ry);
 
@@ -2356,106 +2559,71 @@
       houses++;
     }
 
-    for (var ring = 0; ring < RINGS.length; ring++) {
-      var rad2 = RINGS[ring];
-      for (var qi = 0; qi < 4; qi++) {
-        var per = RING_COUNT[ring][qi];
-        var baseAng = gateAngles[qi] + 0.26;
-        var span = QUAD - 0.52;
-        for (var k = 0; k < per; k++) {
-          var ang2 = baseAng + span * (k + 0.5) / per;
+    if (RING_HOUSES) {
+      // Cincin penuh (kekaisaran): jumlah rumah persis seperti daftar. Rumah
+      // yang jatuh di mulut gerbang digeser sedikit, bukan dibuang.
+      for (var ring = 0; ring < RINGS.length; ring++) {
+        var rad2 = RINGS[ring];
+        var nH = RING_HOUSES[ring] || 0;
+        var bigR = ring === 1 || (cfg.grand && (ring === 2 || ring === 3));
+        for (var k = 0; k < nH; k++) {
+          var ang2 = (k + 0.5) / nH * Math.PI * 2 + ring * 0.13;
+          var tries = 0;
+          while (nearGate(ang2) && tries++ < 60) ang2 += 0.028;
           var hx = cx + Math.cos(ang2) * rad2;
           var hz = cz + Math.sin(ang2) * rad2;
-          var hry = -ang2 - Math.PI / 2;  // fasad (pintu) menghadap pusat kota
-          var big = ring === 1;
-          var hw = big ? 3.4 : (ring === 2 ? 3.0 : 2.8);
-          var hd = big ? 2.9 : (ring === 2 ? 2.6 : 2.4);
+          var hry = -ang2 - Math.PI / 2;  // pintu menghadap pusat kota
+          var hw = (bigR ? 3.4 : (ring === 2 ? 3.0 : 2.8)) * HS;
+          var hd = (bigR ? 2.9 : (ring === 2 ? 2.6 : 2.4)) * HS;
           addHouse.call(this, hx, hz, hry, hw, hd, {
-            wallH: 3.0 + (big ? 0.4 : 0),
-            roofH: 2.5 + (big ? 0.5 : 0),
+            wallH: 3.0 + (bigR ? 0.5 : 0),
+            roofH: 2.5 + (bigR ? 0.6 : 0),
             hex: [0xD9CFB4, 0xD2C6A9, 0xE0D8C2][(rng() * 3) | 0],
             roofHex: [0x6B4636, 0x5E4232, 0x744C3A][(rng() * 3) | 0],
-            doorW: big ? 1.7 : 1.5
+            doorW: bigR ? 1.7 : 1.5
           });
+        }
+      }
+    } else {
+      for (var ring2 = 0; ring2 < RINGS.length; ring2++) {
+        var rad3 = RINGS[ring2];
+        for (var qi = 0; qi < 4; qi++) {
+          var per = RING_COUNT[ring2][qi];
+          var baseAng = gateAngles[qi] + 0.26;
+          var span = QUAD - 0.52;
+          for (var k2 = 0; k2 < per; k2++) {
+            var ang3 = baseAng + span * (k2 + 0.5) / per;
+            var hx2 = cx + Math.cos(ang3) * rad3;
+            var hz2 = cz + Math.sin(ang3) * rad3;
+            var hry2 = -ang3 - Math.PI / 2;  // fasad (pintu) menghadap pusat kota
+            var big = ring2 === 1;
+            var hw2 = (big ? 3.4 : (ring2 === 2 ? 3.0 : 2.8)) * HS;
+            var hd2 = (big ? 2.9 : (ring2 === 2 ? 2.6 : 2.4)) * HS;
+            addHouse.call(this, hx2, hz2, hry2, hw2, hd2, {
+              wallH: 3.0 + (big ? 0.4 : 0),
+              roofH: 2.5 + (big ? 0.5 : 0),
+              hex: [0xD9CFB4, 0xD2C6A9, 0xE0D8C2][(rng() * 3) | 0],
+              roofHex: [0x6B4636, 0x5E4232, 0x744C3A][(rng() * 3) | 0],
+              doorW: big ? 1.7 : 1.5
+            });
+          }
         }
       }
     }
 
     /* ---------- 7. KASTIL DI TENGAH ---------- */
-    var keepY = plazaTop;
-    var castleHalf = 12;
-    var cWallH = 7.5;
-    // Curtain wall 4 sisi, sisi depan (menghadap gerbang utama) diberi celah
-    for (var ci = 0; ci < 4; ci++) {
-      var ca = gateAngles[ci];
-      var nx = Math.cos(ca + Math.PI / 2), nz = Math.sin(ca + Math.PI / 2);
-      for (var half = -1; half <= 1; half += 2) {
-        var segC = castleHalf;
-        var mxC = cx + Math.cos(ca) * (castleHalf + 1.2) + nx * half * (segC / 2 + 0.6);
-        var mzC = cz + Math.sin(ca) * (castleHalf + 1.2) + nz * half * (segC / 2 + 0.6);
-        // Dinding tirai harus MENGITARI kastil (sejajar garis singgung).
-        add('wall', mxC, keepY + cWallH / 2, mzC, segC, cWallH, 0.9, 0xBDB7A4, ca + Math.PI / 2);
-        this.walls.push({
-          x1: mxC - nx * segC / 2, z1: mzC - nz * segC / 2,
-          x2: mxC + nx * segC / 2, z2: mzC + nz * segC / 2,
-          r: 0.55
-        });
-      }
-      // Menara sudut kastil
-      for (var cs = -1; cs <= 1; cs += 2) {
-        var tx2 = cx + Math.cos(ca) * (castleHalf + 1.2) + nx * cs * (castleHalf + 1.2);
-        var tz2 = cz + Math.sin(ca) * (castleHalf + 1.2) + nz * cs * (castleHalf + 1.2);
-        add('body', tx2, keepY - 0.5, tz2, 6.0, cWallH + 8.5, 6.0, 0xC2BCAA);
-        add('towerRoof', tx2, keepY + cWallH + 7.6, tz2, 7.6, 6.2, 7.6, 0x593E31);
-        this.colliders.push({ x: tx2, z: tz2, r: 3.2 });
-      }
-    }
-    // Gerbang kastil (sisi menghadap gerbang kota)
-    var cgx = cx + Math.cos(mainAng) * (castleHalf + 1.2);
-    var cgz = cz + Math.sin(mainAng) * (castleHalf + 1.2);
-    add('arch', cgx, keepY + 3.4, cgz, 4.4, 1.4, 1.2, 0xA8A294, mainAng + Math.PI / 2);
-    add('door', cgx, keepY + 2.0, cgz, 3.6, 3.9, 0.22, 0x4F3722, mainAng + Math.PI / 2);
-
-    // Menara utama (keep) — benteng batu persegi dengan 4 turret sudut.
-    var keepW = 16, keepH = 20;
-    add('stone', cx, keepY + keepH / 2 - 0.5, cz, keepW, keepH, keepW, 0xCAC3B0);
-    // Lis batu di puncak
-    add('stone', cx, keepY + keepH - 0.7, cz, keepW + 1.8, 1.6, keepW + 1.8, 0xB3AC99);
-    // Wereng keliling (5 per sisi)
-    for (var kside = 0; kside < 4; kside++) {
-      var ka = kside * Math.PI / 2;
-      for (var kb = -2; kb <= 2; kb++) {
-        var koff = kb * (keepW / 5.2);
-        add('stone',
-          cx + Math.cos(ka) * (keepW / 2 + 0.55) + Math.cos(ka + Math.PI / 2) * koff,
-          keepY + keepH + 0.4,
-          cz + Math.sin(ka) * (keepW / 2 + 0.55) + Math.sin(ka + Math.PI / 2) * koff,
-          1.5, 1.4, 1.5, 0xB8B19E, ka + Math.PI / 2);
-      }
-    }
-    // Atap limas + tiang panji
-    add('pyramidRoof', cx, keepY + keepH + 1.2, cz, keepW + 6, 8.5, keepW + 6, 0x5A3F32);
-    add('timber', cx, keepY + keepH + 9.7, cz, 0.22, 4.6, 0.22, 0x5B4128);
-    addMat('bannerA', 'timber', clothRed, cx + 1.4, keepY + keepH + 11.7, cz, 2.6, 1.7, 0.08);
-    // 4 turret sudut keep
-    for (var kt = 0; kt < 4; kt++) {
-      var kta = Math.PI / 4 + kt * Math.PI / 2;
-      var ktx = cx + Math.cos(kta) * (keepW * 0.62);
-      var ktz = cz + Math.sin(kta) * (keepW * 0.62);
-      add('body', ktx, keepY - 0.5, ktz, 6.4, keepH + 4.5, 6.4, 0xC6C0AE);
-      add('towerRoof', ktx, keepY + keepH + 3.6, ktz, 8.0, 6.0, 8.0, 0x5A3F32);
-    }
-    // Jendela: 2 per sisi
-    for (var kface = 0; kface < 4; kface++) {
-      var fa = kface * Math.PI / 2;
-      for (var fw = -1; fw <= 1; fw += 2) {
-        var wx3 = cx + Math.cos(fa) * (keepW / 2 + 0.12) + Math.cos(fa + Math.PI / 2) * fw * 3.6;
-        var wz3 = cz + Math.sin(fa) * (keepW / 2 + 0.12) + Math.sin(fa + Math.PI / 2) * fw * 3.6;
-        add('window', wx3, keepY + 12.5, wz3, 1.4, 1.7, 0.3, 0x2C3840, fa + Math.PI / 2);
-        add('window', wx3, keepY + 6.0, wz3, 1.2, 1.5, 0.3, 0x2C3840, fa + Math.PI / 2);
-      }
-    }
-    this.colliders.push({ x: cx, z: cz, r: 11.6 });
+    this._buildCastle({ add: add, addMat: addMat, clothRed: clothRed, clothBlue: clothBlue },
+      cx, cz, plazaTop, mainAng, cfg.grand ? {
+        half: 26, wallH: 12, wallT: 1.5, gateHalf: 4.6, gateH: 7.0,
+        keepW: 22, keepH: 34, keepR: 16.0, turretR: 4.2, turretH: 26,
+        midTurrets: true, batt: 6, windowRows: [8, 17, 26], roofH: 12,
+        banners: true, stair: true
+      } : {
+        half: 13.2, wallH: 7.5, wallT: 1.0, gateHalf: 2.2, gateH: 4.0,
+        keepW: 16, keepH: 20, keepR: 11.2, turretR: 3.2, turretH: 16,
+        midTurrets: false, batt: 5, windowRows: [6, 12.5], roofH: 8.5,
+        banners: true, stair: false
+      });
 
     /* ---------- 8. PASAR, SUMUR, PATUNG, PENGHIAS ---------- */
     var ma = gateAngles[0];
@@ -2473,9 +2641,10 @@
       add('crate', sx2 - 1.0, mcy + 0.42, sz2 + 0.3, 0.58, 0.58, 0.58, 0x93713E, -ma);
       this.colliders.push({ x: sx2, z: sz2, r: 1.1 });
     }
-    // Sumur di pelataran
-    var wx2 = cx + Math.cos(ma + 0.55) * 27, wz2 = cz + Math.sin(ma + 0.55) * 27;
-    var wy2 = gh(wx2, wz2);
+    // Sumur di pelataran (di luar kastil, di atas permukaan pelataran)
+    var wrad = Math.max(27, PLAZA_R - 9);
+    var wx2 = cx + Math.cos(ma + 0.55) * wrad, wz2 = cz + Math.sin(ma + 0.55) * wrad;
+    var wy2 = cfg.grand ? plazaTop : gh(wx2, wz2);
     add('body', wx2, wy2, wz2, 2.6, 0.95, 2.6, 0x8E8678);
     add('body', wx2, wy2 + 0.95, wz2, 2.1, 0.08, 2.1, 0x1B262C);
     add('timber', wx2 - 1.0, wy2 + 1.9, wz2, 0.16, 1.9, 0.16, 0x5B4128);
@@ -2505,24 +2674,45 @@
     this.colliders.push({ x: fx2, z: fz2, r: 1.2 });
 
     /* ---------- 9. POHON HIAS DI SELA-SELA RUMAH ---------- */
-    for (var tr2 = 0; tr2 < 22; tr2++) {
+    // Apakah titik berada di dalam (atau terlalu dekat) sebuah rumah?
+    function inPlatform(x, z, pad) {
+      pad = pad === undefined ? 0.6 : pad;
+      for (var pi = 0; pi < self.platforms.length; pi++) {
+        var pp = self.platforms[pi];
+        var pdx = x - pp.x, pdz = z - pp.z;
+        if (pdx * pdx + pdz * pdz > 90) continue;
+        var plx = pdx * pp.cos - pdz * pp.sin;
+        var plz = pdx * pp.sin + pdz * pp.cos;
+        if (Math.abs(plx) < pp.hw + pad && Math.abs(plz) < pp.hd + pad) return true;
+      }
+      return false;
+    }
+    var nTrees = cfg.trees === undefined ? 22 : cfg.trees;
+    for (var tr2 = 0; tr2 < nTrees; tr2++) {
       var tra = rng() * Math.PI * 2;
-      var trr = 26 + rng() * 32;
+      var trr = PLAZA_R + 4 + rng() * (R_WALL - PLAZA_R - 8);
       var trx = cx + Math.cos(tra) * trr;
       var trz = cz + Math.sin(tra) * trr;
       var try2 = gh(trx, trz);
       // jangan menimpa jalan
       var nearRoad = false;
       for (var rg = 0; rg < ringRoads.length && !nearRoad; rg++) {
-        if (Math.abs(trr - ringRoads[rg]) < 3.2) nearRoad = true;
+        if (Math.abs(trr - ringRoads[rg]) < ROAD_W * 0.65 + 0.6) nearRoad = true;
       }
       for (var gq = 0; gq < 4 && !nearRoad; gq++) {
         var dd = Math.abs(((tra - gateAngles[gq] + Math.PI * 3) % (Math.PI * 2)) - Math.PI);
-        if (dd < 0.12) nearRoad = true;
+        if (dd * trr < ROAD_W * 0.75 + 1.2) nearRoad = true;
       }
       if (nearRoad) continue;
+      if (inPlatform(trx, trz, 1.3)) continue;
       add('timber', trx, try2 + 1.1, trz, 0.3, 2.2, 0.3, 0x4E3B26);
       add('stone', trx, try2 + 2.6, trz, 2.6, 1.9, 2.6, 0x4C6B3C, 0.4);
+    }
+
+    /* ---------- 10. WARGA KOTA (titik NPC) ---------- */
+    if (cfg.npcs) {
+      this._cityNpcSpots(cx, cz, PLAZA_R + 3.5, R_WALL - 7, cfg.npcs,
+        cfg.id, rng, inPlatform);
     }
 
     /* ---------- flush ke InstancedMesh ---------- */
@@ -2555,17 +2745,247 @@
 
     this.landmarks = this.landmarks || [];
     this.landmarks.push({
-      id: 'great_kingdom',
+      id: cfg.id,
       x: cx, z: cz, y: site.y, r: R_WALL,
       group: group, houses: houses, instances: total
     });
-    this.kingdomBuilt = { x: cx, z: cz, r: R_WALL, houses: houses, instances: total, assets: !!(assets && assets.ready) };
+    var built = {
+      id: cfg.id, x: cx, z: cz, y: site.y, r: R_WALL, houses: houses,
+      instances: total, assets: !!(assets && assets.ready),
+      npcs: cfg.npcs || 0, mainAng: mainAng, plazaTop: plazaTop
+    };
+    if (cfg.id === 'empire') this.empireBuilt = built;
+    else this.kingdomBuilt = built;
     if (global.console) {
-      console.log('[Aetheria] Kerajaan Besar: ' + houses + ' rumah, ' + total + ' instance, ' +
+      console.log('[Aetheria] ' + (cfg.label || cfg.id) + ': ' + houses + ' rumah, ' + total + ' instance, ' +
         (assets && assets.ready ? 'model MegaKit' : 'prosedural') +
         ' @ x=' + cx.toFixed(0) + ' z=' + cz.toFixed(0));
     }
     return true;
+  };
+
+  /* Kastil: tembok tirai persegi + menara sudut + benteng (keep) bertingkat.
+     Dipakai kerajaan (kecil) dan kekaisaran (megah). */
+  World.prototype._buildCastle = function (H, cx, cz, baseY, mainAng, o) {
+    var add = H.add, addMat = H.addMat;
+    var half = o.half, wallH = o.wallH, wallT = o.wallT || 1.1;
+    var keepW = o.keepW, keepH = o.keepH;
+    var roofHex = 0x593E31;
+    var ry0 = -(mainAng + Math.PI / 2);
+
+    // ---- Tembok tirai: 4 sisi, sisi depan (menghadap gerbang kota) bergerbang ----
+    for (var ci = 0; ci < 4; ci++) {
+      var ca = mainAng + ci * Math.PI / 2;
+      var nx = Math.cos(ca + Math.PI / 2), nz = Math.sin(ca + Math.PI / 2);
+      var wx = cx + Math.cos(ca) * half, wz = cz + Math.sin(ca) * half;
+      var wry = -(ca + Math.PI / 2);
+      if (ci === 0) {
+        // dua potong tembok mengapit gerbang
+        var segLen = half - o.gateHalf;
+        for (var side = -1; side <= 1; side += 2) {
+          var mx = wx + nx * side * (o.gateHalf + segLen / 2);
+          var mz = wz + nz * side * (o.gateHalf + segLen / 2);
+          add('wall', mx, baseY + wallH / 2, mz, segLen, wallH, wallT, 0xA9A28E, wry);
+          this.walls.push({
+            x1: mx - nx * segLen / 2, z1: mz - nz * segLen / 2,
+            x2: mx + nx * segLen / 2, z2: mz + nz * segLen / 2, r: 0.6
+          });
+        }
+        // ambang + pengisi di atas lubang gerbang
+        var fillH = wallH - o.gateH;
+        if (fillH > 0.2) {
+          add('wall', wx, baseY + o.gateH + fillH / 2, wz, o.gateHalf * 2 + 1.2, fillH, wallT, 0xA9A28E, wry);
+        }
+        add('stone', wx, baseY + o.gateH + 0.4, wz, o.gateHalf * 2 + 1.8, 1.0, wallT + 0.3, 0xA8A294, wry);
+        for (var ds = -1; ds <= 1; ds += 2) {
+          add('timber', wx + nx * ds * o.gateHalf * 0.5, baseY + o.gateH / 2, wz + nz * ds * o.gateHalf * 0.5,
+            o.gateHalf - 0.2, o.gateH, 0.26, 0x4A3524, wry);
+        }
+        // menara gerbang
+        for (var gs = -1; gs <= 1; gs += 2) {
+          var gtx = wx + nx * gs * (o.gateHalf + 1.7);
+          var gtz = wz + nz * gs * (o.gateHalf + 1.7);
+          add('body', gtx, baseY - 0.6, gtz, 7.4, wallH + 7.5, 7.4, 0xB2AB98);
+          add('towerRoof', gtx, baseY + wallH + 6.9, gtz, 8.8, 7.0, 8.8, roofHex);
+          this.colliders.push({ x: gtx, z: gtz, r: 3.7 });
+        }
+      } else {
+        add('wall', wx, baseY + wallH / 2, wz, half * 2, wallH, wallT, 0xA9A28E, wry);
+        this.walls.push({
+          x1: wx - nx * half, z1: wz - nz * half,
+          x2: wx + nx * half, z2: wz + nz * half, r: 0.6
+        });
+      }
+      // menara sudut
+      for (var cs = -1; cs <= 1; cs += 2) {
+        var tx = wx + nx * cs * half;
+        var tz = wz + nz * cs * half;
+        add('body', tx, baseY - 0.6, tz, o.turretR * 2, o.turretH, o.turretR * 2, 0xB6AE9C);
+        add('towerRoof', tx, baseY + o.turretH - 0.6, tz, o.turretR * 2.5, o.turretR * 2.7, o.turretR * 2.5, roofHex);
+        this.colliders.push({ x: tx, z: tz, r: o.turretR });
+        // panji di menara sudut
+        add('timber', tx, baseY + o.turretH + o.turretR * 2.1, tz, 0.14, 3.2, 0.14, 0x5B4128);
+        addMat('bannerA', 'timber', H.clothRed, tx + 0.9, baseY + o.turretH + o.turretR * 2.1 + 1.6, tz, 1.7, 1.2, 0.06);
+      }
+      // menara tengah sisi (kekaisaran)
+      if (o.midTurrets && ci !== 0) {
+        var mtx = wx, mtz = wz;
+        add('body', mtx, baseY - 0.6, mtz, o.turretR * 1.7, o.turretH * 0.7, o.turretR * 1.7, 0xC2BCAA);
+        add('towerRoof', mtx, baseY + o.turretH * 0.7 - 0.6, mtz, o.turretR * 2.2, o.turretR * 2.2, o.turretR * 2.2, roofHex);
+        this.colliders.push({ x: mtx, z: mtz, r: o.turretR * 1.2 });
+      }
+    }
+
+    // ---- Benteng utama (keep) ----
+    // Kaki yang lebih lebar (plinth) + lis tengah: memberi kesan bertingkat.
+    add('stone', cx, baseY + 1.7, cz, keepW + 2.8, 3.4, keepW + 2.8, 0xC6C0AE);
+    var kMid = baseY + keepH / 2 - 0.3;
+    add('stone', cx, kMid, cz, keepW, keepH, keepW, 0xD9D3C1);
+    add('stone', cx, baseY + keepH * 0.56, cz, keepW + 1.4, 1.0, keepW + 1.4, 0xC0B9A6);
+    // lis puncak
+    add('stone', cx, baseY + keepH - 0.7, cz, keepW + 1.9, 1.6, keepW + 1.9, 0xCAC3B0);
+    // wereng keliling
+    var nb = o.batt || 5;
+    for (var kside = 0; kside < 4; kside++) {
+      var ka = mainAng + kside * Math.PI / 2;
+      for (var kb = 0; kb < nb; kb++) {
+        var koff = (kb - (nb - 1) / 2) * (keepW / (nb + 0.4));
+        var kx = cx + Math.cos(ka) * (keepW / 2 + 0.55) + Math.cos(ka + Math.PI / 2) * koff;
+        var kz = cz + Math.sin(ka) * (keepW / 2 + 0.55) + Math.sin(ka + Math.PI / 2) * koff;
+        add('stone', kx, baseY + keepH + 0.45, kz, 1.6, 1.5, 1.6, 0xB8B19E, -(ka + Math.PI / 2));
+      }
+    }
+    // atap limas + tiang panji
+    add('pyramidRoof', cx, baseY + keepH + 1.2, cz, keepW + 6, o.roofH, keepW + 6, 0x5A3F32);
+    add('timber', cx, baseY + keepH + o.roofH + 0.8, cz, 0.24, 4.8, 0.24, 0x5B4128);
+    addMat('bannerB', 'timber', H.clothBlue, cx + 1.5, baseY + keepH + o.roofH + 2.9, cz, 2.6, 1.7, 0.08);
+    // turret sudut keep
+    for (var kt = 0; kt < 4; kt++) {
+      var kta = mainAng + Math.PI / 4 + kt * Math.PI / 2;
+      var ktx = cx + Math.cos(kta) * (keepW * 0.62);
+      var ktz = cz + Math.sin(kta) * (keepW * 0.62);
+      add('body', ktx, baseY - 0.6, ktz, keepW * 0.17, keepH + 5, keepW * 0.17, 0xC6C0AE);
+      add('towerRoof', ktx, baseY + keepH + 4.4, ktz, keepW * 0.22, keepW * 0.2, keepW * 0.22, 0x5A3F32);
+      this.colliders.push({ x: ktx, z: ktz, r: keepW * 0.1 });
+    }
+    // jendela berbaris
+    var rows = o.windowRows || [6, 12.5];
+    for (var kface = 0; kface < 4; kface++) {
+      var fa = mainAng + kface * Math.PI / 2;
+      var nwin = keepW > 20 ? 3 : 2;
+      for (var fw = 0; fw < nwin; fw++) {
+        var foff = (fw - (nwin - 1) / 2) * (keepW * 0.26);
+        for (var rw = 0; rw < rows.length; rw++) {
+          var wx3 = cx + Math.cos(fa) * (keepW / 2 + 0.1) + Math.cos(fa + Math.PI / 2) * foff;
+          var wz3 = cz + Math.sin(fa) * (keepW / 2 + 0.1) + Math.sin(fa + Math.PI / 2) * foff;
+          add('window', wx3, baseY + rows[rw], wz3, 1.25, 1.7, 0.3, 0x2C3840, -(fa + Math.PI / 2));
+        }
+      }
+      // panji pada fasad
+      if (o.banners) {
+        var bxx = cx + Math.cos(fa) * (keepW / 2 + 0.35);
+        var bzz = cz + Math.sin(fa) * (keepW / 2 + 0.35);
+        addMat('bannerA', 'timber', H.clothRed, bxx, baseY + keepH * 0.62, bzz, 2.2, 3.0, 0.09, -(fa + Math.PI / 2));
+      }
+    }
+    // pintu keep
+    var kdx = cx + Math.cos(mainAng) * (keepW / 2 + 0.35);
+    var kdz = cz + Math.sin(mainAng) * (keepW / 2 + 0.35);
+    add('door', kdx, baseY + 2.2, kdz, 4.2, 4.4, 0.26, 0x4F3722, ry0);
+    add('stone', kdx, baseY + 4.7, kdz, 5.4, 1.1, 1.0, 0xA8A294, ry0);
+    // tangga megah (kekaisaran)
+    if (o.stair) {
+      for (var st2 = 0; st2 < 4; st2++) {
+        add('stairsP', cx + Math.cos(mainAng) * (keepW / 2 + 2.2 + st2 * 1.1),
+          baseY + 0.25 - st2 * 0.02,
+          cz + Math.sin(mainAng) * (keepW / 2 + 2.2 + st2 * 1.1),
+          keepW * 0.42, 0.55, 1.25, 0x9A9384, ry0);
+      }
+    }
+    this.colliders.push({ x: cx, z: cz, r: o.keepR });
+  };
+
+  /* Titik NPC warga kota: tersebar di jalan/pelataran, tidak menembus rumah. */
+  World.prototype._cityNpcSpots = function (cx, cz, rMin, rMax, count, cityId, rng, inPlatform) {
+    var NAMES = ['Adipati', 'Arya', 'Bagas', 'Cakra', 'Danu', 'Eka', 'Galih', 'Harsa', 'Indra', 'Jaka',
+      'Kirana', 'Laras', 'Manggala', 'Nala', 'Pramudya', 'Ratna', 'Sena', 'Tanaya', 'Ugra', 'Wira',
+      'Yudha', 'Anjani', 'Baskara', 'Candra', 'Dewi', 'Gita', 'Hanura', 'Ismaya', 'Jaya', 'Kencana',
+      'Laksmi', 'Mahesa', 'Nirmala', 'Puspa', 'Raka', 'Sagara', 'Tirta', 'Utama', 'Wulan', 'Yasa',
+      'Bumi', 'Cahya', 'Dara', 'Fajar', 'Gading', 'Hasta', 'Intan', 'Jatmika', 'Kusuma', 'Lestari'];
+    var ROLES = ['warga', 'pedagang', 'penjaga', 'petani', 'pandai besi', 'bangsawan', 'prajurit'];
+    var PALS = [
+      { shirt: 0x6B5340, pants: 0x3E3A32, skin: 0xD9B48C, hair: 0x3A2A1C },
+      { shirt: 0x4E5E6B, pants: 0x34383C, skin: 0xC79A6E, hair: 0x241A12 },
+      { shirt: 0x7A4A3C, pants: 0x453B31, skin: 0xE0C0A0, hair: 0x51372A },
+      { shirt: 0x4C6248, pants: 0x39392F, skin: 0xB98B60, hair: 0x1D140F, apron: 0x7C6A4A },
+      { shirt: 0x8A7B5C, pants: 0x40403A, skin: 0xD2A57C, hair: 0x33241A, dress: true, apron: 0xB9A57C },
+      { shirt: 0x5A4A6A, pants: 0x3A3442, skin: 0xC08E64, hair: 0x2A1D16, hood: 0x4A3B57 },
+      { shirt: 0x3E4E5E, pants: 0x2F3338, skin: 0xDDBB92, hair: 0x5A4030, cloak: 0x2E3A46 },
+      { shirt: 0x6E4A2E, pants: 0x3B3128, skin: 0xA97A52, hair: 0x1A120D, apron: 0x5A4A37 },
+      { shirt: 0x7C6A4A, pants: 0x3C3A30, skin: 0xE3C9A4, hair: 0x6B543A, beard: true },
+      { shirt: 0x556B4E, pants: 0x373D33, skin: 0xC9946A, hair: 0x211A14, longHair: true }
+    ];
+    var self = this;
+    var list = [];
+    var base = this.townSpots.length;
+    for (var i = 0; i < count; i++) {
+      var spot = null;
+      for (var a = 0; a < 40 && !spot; a++) {
+        var ang = rng() * Math.PI * 2;
+        var rad = rMin + rng() * (rMax - rMin);
+        var x = Math.round(cx + Math.cos(ang) * rad);
+        var z = Math.round(cz + Math.sin(ang) * rad);
+        if (this.groundHeight(x, z) < 3) continue;
+        if (inPlatform && inPlatform(x, z, 1.4)) continue;
+        var hit = false;
+        for (var ci = 0; ci < this.colliders.length; ci++) {
+          var cc = this.colliders[ci];
+          if (Math.hypot(x - cc.x, z - cc.z) < cc.r + 1.3) { hit = true; break; }
+        }
+        if (hit) continue;
+        for (var pj = 0; pj < list.length; pj++) {
+          if (Math.hypot(x - list[pj].x, z - list[pj].z) < 2.6) { hit = true; break; }
+        }
+        if (hit) continue;
+        spot = { x: x, z: z };
+      }
+      if (!spot) continue;
+      var role = ROLES[(i + base) % ROLES.length];
+      spot.name = NAMES[(i + base * 3 + cityId.length) % NAMES.length];
+      spot.role = role;
+      spot.wanderR = 3 + rng() * 4.5;
+      spot.speed = 1.2 + rng() * 0.9;
+      spot.pal = PALS[(i + base + (cityId === 'empire' ? 3 : 0)) % PALS.length];
+      spot.city = cityId;
+      list.push(spot);
+    }
+    for (var ki = 0; ki < list.length; ki++) this.townSpots.push(list[ki]);
+    return list;
+  };
+
+  /* Wrapper: kerajaan pusat (kota pertama). */
+  World.prototype.buildGreatKingdom = function (assets) {
+    return this._buildCity(assets, {
+      id: 'great_kingdom', label: 'Kerajaan Besar', site: this.kingdomSite,
+      seed: 7777, rWall: 60, wallH: 7.2, wallT: 0.9, seg: 48,
+      gateW: 9, sideGateW: 5.4, plazaR: 23,
+      rings: [30, 39.5, 49],
+      ringCount: [[2, 3, 2, 3], [2, 2, 2, 2], [3, 3, 3, 3]],
+      roadW: 4.6, towers: 8, towerR: 3.4, trees: 22, npcs: 10
+    });
+  };
+
+  /* Wrapper: kekaisaran agung — kastil jauh lebih besar + 100 rumah warga. */
+  World.prototype.buildEmpire = function (assets) {
+    return this._buildCity(assets, {
+      id: 'empire', label: 'Kekaisaran Aetheria', site: this.empireSite,
+      seed: 9911, rWall: 148, wallH: 10.5, wallT: 1.35, seg: 96,
+      gateW: 13, sideGateW: 8.5, plazaR: 52,
+      rings: [68, 84, 100, 116, 132],
+      ringHouses: [17, 19, 20, 22, 22],
+      roadW: 7, towers: 12, towerR: 4.6, trees: 54, npcs: 30,
+      houseScale: 1.1, grand: true, flatGate: true
+    });
   };
 
   /* Dinding rumah kerajaan: segmen garis dengan celah pintu. */
@@ -2596,6 +3016,9 @@
     this.harborSpot = this.pickHarborSpot();
     // Kerajaan besar dipilih lebih dulu supaya landmark & vegetasi tidak menimpanya.
     this.kingdomSite = this.pickKingdomSite();
+    // Kekaisaran agung butuh lahan jauh lebih luas.
+    this.empireSite = this.pickEmpireSite();
+    this.townSpots = [];
     this.landmarkSites = this.pickLandmarkSites();
     this._placeProcedural(rng);
 
@@ -2608,6 +3031,8 @@
 
     // Kerajaan pusat: selalu dibangun (MegaKit bila ada, prosedural bila tidak).
     this.buildGreatKingdom(assets && assets.ready ? assets : null);
+    // Kekaisaran agung dengan 100 rumah warga.
+    this.buildEmpire(assets && assets.ready ? assets : null);
   };
 
   World.prototype._placeProcedural = function (rng) {

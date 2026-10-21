@@ -54,9 +54,9 @@ tetap tampil penuh saat dibuka lewat `file://` tanpa internet.
 - **Bahasa** — **Bahasa Indonesia / English** untuk antarmuka & menu (dialog
   cerita tetap Bahasa Indonesia).
 
-Trailer menampilkan kamera terbang mengelilingi kerajaan pesisir (pantai →
-Aldenmere → perbukitan) dengan kartu judul dwibahasa dan bilah letterbox
-sinematik.
+Trailer (±42 dtk) menampilkan kamera terbang mengelilingi kerajaan pesisir
+(pantai → Aldenmere → Kerajaan Pusat → terbang tinggi ke **Kekaisaran
+Aetheria**) dengan kartu judul dwibahasa dan bilah letterbox sinematik.
 
 ## Publikasi & hosting
 
@@ -163,6 +163,18 @@ gerak & serangan dikunci, dan peta menutup otomatis bila pemain diserang.
   pohon hias. Semua bangunan menapak tinggi tanah setempat (tidak melayang di
   lereng), rumah **bisa dimasuki** (platform + collider dinding), dan kerajaan
   tampil sebagai **POI di peta** serta disorot di trailer pembuka
+- **Kekaisaran Aetheria**: kota kekaisaran raksasa **296 m** (± 2,5× kerajaan) di
+  dataran tinggi barat — **tembok batu 96 segmen** (tinggi 10,5 m, tebal 1,35 m)
+  berlorong patroli, **12 menara beratap kerucut** berpanji, dan **4 gerbang**
+  (gerbang utama otomatis memilih arah masuk paling datar agar bisa dilalui).
+  Di tengahnya **kastil agung**: dinding tirai 52 × 52 m, 8 turret sudut +
+  gerbang berkemah, keep 22 m dengan plinth, lis tengah, jendela tiga baris,
+  panji, tangga besar, dan atap piramida 34 m. **100 rumah warga** tersusun di
+  **5 cincin** (17–22 rumah per cincin) mengikuti **4 jalan radial + 5 jalan
+  lingkar** selebar 7 m, pelataran kastil 52 m dengan patung & sumur, pasar,
+  tiang lampu, api unggun, dan 54 pohon hias. **30 warga** berjalan di jalanannya
+  (lihat di bawah). Tampil sebagai **POI kedua di peta** (ikon kastil besar) dan
+  menjadi puncak trailer pembuka
 - **Cahaya malam**: saat senja–fajar **jendela & lentera rumah menyala hangat**,
   lentera besi dan tiang lampu menerangi alun-alun (cahaya nyata di HD/Ultra),
   api unggun pendukuhan menyala lebih terang, dan satu **lampu ruangan**
@@ -176,6 +188,11 @@ gerak & serangan dikunci, dan peta menutup otomatis bila pemain diserang.
   berpondok; pakaian prosedural berupa mantel, celemek, kerudung, ikat
   pinggang, tas, janggut, dan tongkat. Mereka berhenti & menoleh saat diajak
   bicara
+- **40 warga kota**: **10 warga Kerajaan Pusat** + **30 warga Kekaisaran**
+  berjalan santai di jalan dan pelataran (nama, peran, dan warna pakaian
+  diacak dari kumpulan 50 nama / 7 peran / 10 palet) — **petani, pedagang,
+  penjaga, prajurit, bangsawan, pandai besi, dan warga biasa** — dengan dialog
+  singkat sendiri. Warga yang jauh (> 110 m) diistirahatkan agar tetap 60 fps
 - **Dialog & tugas** (Bahasa Indonesia): panel dialog, petunjuk interaksi (E),
   daftar tugas kerajaan di HUD, dan notifikasi singkat. Dua tugas: mengumpulkan
   **5 kelapa** untuk minyak lampu Fajar Panen milik Raka, dan mencari
@@ -237,7 +254,8 @@ gerak & serangan dikunci, dan peta menutup otomatis bila pemain diserang.
 - **Peta besar & tujuan (Fase 5 lanjutan)**: klik peta mini atau tombol 🗺️
   membuka peta seluruh dunia (kanvas 1024² dari peta dasar 512² yang sama) dengan
   ikon & label **Desa Aldenmere**, **Pelabuhan**, **Pondok Dera**, **Pondok
-  Pulau**, **Reruntuhan Kastil**, **Kapel Tua**, dan **Lingkaran Batu**. Klik
+  Pulau**, **Kerajaan Pusat Aetheria**, **Kekaisaran Aetheria**,
+  **Reruntuhan Kastil**, **Kapel Tua**, dan **Lingkaran Batu**. Klik
   ikon/label — tujuan menempel otomatis — atau titik bebas;
   footer menampilkan label & jarak, tombol **Hapus Tujuan** dan **Tutup & Jalan**
   (atau ✕/Esc). Setelah ditutup: **panah kompas** di HUD berputar relatif kamera,
@@ -422,9 +440,10 @@ dialog warga, dan dua tugas kecil. Pemain bebas menentukan arah perjalanan.
 - Penanda peta: desa, pelabuhan, perahu, pondok pulau, warga, musuh hidup,
   jarahan, dan sasaran tugas, plus panah tepi bila sasaran jauh.
 - **Peta besar** (kanvas 1024²) dengan ikon dan label **Desa Aldenmere**,
-  **Pelabuhan**, **Pondok Dera**, **Pondok Pulau**, **Reruntuhan Kastil**,
-  **Kapel Tua**, dan **Lingkaran Batu**. Klik ikon, label, atau titik bebas untuk
-  menandai tujuan.
+  **Pelabuhan**, **Pondok Dera**, **Pondok Pulau**, **Kerajaan Pusat
+  Aetheria**, **Kekaisaran Aetheria**, **Reruntuhan Kastil**, **Kapel Tua**,
+  dan **Lingkaran Batu**. Klik ikon, label, atau titik bebas untuk menandai
+  tujuan.
 - Setelah peta ditutup: **kompas HUD** berputar relatif kamera, jarak m/km
   diperbarui, peta mini menampilkan pin dan garis putus-putus, dan **mercusuar
   emas 3D** menandai lokasi. Tiba dalam ±3 m, tujuan dibersihkan otomatis.
@@ -698,3 +717,4 @@ tools/                  uji & alat (Node)
 - [x] **Grafis G6** — Lingkungan: terrain lebih halus + tekstur tanah, pohon lebih tinggi + cemara, rumah besar yang bisa dimasuki + lampu malam
 - [x] **Grafis G7** — Pohon lebih tinggi (kelapa melengkung + pelepah 3D), hotbar item + panel tas besar, label level di atas kepala, instruksi/FPS disembunyikan
 - [x] **Dunia K1** — Konversi kerajaan abad pertengahan: ksatria pemain, Aldenmere setengah-kayu + pasar + gapura batu, kapel/kastil/menara/lingkaran batu, celeng/penyamun/roh rawa/ksatria terkutuk, palet hutan sedang, dialog & peta bernuansa kerajaan
+- [x] **Dunia K2** — Kerajaan Pusat Aetheria (120 m, 30 rumah, 10 warga) + **Kekaisaran Aetheria** (296 m, 100 rumah, 30 warga, kastil agung), tembok pejal anti-tembus, jalan masuk bergerbang, POI kedua, trailer 42 dtk

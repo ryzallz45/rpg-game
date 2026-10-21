@@ -116,6 +116,7 @@
     'map.poi.hut2': 'Island Hut',
     'map.poi.castle': 'Castle Ruins',
     'map.poi.kingdom': 'Aetheria Central Kingdom',
+    'map.poi.empire': 'Aetheria Empire',
     'map.poi.chapel': 'Old Chapel',
     'map.poi.stones': 'Standing Stones',
     'map.legend.village': 'Village',
@@ -151,8 +152,10 @@
     'trailer.c3s': 'Help the folk of Aldenmere with their quests',
     'trailer.c4t': 'Face the wild',
     'trailer.c4s': 'Boars, brigands and bog wisps - and the cursed knights of the keep',
-    'trailer.c5t': 'AETHERIA',
-    'trailer.c5s': 'Legacy of the Dawn — the dawn awaits'
+    'trailer.c5t': 'The Empire Beyond',
+    'trailer.c5s': 'A hundred rooftops behind a colossal wall - the seat of the Aetherian Empire',
+    'trailer.c6t': 'AETHERIA',
+    'trailer.c6s': 'Legacy of the Dawn — the dawn awaits'
   };
 
   /* ---------- Kamus untai dinamis (teks Indonesia → Inggris) ---------- */
