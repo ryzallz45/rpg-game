@@ -410,7 +410,7 @@
       var p = pois[i];
       if (!p || !isFinite(p.x) || !isFinite(p.z)) continue;
       var sx = mx(p.x), sy = my(p.z);
-      var major = p.id === 'village' || p.id === 'harbor' || p.id === 'castle';
+      var major = p.id === 'village' || p.id === 'harbor' || p.id === 'castle' || p.id === 'kingdom';
       c.beginPath();
       c.arc(sx, sy, (major ? 24 : 17) * k, 0, Math.PI * 2);
       c.fillStyle = 'rgba(4, 13, 20, 0.58)';
@@ -418,17 +418,19 @@
       if (p.id === 'harbor') iconAnchor(sx, sy, 1.95 * k);
       else if (p.id === 'hut' || p.id === 'hut2') iconHut(sx, sy, 1.95 * k);
       else if (p.id === 'castle') iconCastle(sx, sy, 1.95 * k);
+      else if (p.id === 'kingdom') iconCastle(sx, sy, 2.5 * k);
       else if (p.id === 'chapel') iconChapel(sx, sy, 1.95 * k);
       else if (p.id === 'stones') iconStones(sx, sy, 1.95 * k);
       else iconHouse(sx, sy, 1.95 * k, '#ffd166');
 
-      var side = (p.id === 'village' || p.id === 'castle' || p.id === 'chapel') ? 'left' : 'right';
+      var side = (p.id === 'village' || p.id === 'castle' || p.id === 'chapel' || p.id === 'kingdom') ? 'left' : 'right';
       var dy = p.id === 'village' ? 29 * k :
         (p.id === 'harbor' ? -26 * k :
-          (p.id === 'chapel' ? -22 * k : (p.id === 'stones' ? 38 * k : 24 * k)));
+          (p.id === 'chapel' ? -22 * k : (p.id === 'kingdom' ? 34 * k : (p.id === 'stones' ? 38 * k : 24 * k))));
       var color = p.id === 'harbor' ? '#c8f6ff' :
         (p.id === 'village' ? '#ffe9b0' :
-          (p.id === 'castle' ? '#e8d7b0' : (p.id === 'chapel' ? '#d7e3e9' : '#f3e2c0')));
+          (p.id === 'castle' ? '#e8d7b0' :
+            (p.id === 'kingdom' ? '#ffd98a' : (p.id === 'chapel' ? '#d7e3e9' : '#f3e2c0'))));
       var lb = drawLabel(p.label || p.id, sx, sy, side, dy, color);
       this._bigHotspots.push({
         poi: p.id, x: p.x, z: p.z,

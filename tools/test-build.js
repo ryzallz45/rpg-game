@@ -51,6 +51,62 @@ t('buildEnvironment', function () { world.buildEnvironment(); });
 console.log('  Dunia: ' + globalThis.CONFIG.WORLD.size + ' m (skala ' + world.scale.toFixed(3) + '×), pulau kecil: ' +
   (world.islands ? world.islands.length : 0) + ', pelabuhan: ' +
   (world.harborSpot ? 'x=' + world.harborSpot.x.toFixed(0) + ' z=' + world.harborSpot.z.toFixed(0) + ' (dermaga ' + world.harborSpot.dockLen + ' m)' : 'TIDAK ADA!'));
+
+// ---- Kerajaan Besar: tembok melingkar + kastil + 30 rumah + jalan ----
+t('kerajaan besar dibangun (tembok, kastil, ~30 rumah)', function () {
+  var kb = world.kingdomBuilt;
+  if (!kb) throw new Error('kingdomBuilt tidak ada — kerajaan tidak dibangun');
+  if (kb.houses < 30) throw new Error('rumah kerajaan kurang: ' + kb.houses);
+  if (kb.instances < 500) throw new Error('instance kerajaan terlalu sedikit: ' + kb.instances);
+  if (!(kb.r >= 55)) throw new Error('radius tembok terlalu kecil: ' + kb.r);
+  var lm = (world.landmarks || []).filter(function (l) { return l.id === 'great_kingdom'; });
+  if (!lm.length) throw new Error('landmark great_kingdom tidak terdaftar');
+  var box = new THREE.Box3();
+  var m = new THREE.Matrix4(), v = new THREE.Vector3(), nan = 0;
+  var meshes = 0;
+  lm[0].group.traverse(function (o) {
+    if (!o.isInstancedMesh) return;
+    meshes++;
+    for (var i = 0; i < o.count; i++) {
+      o.getMatrixAt(i, m);
+      v.set(m.elements[12], m.elements[13], m.elements[14]);
+      if (!isFinite(v.x) || !isFinite(v.y) || !isFinite(v.z)) nan++;
+      box.expandByPoint(v);
+    }
+  });
+  if (nan) throw new Error('instance kerajaan NaN: ' + nan);
+  if (meshes < 8) throw new Error('InstancedMesh kerajaan terlalu sedikit: ' + meshes);
+  var spanX = box.max.x - box.min.x, spanZ = box.max.z - box.min.z;
+  if (spanX < 100 || spanZ < 100) throw new Error('kerajaan terlalu kecil: ' + spanX.toFixed(0) + '×' + spanZ.toFixed(0) + ' m');
+  if (box.min.y < world.groundHeight(kb.x, kb.z) - 12) throw new Error('kerajaan terbenam terlalu dalam');
+  return kb;
+});
+t('platform rumah kerajaan menapak tanah (tidak melayang)', function () {
+  var kb = world.kingdomBuilt;
+  var bad = 0, count = 0;
+  for (var i = 0; i < world.platforms.length; i++) {
+    var p = world.platforms[i];
+    if (Math.hypot(p.x - kb.x, p.z - kb.z) > kb.r) continue;
+    count++;
+    if (p.top < world.groundHeight(p.x, p.z) - 0.1) bad++;
+    if (p.top - world.groundHeight(p.x, p.z) > 2.2) bad++;
+  }
+  if (count < 30) throw new Error('platform kerajaan hanya ' + count);
+  if (bad) throw new Error(bad + ' platform kerajaan tidak menapak tanah');
+  return count;
+});
+t('tembok kerajaan menahan pemain (collider melingkar penuh)', function () {
+  var kb = world.kingdomBuilt;
+  var segs = 0;
+  for (var i = 0; i < world.walls.length; i++) {
+    var w = world.walls[i];
+    var mx = (w.x1 + w.x2) / 2, mz = (w.z1 + w.z2) / 2;
+    var d = Math.hypot(mx - kb.x, mz - kb.z);
+    if (d > kb.r - 6 && d < kb.r + 6) segs++;
+  }
+  if (segs < 30) throw new Error('segmen tembok luar kurang: ' + segs);
+  return segs;
+});
 var village = t('new Village', function () { return new globalThis.Village(scene, world); });
 t('build village', function () { village.build(); });
 var boat = t('new Boat', function () { return new globalThis.Boat(scene, world); });
@@ -147,9 +203,19 @@ console.log('  Uji tabrakan: jarak=' + distR.toFixed(2) + ' (minimum ' + minR.to
 console.log('  Rintangan: ' + world.colliders.length + ' lingkaran + ' + world.walls.length + ' segmen dinding (pohon ' + world.envCounts.trees + ', batu ' + world.envCounts.rocks + ', kanopi ' + world.envCounts.canopyParts + ' bagian, cemara ' + world.envCounts.pines + ' kerucut)');
 console.log('  Rumah: ' + world.platforms.length + ' platform lantai (bisa dimasuki)');
 
+// Platform rumah milik desa Aldenmere. Kerajaan Besar punya platform sendiri
+// (dibangun lebih dulu di buildEnvironment), jadi uji pintu/dinding desa harus
+// memilih platform yang benar-benar berada di desa.
+var villagePlatforms = world.platforms.filter(function (p) {
+  var v = world.villageSpots[0];
+  return p && !p.open && Math.hypot(p.x - v.x, p.z - v.z) < 90;
+});
+if (villagePlatforms.length < 2) throw new Error('platform rumah desa tidak ditemukan');
+console.log('  Platform desa: ' + villagePlatforms.length + ' unit (kerajaan: ' + (world.platforms.length - villagePlatforms.length) + ')');
+
 // Uji rumah bisa dimasuki: platform lantai menangkap pemain, dinding tetap menabrak
 t('rumah bisa dimasuki (platform)', function () {
-  var p0 = world.platforms[0];
+  var p0 = villagePlatforms[0];
   if (!p0) throw new Error('tidak ada platform rumah');
   if (!world.isInsideHouse(p0.x, p0.z)) throw new Error('isInsideHouse gagal di tengah rumah');
   var sup = world.supportHeight(p0.x, p0.z, p0.top - 0.2);
@@ -157,24 +223,24 @@ t('rumah bisa dimasuki (platform)', function () {
   var supJauh = world.supportHeight(p0.x, p0.z, p0.top - 3.0);
   if (supJauh >= p0.top - 0.001) throw new Error('platform menangkap dari terlalu jauh');
 });
-console.log('  Platform rumah pertama: top=' + world.platforms[0].top.toFixed(2) + ' (terrain ' + world.groundHeight(world.platforms[0].x, world.platforms[0].z).toFixed(2) + ') → ' + (world.platforms[0].top - world.groundHeight(world.platforms[0].x, world.platforms[0].z) < 0.95 ? 'bisa dinaiki ✓' : 'TERLALU TINGGI!'));
+console.log('  Platform rumah pertama: top=' + villagePlatforms[0].top.toFixed(2) + ' (terrain ' + world.groundHeight(villagePlatforms[0].x, villagePlatforms[0].z).toFixed(2) + ') → ' + (villagePlatforms[0].top - world.groundHeight(villagePlatforms[0].x, villagePlatforms[0].z) < 0.95 ? 'bisa dinaiki ✓' : 'TERLALU TINGGI!'));
 
 // Fase 5: rumah seukuran manusia normal, ruang dalam lapang (tidak sesak)
 t('rumah lapang: pintu ≥2,1 m & langit-langit ≥2,7 m', function () {
-  var p0 = world.platforms[0];
-  var p1 = world.platforms[1];
+  var p0 = villagePlatforms[0];
+  var p1 = villagePlatforms[1];
   if (!(p0.doorW >= 1.3 && p0.doorH >= 2.1)) throw new Error('pintu balai terlalu kecil: ' + p0.doorW + '×' + p0.doorH);
   if (!(p1.doorW >= 1.3 && p1.doorH >= 2.1)) throw new Error('pintu rumah terlalu kecil: ' + p1.doorW + '×' + p1.doorH);
   if (p0.ceil - p0.top < 2.7) throw new Error('langit-langit balai terlalu rendah: ' + (p0.ceil - p0.top).toFixed(2));
   if (p1.ceil - p1.top < 2.7) throw new Error('langit-langit rumah terlalu rendah: ' + (p1.ceil - p1.top).toFixed(2));
   if (p0.hw * 2 > 9 || p0.hd * 2 > 9) throw new Error('rumah terlalu besar untuk ukuran manusia');
 });
-console.log('  Rumah: pintu ' + world.platforms[1].doorW + '×' + world.platforms[1].doorH.toFixed(2) +
-  ' m, langit-langit ' + (world.platforms[1].ceil - world.platforms[1].top).toFixed(2) + ' m ✓');
+console.log('  Rumah: pintu ' + villagePlatforms[1].doorW + '×' + villagePlatforms[1].doorH.toFixed(2) +
+  ' m, langit-langit ' + (villagePlatforms[1].ceil - villagePlatforms[1].top).toFixed(2) + ' m ✓');
 
 // Uji dinding: pemain tidak boleh menembus dinding rumah (termasuk saat fps rendah)
 function ujiDinding(dt) {
-  var p0 = world.platforms[0];
+  var p0 = villagePlatforms[0];
   var rot = Math.atan2(p0.sin, p0.cos);
   var doorX = Math.sin(rot), doorZ = Math.cos(rot);
   var hdRaw = p0.hd - 0.17;
@@ -195,7 +261,7 @@ t('dinding rumah menahan pemain (20 fps)', function () {
   if (ujiDinding(0.05)) throw new Error('menembus dinding pada 20 fps!');
 });
 t('pintu rumah tetap bisa dimasuki', function () {
-  var p0 = world.platforms[0];
+  var p0 = villagePlatforms[0];
   var rot = Math.atan2(p0.sin, p0.cos);
   var doorX = Math.sin(rot), doorZ = Math.cos(rot);
   var hdRaw = p0.hd - 0.17;

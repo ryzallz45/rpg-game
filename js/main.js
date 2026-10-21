@@ -37,7 +37,7 @@
   var waypoint = null; // { x, z, poi } — poi null untuk titik bebas
   var wmAcc = 0;
   var beacon = null, beaconBeam = null, beaconGem = null, beaconRing = null, beaconT = 0;
-  var MAP_POI = { village: 1, harbor: 1, hut: 1, hut2: 1, castle: 1, chapel: 1, stones: 1 };
+  var MAP_POI = { village: 1, harbor: 1, hut: 1, hut2: 1, castle: 1, chapel: 1, stones: 1, kingdom: 1 };
 
   /* Dwibahasa (i18n): pintasan terjemahan antarmuka. */
   function L(key, fb) { return window.Lang ? window.Lang.tx(key, fb) : fb; }
@@ -280,7 +280,7 @@
         dom.loadingText.textContent = Lstr('Memuat model 3D...') + ' (' + done + '/' + total + ')';
       });
     }],
-    ['Menumbuhkan hutan pinus & batu...', function () { world.buildEnvironment(); }],
+    ['Menumbuhkan hutan pinus & batu...', function () { world.buildEnvironment(assets); }],
     ['Membangun Aldenmere & penduduk...', function () {
       village = new window.Village(scene, world);
       village.build();
@@ -774,6 +774,12 @@
         });
       }
     }
+    if (world && world.kingdomSite) {
+      list.push({
+        id: 'kingdom', x: world.kingdomSite.x, z: world.kingdomSite.z,
+        label: L('map.poi.kingdom', 'Kerajaan Pusat Aetheria')
+      });
+    }
     if (world && world.landmarks) {
       var lmLabels = {
         castle: ['map.poi.castle', 'Reruntuhan Kastil'],
@@ -797,6 +803,7 @@
     if (waypoint.poi === 'hut') return L('map.poi.hut', 'Pondok Dera');
     if (waypoint.poi === 'hut2') return L('map.poi.hut2', 'Pondok Pulau');
     if (waypoint.poi === 'castle') return L('map.poi.castle', 'Reruntuhan Kastil');
+    if (waypoint.poi === 'kingdom') return L('map.poi.kingdom', 'Kerajaan Pusat Aetheria');
     if (waypoint.poi === 'chapel') return L('map.poi.chapel', 'Kapel Tua');
     if (waypoint.poi === 'stones') return L('map.poi.stones', 'Lingkaran Batu');
     return L('map.freeTarget', 'Tujuan');

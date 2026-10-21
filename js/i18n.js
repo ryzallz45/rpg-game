@@ -115,6 +115,7 @@
     'map.poi.hut': "Dera's Hut",
     'map.poi.hut2': 'Island Hut',
     'map.poi.castle': 'Castle Ruins',
+    'map.poi.kingdom': 'Aetheria Central Kingdom',
     'map.poi.chapel': 'Old Chapel',
     'map.poi.stones': 'Standing Stones',
     'map.legend.village': 'Village',

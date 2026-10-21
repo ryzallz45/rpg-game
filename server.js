@@ -43,11 +43,16 @@ http.createServer(function (req, res) {
       return;
     }
     var ext = path.extname(file).toLowerCase();
-    res.writeHead(200, {
+    var headers = {
       'Content-Type': MIME[ext] || 'application/octet-stream',
       'Cache-Control': 'no-cache',
       'Access-Control-Allow-Origin': '*'
-    });
+    };
+    // Prevent browser download prompt for GLTF binary buffers
+    if (ext === '.bin' || ext === '.gltf') {
+      headers['Content-Disposition'] = 'inline';
+    }
+    res.writeHead(200, headers);
     res.end(data);
   });
 }).listen(PORT, function () {

@@ -11,13 +11,64 @@
     mage: 'assets/models/Mage.glb',
     rogue: 'assets/models/Rogue.glb',
     hooded: 'assets/models/Rogue_Hooded.glb',
-    boar: 'assets/models/Boar.glb'
+    boar: 'assets/models/Boar.glb',
+    /* Quaternius Medieval Village MegaKit (Free) — modular buildings.
+       Semua sudah dikonversi ke .glb mandiri (tanpa .bin / PNG terpisah)
+       lewat tools/gltf-to-glb.js — satu request per model, tidak ada
+       dialog unduh berkas biner di peramban. */
+    // Walls
+    'wall_plaster_straight': 'assets/models/buildings/Wall_Plaster_Straight.glb',
+    'wall_plaster_door_flat': 'assets/models/buildings/Wall_Plaster_Door_Flat.glb',
+    'wall_plaster_window_wide_round': 'assets/models/buildings/Wall_Plaster_Window_Wide_Round.glb',
+    'wall_unevenbrick_straight': 'assets/models/buildings/Wall_UnevenBrick_Straight.glb',
+    'wall_plaster_woodgrid': 'assets/models/buildings/Wall_Plaster_WoodGrid.glb',
+    'wall_unevenbrick_door_flat': 'assets/models/buildings/Wall_UnevenBrick_Door_Flat.glb',
+    'wall_unevenbrick_window_wide_round': 'assets/models/buildings/Wall_UnevenBrick_Window_Wide_Round.glb',
+    'wall_arch': 'assets/models/buildings/Wall_Arch.glb',
+    // Floors
+    'floor_brick': 'assets/models/buildings/Floor_Brick.glb',
+    'floor_wooddark': 'assets/models/buildings/Floor_WoodDark.glb',
+    'floor_woodlight': 'assets/models/buildings/Floor_WoodLight.glb',
+    'floor_redbrick': 'assets/models/buildings/Floor_RedBrick.glb',
+    'floor_unevenbrick': 'assets/models/buildings/Floor_UnevenBrick.glb',
+    // Roofs
+    'roof_roundtiles_4x4': 'assets/models/buildings/Roof_RoundTiles_4x4.glb',
+    'roof_wooden_2x1': 'assets/models/buildings/Roof_Wooden_2x1.glb',
+    'roof_tower_roundtiles': 'assets/models/buildings/Roof_Tower_RoundTiles.glb',
+    'roof_roundtiles_6x6': 'assets/models/buildings/Roof_RoundTiles_6x6.glb',
+    'roof_roundtiles_8x8': 'assets/models/buildings/Roof_RoundTiles_8x8.glb',
+    // Stairs
+    'stairs_exterior_straight': 'assets/models/buildings/Stairs_Exterior_Straight.glb',
+    'stairs_exterior_platform': 'assets/models/buildings/Stairs_Exterior_Platform.glb',
+    'stairs_interior_simple': 'assets/models/buildings/Stairs_Exterior_Straight.glb',
+    // Props
+    'prop_chimney': 'assets/models/buildings/Prop_Chimney.glb',
+    'prop_crate': 'assets/models/buildings/Prop_Crate.glb',
+    'prop_woodenfence_single': 'assets/models/buildings/Prop_WoodenFence_Single.glb',
+    'prop_metalfence_simple': 'assets/models/buildings/Prop_MetalFence_Simple.glb',
+    'prop_wagon': 'assets/models/buildings/Prop_Wagon.glb',
+    'prop_vine1': 'assets/models/buildings/Prop_Vine1.glb',
+    // Doors & Windows
+    'door_1_flat': 'assets/models/buildings/Door_1_Flat.glb',
+    'doorframe_flat_brick': 'assets/models/buildings/DoorFrame_Flat_Brick.glb',
+    'window_wide_round1': 'assets/models/buildings/Window_Wide_Round1.glb',
+    'windowshutters_wide_round_open': 'assets/models/buildings/WindowShutters_Wide_Round_Open.glb',
+    // Overhangs
+    'overhang_plaster_long': 'assets/models/buildings/Overhang_Plaster_Long.glb',
+    'overhang_plaster_corner': 'assets/models/buildings/Overhang_Plaster_Corner.glb',
+    'overhang_unevenbrick_long': 'assets/models/buildings/Overhang_UnevenBrick_Long.glb'
   };
 
   /* Koreksi orientasi menghadap per-model (digeser bila hasil uji visual perlu). */
   var FIX = {
     barbarian: { yaw: 0 }, knight: { yaw: 0 }, mage: { yaw: 0 },
-    rogue: { yaw: 0 }, hooded: { yaw: 0 }, boar: { yaw: 0 }
+    rogue: { yaw: 0 }, hooded: { yaw: 0 }, boar: { yaw: 0 },
+    // Building models typically face +Z, centered at base
+    'wall_plaster_straight': { yaw: 0 }, 'wall_plaster_door_flat': { yaw: 0 },
+    'wall_plaster_window_wide_round': { yaw: 0 }, 'wall_unevenbrick_straight': { yaw: 0 },
+    'floor_brick': { yaw: 0 }, 'floor_wooddark': { yaw: 0 }, 'floor_woodlight': { yaw: 0 },
+    'roof_roundtiles_4x4': { yaw: 0 }, 'roof_wooden_2x1': { yaw: 0 }, 'roof_tower_roundtiles': { yaw: 0 },
+    'stairs_exterior_straight': { yaw: 0 }, 'prop_chimney': { yaw: 0 }, 'prop_crate': { yaw: 0 }
   };
 
   /* Cari klip animasi berdasarkan daftar pola regex (berurut prioritas). */
@@ -137,6 +188,54 @@
     var wrap = new THREE.Group();
     wrap.add(root);
     return { root: wrap, model: root, clips: src.clips, mats: mats, scale: s };
+  };
+
+  /* Klon model statis (bangunan, prop) tanpa skeleton — untuk InstancedMesh.
+     opts: { height, tint, cloneMaterials, yaw }
+     Mengembalikan { geometry, materials, box } — geometry sudah diskalakan & diposisikan. */
+  AssetLibrary.prototype.spawnStatic = function (name, opts) {
+    var src = this.models[name];
+    if (!src) return null;
+    opts = opts || {};
+    var geo = src.scene.clone(true);
+    var box = src.box;
+    var h = Math.max(0.01, box.max.y - box.min.y);
+    var s = (opts.height || h) / h;
+    geo.scale.setScalar(s);
+    geo.position.set(
+      -((box.min.x + box.max.x) / 2) * s,
+      -box.min.y * s,
+      -((box.min.z + box.max.z) / 2) * s
+    );
+    geo.rotation.y = opts.yaw !== undefined ? opts.yaw : (FIX[name] ? FIX[name].yaw : 0);
+    geo.updateMatrixWorld(true);
+
+    var mats = [];
+    var tint = opts.tint !== undefined ? new THREE.Color(opts.tint) : null;
+    var tintMix = opts.tintMix === undefined ? 1 : Math.max(0, Math.min(1, opts.tintMix));
+    geo.traverse(function (o) {
+      if (!o.isMesh) return;
+      o.castShadow = true;
+      o.receiveShadow = true;
+      o.frustumCulled = false;
+      var mat = o.material;
+      if (mat) {
+        if (opts.cloneMaterials || tint) {
+          mat = mat.clone();
+          o.material = mat;
+        }
+        if (tint) {
+          if (tintMix >= 0.999) mat.color.copy(tint);
+          else mat.color.lerp(tint, tintMix);
+        }
+        mats.push(mat);
+      }
+    });
+
+    var wrappedGeo = new THREE.BufferGeometry();
+    // Merge geometries per material for instancing (simplified: single material per model)
+    // For now, return the group with its meshes for manual instancing
+    return { group: geo, materials: mats, box: box, scale: s };
   };
 
   AssetLibrary.findClip = findClip;

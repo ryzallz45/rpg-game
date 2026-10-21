@@ -16,3 +16,7 @@ desktop.ini
 *.log
 *.tmp
 *.temp
+
+# Sumber asli MegaKit (176 .gltf + .bin + PNG) — tidak dipakai runtime.
+# Model yang dipakai sudah dikonversi ke .glb mandiri oleh tools/gltf-to-glb.js
+assets/models/buildings/_unused/

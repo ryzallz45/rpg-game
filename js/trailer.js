@@ -47,24 +47,18 @@
     // fallback ke objek desa (bila diberikan) atau pusat pulau.
     var v = w.villageCenter || w.villageSpot || (w.village ? w.village.center : { x: 0, z: 0 });
 
-    // cari puncak tertinggi pulau lewat sampel kisi
-    var peakR = 330 * S, peakStep = 15 * S;
-    var peak = { x: 0, z: 0, h: 0 };
-    for (var x = -peakR; x <= peakR; x += peakStep) {
-      for (var z = -peakR; z <= peakR; z += peakStep) {
-        var h = w.groundHeight(x, z);
-        if (h > peak.h) { peak.h = h; peak.x = x; peak.z = z; }
-      }
-    }
+    // Lokasi kerajaan besar (dipilih saat buildEnvironment) — pusat perhatian trailer.
+    var k = w.kingdomSite || { x: 0, z: 0, r: 60 };
+    var kr = k.r || 60;
 
     var pts = [
       [spawn.x + 150 * S, 34 * S, spawn.z + 120 * S],       // laut lepas (pelabuhan)
       [spawn.x + 56 * S, 18 * S, spawn.z + 44 * S],         // menyusur pantai awal
       [v.x + 64 * S, 17 * S, v.z + 58 * S],                 // menuju desa
       [v.x + 20 * S, 9.5 * S, v.z + 20 * S],                // melintas alun-alun
-      [peak.x + 96 * S, 56 * S, peak.z + 118 * S],          // naik ke pegunungan
-      [peak.x + 26 * S, peak.h * 0.55 + 20 * S, peak.z + 26 * S], // mengitari puncak
-      [v.x - 46 * S, 28 * S, v.z - 62 * S],                 // menukik kembali ke desa
+      [k.x + (kr + 105) * 0.72, 62, k.z + (kr + 105) * 0.72], // terbang menuju kerajaan
+      [k.x + kr * 1.15, 34, k.z + kr * 1.15],               // mengitari tembok kerajaan
+      [k.x - kr * 0.55, 26, k.z - kr * 0.55],               // melintas di atas kastil
       [v.x + 30 * S, 12.5 * S, v.z + 34 * S]                // rendah di tepi desa
     ];
     var tgts = [
@@ -72,9 +66,9 @@
       [spawn.x, 3, spawn.z],
       [v.x, 6, v.z],
       [v.x, 3.5, v.z],
-      [peak.x, peak.h * 0.6, peak.z],
-      [peak.x, peak.h * 0.7, peak.z],
-      [v.x, 4, v.z],
+      [k.x, 12, k.z],
+      [k.x, 14, k.z],
+      [k.x, 20, k.z],
       [v.x, 2.5, v.z]
     ];
 

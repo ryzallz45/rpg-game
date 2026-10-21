@@ -424,6 +424,15 @@
 
   Village.prototype.build = function () {
     var world = this.world;
+
+    // If 3D assets are loaded and MegaKit models are available, use buildFromKit
+    var assets = (typeof window !== 'undefined' ? window.assets : (typeof global !== 'undefined' ? global.assets : null));
+    if (assets && assets.ready && assets.has('wall_plaster_straight')) {
+      this.buildFromKit(assets);
+      return;
+    }
+
+    // Fallback to procedural buildings
     var raw = world.villageSpots && world.villageSpots.length
       ? world.villageSpots
       : [{ x: 205, z: 0, r: 19, main: true }];
@@ -491,6 +500,625 @@
     this._buildBasketSpot();
     this._spawnNpcs();
     this.updateTracker();
+  };
+
+  /* ---------- Bangunan dari Quaternius MegaKit (modular, grid-based) ---------- */
+  Village.prototype.buildFromKit = function (assets) {
+    if (!assets || !assets.ready) {
+      console.warn('[Aetheria] MegaKit models not loaded, falling back to procedural');
+      this.build(); // fallback to procedural
+      return;
+    }
+    var world = this.world;
+    var raw = world.villageSpots && world.villageSpots.length
+      ? world.villageSpots
+      : [{ x: 205, z: 0, r: 19, main: true }];
+    var rng = U.mulberry32(C.WORLD.seed + 777);
+
+    this.sites = [];
+    for (var i = 0; i < raw.length; i++) {
+      this.sites.push({
+        x: raw[i].x, z: raw[i].z,
+        y: world.groundHeight(raw[i].x, raw[i].z),
+        main: !!raw[i].main,
+        plazaR: raw[i].main ? 12.5 : 5.5
+      });
+    }
+    this.center = this.sites[0];
+    world.villageCenter = this.center;
+
+    // Initialize InstancedMesh containers for each module type
+    this.kitMeshes = {
+      wall: { mesh: null, list: [], mat: null, geo: null },
+      floor: { mesh: null, list: [], mat: null, geo: null },
+      roof: { mesh: null, list: [], mat: null, geo: null },
+      door: { mesh: null, list: [], mat: null, geo: null },
+      window: { mesh: null, list: [], mat: null, geo: null },
+      stair: { mesh: null, list: [], mat: null, geo: null },
+      prop: { mesh: null, list: [], mat: null, geo: null },
+      overhang: { mesh: null, list: [], mat: null, geo: null },
+      chimney: { mesh: null, list: [], mat: null, geo: null },
+      fence_post: { mesh: null, list: [], mat: null, geo: null },
+      fence_rail: { mesh: null, list: [], mat: null, geo: null },
+      lamp_post: { mesh: null, list: [], mat: null, geo: null }
+    };
+
+    // Create materials & geometries from loaded models
+    this._initKitMaterials(assets);
+
+    for (i = 0; i < this.sites.length; i++) {
+      var site = this.sites[i];
+      this._buildPlaza(site);
+      if (site.main) {
+        this._buildVillageFromKit(site, rng);
+        this._buildWellFromKit(site);
+        this._buildFenceFromKit(site, 18.4);
+        this._buildLampPosts(site); // keep procedural lamp posts
+        this._buildMarketFromKit(site);
+        this._buildGateFromKit(site);
+      } else {
+        this._buildHamletFromKit(site, rng);
+        this._buildCampfire(site);
+      }
+    }
+
+    // Fase 5: pondok di pulau kecil
+    var islands = world.islandSites || [];
+    for (i = 0; i < islands.length; i++) {
+      var isite = {
+        x: islands[i].x, z: islands[i].z,
+        y: world.groundHeight(islands[i].x, islands[i].z),
+        main: false, plazaR: 3.0, island: true
+      };
+      this.sites.push(isite);
+      this._buildHamletFromKit(isite, rng, 1);
+      this._buildCampfire(isite);
+    }
+
+    this._flushKitMeshes();
+    this._spawnNpcs();
+    this.updateTracker();
+  };
+
+  Village.prototype._initKitMaterials = function (assets) {
+    var km = this.kitMeshes;
+    var srgb = function(hex) { return new THREE.Color(hex).convertSRGBToLinear(); };
+
+    // Helper to extract geometry from spawned model
+    function getGeo(name) {
+      var spawned = assets.spawnStatic(name);
+      if (!spawned || !spawned.group) return null;
+      var geo = new THREE.BufferGeometry();
+      var firstMesh = null;
+      spawned.group.traverse(function(o) {
+        if (o.isMesh && !firstMesh) firstMesh = o;
+      });
+      if (!firstMesh) return null;
+      geo.copy(firstMesh.geometry);
+      geo.applyMatrix4(firstMesh.matrix);
+      return geo;
+    }
+
+    // Wall material
+    km.wall.mat = new THREE.MeshStandardMaterial({ color: srgb(0xC8B898), roughness: 0.92, metalness: 0 });
+    if (global.TexLib) global.TexLib.apply(km.wall.mat, 'plaster', 2.4, 1.6);
+    km.wall.geo = getGeo('wall_plaster_straight') || new THREE.BoxGeometry(4, 3, 0.2);
+
+    // Floor material
+    km.floor.mat = new THREE.MeshStandardMaterial({ color: srgb(0x795A3C), roughness: 0.94, metalness: 0 });
+    if (global.TexLib) global.TexLib.apply(km.floor.mat, 'plank', 2.6, 2);
+    km.floor.geo = getGeo('floor_wooddark') || new THREE.BoxGeometry(4, 0.14, 4);
+
+    // Roof material
+    km.roof.mat = new THREE.MeshStandardMaterial({ color: srgb(0x5C4E42), roughness: 0.9, metalness: 0 });
+    if (global.TexLib) global.TexLib.apply(km.roof.mat, 'shingle', 3, 1.8);
+    km.roof.geo = getGeo('roof_roundtiles_4x4') || new THREE.ConeGeometry(3, 1.5, 4);
+
+    // Door material
+    km.door.mat = new THREE.MeshStandardMaterial({ color: srgb(0x4D3725), roughness: 0.88, metalness: 0.1 });
+    if (global.TexLib) global.TexLib.apply(km.door.mat, 'wood', 1, 1.4);
+    km.door.geo = getGeo('door_1_flat') || new THREE.BoxGeometry(1.5, 2.2, 0.1);
+
+    // Window material (emissive for night)
+    km.window.mat = new THREE.MeshStandardMaterial({
+      color: srgb(0x2F3B42), roughness: 0.3, metalness: 0.2,
+      emissive: srgb(0xFFC069), emissiveIntensity: 0
+    });
+    if (global.TexLib) global.TexLib.apply(km.window.mat, 'plank', 1.2, 1);
+    km.window.geo = getGeo('window_wide_round1') || new THREE.BoxGeometry(1, 1, 0.1);
+
+    // Stair material
+    km.stair.mat = new THREE.MeshStandardMaterial({ color: srgb(0x7E6244), roughness: 0.95, metalness: 0 });
+    if (global.TexLib) global.TexLib.apply(km.stair.mat, 'wood', 1.6, 1);
+    km.stair.geo = getGeo('stairs_exterior_straight') || new THREE.BoxGeometry(2, 0.3, 1);
+
+    // Prop material
+    km.prop.mat = new THREE.MeshStandardMaterial({ color: srgb(0x59422D), roughness: 0.94, metalness: 0 });
+    if (global.TexLib) global.TexLib.apply(km.prop.mat, 'wood', 1, 2);
+    km.prop.geo = getGeo('prop_crate') || new THREE.BoxGeometry(0.5, 0.5, 0.5);
+
+    // Overhang material
+    km.overhang.mat = new THREE.MeshStandardMaterial({ color: srgb(0xC8B898), roughness: 0.92, metalness: 0 });
+    if (global.TexLib) global.TexLib.apply(km.overhang.mat, 'plaster', 2.4, 1.6);
+    km.overhang.geo = getGeo('overhang_plaster_long') || new THREE.BoxGeometry(4, 0.3, 0.5);
+
+    // Chimney material
+    km.chimney.mat = new THREE.MeshStandardMaterial({ color: srgb(0x66645C), roughness: 0.95, metalness: 0 });
+    if (global.TexLib) global.TexLib.apply(km.chimney.mat, 'stoneBrick', 1.5, 1.5);
+    km.chimney.geo = getGeo('prop_chimney') || new THREE.CylinderGeometry(0.5, 0.6, 4, 8);
+
+    // Fence materials
+    km.fence_post.mat = new THREE.MeshStandardMaterial({ color: srgb(0x5A432C), roughness: 0.92, metalness: 0 });
+    if (global.TexLib) global.TexLib.apply(km.fence_post.mat, 'wood', 1, 2);
+    km.fence_post.geo = getGeo('prop_woodenfence_single') || new THREE.CylinderGeometry(0.06, 0.08, 0.7, 6);
+
+    km.fence_rail.mat = new THREE.MeshStandardMaterial({ color: srgb(0x6B5237), roughness: 0.92, metalness: 0 });
+    if (global.TexLib) global.TexLib.apply(km.fence_rail.mat, 'wood', 1, 1.4);
+    km.fence_rail.geo = new THREE.BoxGeometry(1, 0.07, 0.055);
+
+    // Lamp post material
+    km.lamp_post.mat = new THREE.MeshStandardMaterial({ color: srgb(0x343537), roughness: 0.58, metalness: 0.44 });
+    if (global.TexLib) global.TexLib.apply(km.lamp_post.mat, 'metal', 1, 2);
+    km.lamp_post.geo = new THREE.CylinderGeometry(0.06, 0.085, 2.75, 7);
+  };
+
+  Village.prototype._buildVillageFromKit = function (site, rng) {
+    var world = this.world;
+    var km = this.kitMeshes;
+    var parts = km;
+
+    // Building layout: ring around plaza
+    var count = 10;
+    var ringDist = 15.4;
+    var angles = [];
+    for (var i = 0; i < count; i++) {
+      angles.push((i / count) * Math.PI * 2 + 0.35 + (rng() - 0.5) * 0.16);
+    }
+    this._hutAngles = angles;
+
+    var wallColors = [0xC3B398, 0xB8A88C, 0xC9BAA0, 0xB1A185];
+    var roofColors = [0x57483C, 0x624A3C, 0x4E4238, 0x5C5143];
+
+    for (i = 0; i < count; i++) {
+      var ang = angles[i];
+      var big = (i === 0); // first is town hall
+      var dist = ringDist + rng() * 0.9;
+      var hx = site.x + Math.cos(ang) * dist;
+      var hz = site.z + Math.sin(ang) * dist;
+      var y0 = world.groundHeight(hx, hz) - 0.5;
+
+      var hw = big ? 3.4 : 2.6 + rng() * 0.4;
+      var hd = big ? 2.9 : 2.3 + rng() * 0.3;
+      var wallH = big ? 3.05 : 2.8;
+      var roofH = big ? 2.15 : 1.55 + rng() * 0.25;
+      var floorY = big ? 1.05 : 0.95;
+      var doorW = big ? 1.8 : 1.5;
+      var doorH = big ? 2.3 : 2.15;
+      var rotY = Math.atan2(site.x - hx, site.z - hz);
+      var wallHex = wallColors[(rng() * wallColors.length) | 0];
+      var roofHex = roofColors[(rng() * roofColors.length) | 0];
+
+      var hutM = new THREE.Matrix4().compose(
+        new THREE.Vector3(hx, y0, hz),
+        new THREE.Quaternion().setFromEuler(new THREE.Euler(0, rotY, 0)),
+        new THREE.Vector3(1, 1, 1)
+      );
+      var wallBase = floorY + 0.07;
+      var floorTop = floorY + 0.07;
+
+      var tmpC = new THREE.Color();
+
+      // Helper to add instance
+      function addInstance(list, lx, ly, lz, sx, sy, sz, hex, ry, materialOverride) {
+        var q = new THREE.Quaternion();
+        if (ry) q.setFromEuler(new THREE.Euler(0, ry, 0));
+        var local = new THREE.Matrix4().compose(
+          new THREE.Vector3(lx, ly, lz), q, new THREE.Vector3(sx, sy, sz)
+        );
+        list.push({ m: new THREE.Matrix4().multiplyMatrices(hutM, local), hex: hex, mat: materialOverride });
+      }
+
+      // Foundation & Floor
+      addInstance(parts.floor.list, 0, floorY, 0, hw * 2 + 0.34, 0.14, hd * 2 + 0.34, 0x795A3C);
+
+      // Walls (back, left, right, front with door)
+      addInstance(parts.wall.list, 0, wallBase + wallH / 2, -hd, hw * 2, wallH, 0.2, wallHex);
+      addInstance(parts.wall.list, -hw, wallBase + wallH / 2, 0, 0.2, wallH, hd * 2, wallHex);
+      addInstance(parts.wall.list, hw, wallBase + wallH / 2, 0, 0.2, wallH, hd * 2, wallHex);
+
+      var frontW = hw - doorW / 2;
+      var lPanel = -(doorW / 2 + frontW / 2), rPanel = doorW / 2 + frontW / 2;
+      addInstance(parts.wall.list, lPanel, wallBase + wallH / 2, hd, frontW, wallH, 0.2, wallHex);
+      addInstance(parts.wall.list, rPanel, wallBase + wallH / 2, hd, frontW, wallH, 0.2, wallHex);
+      addInstance(parts.wall.list, 0, wallBase + doorH + (wallH - doorH) / 2, hd, doorW, wallH - doorH, 0.2, wallHex);
+
+      // Door
+      var doorAng = 0; // facing +Z in local, will be rotated by hutM
+      var dCx = 0, dCz = 0;
+      var dOx = -doorW / 2, dOz = hd + 0.07;
+      addInstance(parts.door.list, dOx, wallBase + doorH / 2, dOz, doorW * 0.92, doorH, 0.07, 0x4D3725);
+
+      // Stairs
+      addInstance(parts.stair.list, 0, 0.62, hd + 0.64, doorW + 0.34, 0.24, 0.46, 0x7E6244);
+      addInstance(parts.stair.list, 0, 0.86, hd + 0.3, doorW + 0.14, 0.2, 0.34, 0x876B4B);
+
+      // Windows
+      var wy = wallBase + wallH * 0.63;
+      addInstance(parts.window.list, -(hw * 0.62), wy, hd + 0.03, 0.52, 0.52, 0.06, 0x2F3B42);
+      addInstance(parts.window.list, hw * 0.62, wy, hd + 0.03, 0.52, 0.52, 0.06, 0x2F3B42);
+      addInstance(parts.window.list, -(hw + 0.03), -hd * 0.3, 0.06, 0.52, 0.6, 0x2F3B42, Math.PI / 2);
+      addInstance(parts.window.list, hw + 0.03, -hd * 0.3, 0.06, 0.52, 0.6, 0x2F3B42, Math.PI / 2);
+      // Back window
+      addInstance(parts.window.list, hw * 0.34, wy, -hd - 0.035, 0.52, 0.52, 0.06, 0x2F3B42);
+
+      // Overhangs (eaves)
+      addInstance(parts.overhang.list, 0, wallBase + wallH - 0.15, hd + 0.45, hw * 2 + 0.6, 0.3, 0.5, wallHex);
+      addInstance(parts.overhang.list, 0, wallBase + wallH - 0.15, -hd - 0.45, hw * 2 + 0.6, 0.3, 0.5, wallHex);
+      addInstance(parts.overhang.list, -hw - 0.3, wallBase + wallH - 0.15, 0, 0.5, 0.3, hd * 2 + 0.6, wallHex, Math.PI / 2);
+      addInstance(parts.overhang.list, hw + 0.3, wallBase + wallH - 0.15, 0, 0.5, 0.3, hd * 2 + 0.6, wallHex, Math.PI / 2);
+
+      // Roof
+      addInstance(parts.roof.list, 0, wallBase + wallH + roofH * 0.4, 0, hw + 0.55, roofH, hd + 0.62, roofHex);
+
+      // Chimney
+      var chx = hw * 0.62, chz = -hd * 0.58;
+      var chH = wallH + roofH * 0.72;
+      addInstance(parts.chimney.list, chx, wallBase + chH * 0.5, chz, 0.62, chH, 0.62, 0x66645C);
+
+      // Props inside
+      addInstance(parts.prop.list, -hw * 0.42, floorTop + 0.2, -hd * 0.34, 0.5, 0.5, 0.5, 0x9A6B3A);
+      addInstance(parts.prop.list, hw * 0.48, floorTop + 0.26, -hd * 0.42, 0.6, 0.6, 0.6, 0x725237);
+
+      // Lamp on porch
+      var lampMat = new THREE.MeshStandardMaterial({
+        color: srgb(0xFFE9B0), emissive: srgb(0xFFB050), emissiveIntensity: 0.18,
+        roughness: 0.5, metalness: 0
+      });
+      addInstance(parts.prop.list, 0, wallBase + wallH - 0.62, hd + 0.48, 0.15, 0.16, 0.15, 0xFFE9B0, 0, lampMat);
+
+      // Platform for player collision
+      world.platforms.push({
+        x: hx, z: hz,
+        hw: hw + 0.17, hd: hd + 0.17,
+        cos: Math.cos(rotY), sin: Math.sin(rotY),
+        top: y0 + floorTop,
+        ceil: y0 + wallBase + wallH,
+        doorW: doorW, doorH: doorH
+      });
+
+      // Wall colliders (with door gap)
+      this._addWallColliders(hx, hz, rotY, hw, hd, doorW);
+
+      // Town hall banner
+      if (big) {
+        addInstance(parts.prop.list, hw * 0.78, wallBase + wallH + 1.15, hd + 0.67, 0.82, 1.35, 0.045, 0x6B2C32);
+      }
+    }
+  };
+
+  Village.prototype._buildHamletFromKit = function (site, rng, count) {
+    count = count || 3;
+    var world = this.world;
+    var km = this.kitMeshes;
+    var parts = km;
+
+    var angles = [];
+    for (var i = 0; i < count; i++) {
+      angles.push((i / count) * Math.PI * 2 + 0.8 + (rng() - 0.5) * 0.16);
+    }
+
+    var wallColors = [0xC3B398, 0xB8A88C, 0xC9BAA0, 0xB1A185];
+    var roofColors = [0x57483C, 0x624A3C, 0x4E4238, 0x5C5143];
+
+    for (var i = 0; i < count; i++) {
+      var ang = angles[i];
+      var dist = 7.9 + rng() * 0.9;
+      var hx = site.x + Math.cos(ang) * dist;
+      var hz = site.z + Math.sin(ang) * dist;
+      var y0 = world.groundHeight(hx, hz) - 0.5;
+
+      var hw = 2.3 + rng() * 0.3;
+      var hd = 2.1 + rng() * 0.3;
+      var wallH = 2.6;
+      var roofH = 1.4 + rng() * 0.25;
+      var floorY = 0.85;
+      var doorW = 1.4;
+      var doorH = 2.0;
+      var rotY = Math.atan2(site.x - hx, site.z - hz);
+      var wallHex = wallColors[(rng() * wallColors.length) | 0];
+      var roofHex = roofColors[(rng() * roofColors.length) | 0];
+
+      var hutM = new THREE.Matrix4().compose(
+        new THREE.Vector3(hx, y0, hz),
+        new THREE.Quaternion().setFromEuler(new THREE.Euler(0, rotY, 0)),
+        new THREE.Vector3(1, 1, 1)
+      );
+      var wallBase = floorY + 0.07;
+      var floorTop = floorY + 0.07;
+
+      function addInstance(list, lx, ly, lz, sx, sy, sz, hex, ry, materialOverride) {
+        var q = new THREE.Quaternion();
+        if (ry) q.setFromEuler(new THREE.Euler(0, ry, 0));
+        var local = new THREE.Matrix4().compose(
+          new THREE.Vector3(lx, ly, lz), q, new THREE.Vector3(sx, sy, sz)
+        );
+        list.push({ m: new THREE.Matrix4().multiplyMatrices(hutM, local), hex: hex, mat: materialOverride });
+      }
+
+      // Foundation & Floor
+      addInstance(parts.floor.list, 0, floorY, 0, hw * 2 + 0.3, 0.14, hd * 2 + 0.3, 0x795A3C);
+
+      // Walls
+      addInstance(parts.wall.list, 0, wallBase + wallH / 2, -hd, hw * 2, wallH, 0.2, wallHex);
+      addInstance(parts.wall.list, -hw, wallBase + wallH / 2, 0, 0.2, wallH, hd * 2, wallHex);
+      addInstance(parts.wall.list, hw, wallBase + wallH / 2, 0, 0.2, wallH, hd * 2, wallHex);
+
+      var frontW = hw - doorW / 2;
+      var lPanel = -(doorW / 2 + frontW / 2), rPanel = doorW / 2 + frontW / 2;
+      addInstance(parts.wall.list, lPanel, wallBase + wallH / 2, hd, frontW, wallH, 0.2, wallHex);
+      addInstance(parts.wall.list, rPanel, wallBase + wallH / 2, hd, frontW, wallH, 0.2, wallHex);
+      addInstance(parts.wall.list, 0, wallBase + doorH + (wallH - doorH) / 2, hd, doorW, wallH - doorH, 0.2, wallHex);
+
+      // Door
+      addInstance(parts.door.list, -doorW / 2, wallBase + doorH / 2, hd + 0.07, doorW * 0.92, doorH, 0.07, 0x4D3725);
+
+      // Stairs
+      addInstance(parts.stair.list, 0, 0.55, hd + 0.55, doorW + 0.3, 0.24, 0.42, 0x7E6244);
+
+      // Windows (simpler)
+      var wy = wallBase + wallH * 0.6;
+      addInstance(parts.window.list, -(hw * 0.5), wy, hd + 0.03, 0.45, 0.45, 0.06, 0x2F3B42);
+      addInstance(parts.window.list, hw * 0.5, wy, hd + 0.03, 0.45, 0.45, 0.06, 0x2F3B42);
+
+      // Overhangs
+      addInstance(parts.overhang.list, 0, wallBase + wallH - 0.12, hd + 0.4, hw * 2 + 0.5, 0.25, 0.45, wallHex);
+      addInstance(parts.overhang.list, 0, wallBase + wallH - 0.12, -hd - 0.4, hw * 2 + 0.5, 0.25, 0.45, wallHex);
+
+      // Roof
+      addInstance(parts.roof.list, 0, wallBase + wallH + roofH * 0.35, 0, hw + 0.45, roofH, hd + 0.5, roofHex);
+
+      // Chimney (smaller)
+      addInstance(parts.chimney.list, hw * 0.5, wallBase + wallH + roofH * 0.5, -hd * 0.4, 0.45, wallH + roofH * 0.6, 0.45, 0x66645C);
+
+      // Platform
+      world.platforms.push({
+        x: hx, z: hz,
+        hw: hw + 0.15, hd: hd + 0.15,
+        cos: Math.cos(rotY), sin: Math.sin(rotY),
+        top: y0 + floorTop,
+        ceil: y0 + wallBase + wallH,
+        doorW: doorW, doorH: doorH
+      });
+
+      // Wall colliders
+      this._addWallColliders(hx, hz, rotY, hw, hd, doorW);
+    }
+  };
+
+  Village.prototype._buildWellFromKit = function (site) {
+    var world = this.world;
+    var wx = site.x + 2.6, wz = site.z + 3.4;
+    var wy = world.groundHeight(wx, wz) - 0.08;
+    var km = this.kitMeshes;
+
+    // Well: use prop_crate as base, add chimney as well shaft
+    var wellM = new THREE.Matrix4().compose(
+      new THREE.Vector3(wx, wy, wz),
+      new THREE.Quaternion(), new THREE.Vector3(1, 1, 1)
+    );
+
+    function addInstance(list, lx, ly, lz, sx, sy, sz, hex) {
+      var local = new THREE.Matrix4().compose(
+        new THREE.Vector3(lx, ly, lz), new THREE.Quaternion(), new THREE.Vector3(sx, sy, sz)
+      );
+      list.push({ m: new THREE.Matrix4().multiplyMatrices(wellM, local), hex: hex });
+    }
+
+    // Stone base
+    addInstance(km.wall.list, 0, 0.39, 0, 1.7, 0.78, 1.7, 0x74736B);
+    addInstance(km.wall.list, 0, 0.79, 0, 1.2, 0.06, 1.2, 0x19242A);
+    // Wood posts
+    addInstance(km.prop.list, -0.72, 1.32, 0, 0.1, 1.15, 0.1, 0x59422D);
+    addInstance(km.prop.list, 0.72, 1.32, 0, 0.1, 1.15, 0.1, 0x59422D);
+    // Winch
+    addInstance(km.prop.list, 0, 1.45, 0, 0.018, 0.75, 0.018, 0x353638);
+    // Roof
+    var roofMat = new THREE.MeshStandardMaterial({ color: srgb(0x504238), roughness: 0.95, metalness: 0 });
+    if (global.TexLib) global.TexLib.apply(roofMat, 'shingle', 2, 1);
+    addInstance(km.roof.list, 0, 1.9, 0, 1.0, 0.52, 0.78, 0x504238, 0, roofMat);
+
+    world.colliders.push({ x: wx, z: wz, r: 1.15 });
+    this.well = { x: wx, z: wz, y: wy };
+  };
+
+  Village.prototype._buildMarketFromKit = function (site) {
+    var world = this.world;
+    var km = this.kitMeshes;
+    var angles = [2.15, 3.78, 5.46];
+
+    for (var s = 0; s < angles.length; s++) {
+      var a = angles[s];
+      var px = site.x + Math.cos(a) * 8.7;
+      var pz = site.z + Math.sin(a) * 8.7;
+      var py = world.groundHeight(px, pz);
+
+      var stallM = new THREE.Matrix4().compose(
+        new THREE.Vector3(px, py, pz),
+        new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.atan2(site.x - px, site.z - pz), 0)),
+        new THREE.Vector3(1, 1, 1)
+      );
+
+      function addInstance(list, lx, ly, lz, sx, sy, sz, hex) {
+        var local = new THREE.Matrix4().compose(
+          new THREE.Vector3(lx, ly, lz), new THREE.Quaternion(), new THREE.Vector3(sx, sy, sz)
+        );
+        list.push({ m: new THREE.Matrix4().multiplyMatrices(stallM, local), hex: hex });
+      }
+
+      // Posts
+      addInstance(km.prop.list, -1.05, 1.12, -0.55, 0.07, 2.25, 0.07, 0x453322);
+      addInstance(km.prop.list, 1.05, 1.12, -0.55, 0.07, 2.25, 0.07, 0x453322);
+      addInstance(km.prop.list, -1.05, 1.0, 0.6, 0.07, 2.0, 0.07, 0x453322);
+      addInstance(km.prop.list, 1.05, 1.0, 0.6, 0.07, 2.0, 0.07, 0x453322);
+
+      // Table & canopy
+      addInstance(km.floor.list, 0, 0.96, 0.25, 2.2, 0.14, 0.75, 0x59422D);
+      var clothMat = new THREE.MeshStandardMaterial({ color: srgb(0x6E2B30), roughness: 0.92, metalness: 0 });
+      if (global.TexLib) global.TexLib.apply(clothMat, 'cloth', 1.4, 1.0);
+      addInstance(km.prop.list, 0, 0.62, 0.64, 2.15, 0.7, 0.08, 0x6E2B30, 0, clothMat);
+      addInstance(km.floor.list, 0, 0.39, 0.25, 2.2, 0.08, 0.75, 0x453322);
+
+      // Crates & barrels
+      addInstance(km.prop.list, -0.72, 1.24, 0.18, 0.58, 0.45, 0.5, 0x7C5B35);
+      addInstance(km.prop.list, 0.12, 1.16, 0.18, 0.42, 0.3, 0.34, 0x5F6E3C);
+      addInstance(km.prop.list, 0.62, 1.13, 0.2, 0.34, 0.24, 0.28, 0x8E3F36);
+      addInstance(km.prop.list, -1.32, 0.3, 0.72, 0.28, 0.55, 0.28, 0x59422D); // barrel
+
+      world.colliders.push({ x: px, z: pz, r: 1.05 });
+    }
+  };
+
+  Village.prototype._buildGateFromKit = function (site) {
+    var world = this.world;
+    var sp = world.findSpawnPoint ? world.findSpawnPoint() : { x: site.x, z: site.z + 20 };
+    var ang = Math.atan2(sp.x - site.x, sp.z - site.z);
+    var px = site.x + Math.sin(ang) * 21.6;
+    var pz = site.z + Math.cos(ang) * 21.6;
+    var py = world.groundHeight(px, pz);
+
+    var gateM = new THREE.Matrix4().compose(
+      new THREE.Vector3(px, py, pz),
+      new THREE.Quaternion().setFromEuler(new THREE.Euler(0, ang, 0)),
+      new THREE.Vector3(1, 1, 1)
+    );
+
+    var km = this.kitMeshes;
+    var stoneMat = new THREE.MeshStandardMaterial({ color: srgb(0x6D6B62), roughness: 0.96, metalness: 0 });
+    if (global.TexLib) global.TexLib.apply(stoneMat, 'stoneBrick', 1.5, 1.6);
+
+    function addInstance(list, lx, ly, lz, sx, sy, sz, hex, ry, materialOverride) {
+      var q = new THREE.Quaternion();
+      if (ry) q.setFromEuler(new THREE.Euler(0, ry, 0));
+      var local = new THREE.Matrix4().compose(
+        new THREE.Vector3(lx, ly, lz), q, new THREE.Vector3(sx, sy, sz)
+      );
+      list.push({ m: new THREE.Matrix4().multiplyMatrices(gateM, local), hex: hex, mat: materialOverride });
+    }
+
+    // Pillars
+    addInstance(km.wall.list, -2.15, 1.7, 0, 0.9, 3.4, 0.9, 0x6D6B62, 0, stoneMat);
+    addInstance(km.wall.list, 2.15, 1.7, 0, 0.9, 3.4, 0.9, 0x6D6B62, 0, stoneMat);
+    // Arch top
+    addInstance(km.wall.list, 0, 3.72, 0, 5.25, 0.42, 0.7, 0x595850);
+    addInstance(km.prop.list, 0, 3.94, 0, 4.2, 0.12, 0.74, 0x323436);
+    // Gates (iron)
+    addInstance(km.prop.list, 0, 3.18, 0.4, 1.25, 1.55, 0.05, 0x6B2C32);
+    addInstance(km.prop.list, 0, 3.8, 0.42, 1.25, 0.14, 0.06, 0xB08A45);
+
+    // Side walls
+    addInstance(km.wall.list, -5.55, 0.78, 0, 6.4, 1.55, 0.55, 0x595850, 0, stoneMat);
+    addInstance(km.wall.list, 5.55, 0.78, 0, 6.4, 1.55, 0.55, 0x595850, 0, stoneMat);
+
+    // Lanterns
+    var lampMat = new THREE.MeshStandardMaterial({ color: srgb(0xFFE2A8), emissive: srgb(0xFFA64D), emissiveIntensity: 0.25, roughness: 0.5, metalness: 0 });
+    for (var s = -1; s <= 1; s += 2) {
+      addInstance(km.lamp_post.list, s * 2.15, 3.05, 0.52, 0.06, 1.1, 0.06, 0x343537);
+      addInstance(km.prop.list, s * 2.15, 2.58, 0.52, 0.28, 0.36, 0.28, 0xFFE2A8, 0, lampMat);
+    }
+
+    this.scene.add(new THREE.Group()); // placeholder
+    world.colliders.push({ x: px - Math.cos(ang) * 2.15, z: pz + Math.sin(ang) * 2.15, r: 0.72 });
+    world.colliders.push({ x: px + Math.cos(ang) * 2.15, z: pz - Math.sin(ang) * 2.15, r: 0.72 });
+
+    // Wall segments for collision
+    var wing = 4.1;
+    world.walls.push({
+      x1: px - Math.cos(ang) * (2.4 + wing), z1: pz + Math.sin(ang) * (2.4 + wing),
+      x2: px - Math.cos(ang) * 2.4, z2: pz + Math.sin(ang) * 2.4, r: 0.4
+    });
+    world.walls.push({
+      x1: px + Math.cos(ang) * 2.4, z1: pz - Math.sin(ang) * 2.4,
+      x2: px + Math.cos(ang) * (2.4 + wing), z2: pz - Math.sin(ang) * (2.4 + wing), r: 0.4
+    });
+  };
+
+  Village.prototype._buildFenceFromKit = function (site, radius) {
+    var world = this.world;
+    var km = this.kitMeshes;
+    var posts = [], rails = [], i;
+
+    for (i = 0; i < this._hutAngles.length; i++) {
+      var a0 = this._hutAngles[i];
+      var a1 = this._hutAngles[(i + 1) % this._hutAngles.length] + (i === this._hutAngles.length - 1 ? Math.PI * 2 : 0);
+      var mid = (a0 + a1) / 2;
+      var prev = null;
+      for (var k = -1; k <= 1; k++) {
+        var a = mid + k * 0.14;
+        var ppx = site.x + Math.cos(a) * radius;
+        var ppz = site.z + Math.sin(a) * radius;
+        var ppy = world.groundHeight(ppx, ppz);
+        posts.push({ x: ppx, y: ppy, z: ppz });
+        if (prev) {
+          var dx = ppx - prev.x, dz = ppz - prev.z;
+          var len = Math.sqrt(dx * dx + dz * dz);
+          rails.push({
+            x: (ppx + prev.x) / 2, y: (ppy + prev.y) / 2 + 0.36, z: (ppz + prev.z) / 2,
+            ry: Math.atan2(-dz, dx), len: len
+          });
+          rails.push({
+            x: (ppx + prev.x) / 2, y: (ppy + prev.y) / 2 + 0.12, z: (ppz + prev.z) / 2,
+            ry: Math.atan2(-dz, dx), len: len
+          });
+        }
+        prev = { x: ppx, y: ppy, z: ppz };
+      }
+    }
+
+    // Use InstancedMesh for fence posts and rails
+    var dummy = new THREE.Object3D();
+    for (i = 0; i < posts.length; i++) {
+      var p = posts[i];
+      dummy.position.set(p.x, p.y, p.z);
+      dummy.rotation.set(0, 0, 0);
+      dummy.scale.set(1, 1, 1);
+      dummy.updateMatrix();
+      km.fence_post.list.push({ m: dummy.matrix.clone(), hex: 0x5A432C });
+    }
+    for (i = 0; i < rails.length; i++) {
+      var r = rails[i];
+      dummy.position.set(r.x, r.y, r.z);
+      dummy.rotation.set(0, r.ry, 0);
+      dummy.scale.set(r.len, 1, 1);
+      dummy.updateMatrix();
+      km.fence_rail.list.push({ m: dummy.matrix.clone(), hex: 0x6B5237 });
+    }
+  };
+
+  Village.prototype._flushKitMeshes = function () {
+    var km = this.kitMeshes;
+    var tmpC = new THREE.Color();
+    var rng = U.mulberry32(C.WORLD.seed + 999);
+
+    for (var key in km) {
+      var entry = km[key];
+      if (!entry.list.length || !entry.geo || !entry.mat) continue;
+      var mesh = new THREE.InstancedMesh(entry.geo, entry.mat, entry.list.length);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(entry.list.length * 3), 3);
+      for (var i = 0; i < entry.list.length; i++) {
+        mesh.setMatrixAt(i, entry.list[i].m);
+        var c = entry.list[i].mat ? entry.list[i].mat.color.clone() : new THREE.Color();
+        if (entry.list[i].hex) {
+          c.setHex(entry.list[i].hex).convertSRGBToLinear().multiplyScalar(0.92 + rng() * 0.16);
+        }
+        mesh.setColorAt(i, c);
+      }
+      this.scene.add(mesh);
+      entry.mesh = mesh;
+    }
+    this.hutMeshes = []; // for compatibility
+    Object.keys(km).forEach(function(k) { if (km[k].mesh) this.hutMeshes.push(km[k].mesh); }, this);
   };
 
   Village.prototype._buildPlaza = function (site) {
