@@ -326,9 +326,11 @@
     }
 
     // Air dalam bukan lagi penghalang: turun ke sisi perahu lalu berenang.
-    var waterY = w.waveHeight
-      ? w.waveHeight(this.position.x, this.position.z, w.elapsed || 0)
-      : (C.WATER.level || 0);
+    var waterY = w.waterLevelAt
+      ? w.waterLevelAt(this.position.x, this.position.z, w.elapsed || 0)
+      : (w.waveHeight
+        ? w.waveHeight(this.position.x, this.position.z, w.elapsed || 0)
+        : (C.WATER.level || 0));
     var sides = [[2.3, 0], [-2.3, 0], [0, 1.9], [0, -1.9], [1.9, 1.6], [1.9, -1.6]];
     for (i = 0; i < sides.length; i++) {
       x = this.position.x + fx * sides[i][0] + rx * sides[i][1];

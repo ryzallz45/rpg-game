@@ -8,6 +8,24 @@
   // Warna sRGB -> linear (akurat dengan tone mapping + output sRGB)
   function srgb(hex) { return new THREE.Color(hex).convertSRGBToLinear(); }
 
+  /* ---------- Alur sungai panjang ----------
+     Koordinat dasar (dikali S seperti bentuk pulau lain). Sungai mengalir dari
+     dataran tinggi utara, melewati lembah di antara kerajaan dan kekaisaran,
+     lalu bermuara di pantai selatan. Karena dipotong langsung ke fungsi
+     ketinggian, terrain, peta kecil, penempatan desa, jalan, dan vegetasi
+     otomatis menghormati alurnya. */
+  var RIVER_BASE = [
+    { x: 55, z: -305 },
+    { x: 42, z: -235 },
+    { x: 12, z: -150 },
+    { x: -36, z: -62 },
+    { x: -66, z: 32 },
+    { x: -58, z: 122 },
+    { x: -20, z: 212 },
+    { x: 14, z: 300 },
+    { x: 40, z: 390 }
+  ];
+
   /* ---------- Generator ketinggian pulau (murni matematika, tanpa THREE) ----------
      Fase 5: dunia diperbesar seragam S× (S = size/baseSize). Semua bentuk dihitung
      pada koordinat lama (baseSize) lalu dikalikan S — medan tetap identik bentuknya,
@@ -25,6 +43,53 @@
     var fbmColor = U.makeFbm(U.createNoise2D(seed + 66), 3);
     var fbmDetail = U.makeFbm(U.createNoise2D(seed + 77), 3);
 
+    // --- Alur sungai panjang (koordinat dunia) ---
+    // Alur dihaluskan (Chaikin 2×) SEBELUM dipakai galian & pita air, supaya
+    // keduanya persis sama dan air tidak terpotong-potong di tikungan.
+    var riverPts = [];
+    for (var ri = 0; ri < RIVER_BASE.length; ri++) {
+      riverPts.push({ x: RIVER_BASE[ri].x * S, z: RIVER_BASE[ri].z * S });
+    }
+    for (var rsmooth = 0; rsmooth < 2; rsmooth++) {
+      var rsm = [riverPts[0]];
+      for (var rsi = 0; rsi < riverPts.length - 1; rsi++) {
+        var rs0 = riverPts[rsi], rs1 = riverPts[rsi + 1];
+        rsm.push({ x: rs0.x * 0.75 + rs1.x * 0.25, z: rs0.z * 0.75 + rs1.z * 0.25 });
+        rsm.push({ x: rs0.x * 0.25 + rs1.x * 0.75, z: rs0.z * 0.25 + rs1.z * 0.75 });
+      }
+      rsm.push(riverPts[riverPts.length - 1]);
+      riverPts = rsm;
+    }
+    var riverMinX = Infinity, riverMaxX = -Infinity, riverMinZ = Infinity, riverMaxZ = -Infinity;
+    for (var rbi = 0; rbi < riverPts.length; rbi++) {
+      var rbp = riverPts[rbi];
+      if (rbp.x < riverMinX) riverMinX = rbp.x;
+      if (rbp.x > riverMaxX) riverMaxX = rbp.x;
+      if (rbp.z < riverMinZ) riverMinZ = rbp.z;
+      if (rbp.z > riverMaxZ) riverMaxZ = rbp.z;
+    }
+    var RIVER_PAD = 96; // jarak maksimum pengaruh lembah sungai (m)
+
+    // Jarak titik ke poligon sungai (m). Tolak cepat di luar kotak pembatas.
+    function riverDistance(x, z) {
+      if (x < riverMinX - RIVER_PAD || x > riverMaxX + RIVER_PAD ||
+          z < riverMinZ - RIVER_PAD || z > riverMaxZ + RIVER_PAD) return 1e9;
+      var best = 1e9;
+      for (var i = 0; i < riverPts.length - 1; i++) {
+        var ax = riverPts[i].x, az = riverPts[i].z;
+        var bx = riverPts[i + 1].x, bz = riverPts[i + 1].z;
+        var vx = bx - ax, vz = bz - az;
+        var wx = x - ax, wz = z - az;
+        var L2 = vx * vx + vz * vz;
+        var t = L2 > 0 ? U.clamp((wx * vx + wz * vz) / L2, 0, 1) : 0;
+        var px = ax + vx * t, pz = az + vz * t;
+        var dx = x - px, dz = z - pz;
+        var d = Math.sqrt(dx * dx + dz * dz);
+        if (d < best) best = d;
+      }
+      return best;
+    }
+
     // Bentuk besar pulau utama (koordinat dunia lama → dikali S)
     function main(x, z) {
       var u = x / S, v = z / S;
@@ -38,9 +103,12 @@
       var hills = fbmHill(u * 0.018, v * 0.018);
       var h = (land * 24 + hills * 7 + 15) * mask - 3.0;
 
-      var center = 1 - U.smoothstep(0.22, 0.80, r);
-      var ridge = Math.max(0, fbmRidge(u * 0.0075 + 7.3, v * 0.0075 + 2.1) + 0.15);
-      h += ridge * 58 * center * center;
+      var center = 1 - U.smoothstep(0.12, 0.66, r);
+      // Hanya punggung bukit terkuat yang menjadi pegunungan — jadi jumlah
+      // gunung jauh lebih sedikit, sementara pulau tetap punya beberapa puncak.
+      var ridge = Math.max(0, fbmRidge(u * 0.0075 + 7.3, v * 0.0075 + 2.1));
+      var massif = U.smoothstep(0.34, 0.72, ridge);
+      h += (14 + massif * 50) * center * center;
 
       var sea = 1 - mask;
       h -= sea * (9 + 7 * (fbmSea(u * 0.004 + 40, v * 0.004 + 40) * 0.5 + 0.5));
@@ -99,10 +167,114 @@
       return iv > m ? iv : m;
     }
 
-    // Ketinggian akhir = bentuk besar + kerutan halus permukaan daratan
-    function full(x, z) {
+    // Ketinggian dasar (sebelum sungai): bentuk besar + kerutan halus daratan.
+    function baseFull(x, z) {
       var m = macro(x, z);
       m += fbmDetail(x * (0.058 / S), z * (0.058 / S)) * 0.42 * S * U.smoothstep(-S, 1.5 * S, m);
+      return m;
+    }
+
+    /* --- Isi danau pedalaman ---
+       Cekungan tertutup di tengah pulau (air yang tidak tersambung ke laut)
+       dinaikkan menjadi daratan rendah. Dengan begitu satu-satunya air tawar
+       adalah sungai panjang, dan jalan tidak perlu jembatan raksasa. */
+    var lakeFills = [];
+    (function findLakes() {
+      var step = 20;
+      var half = C.WORLD.size / 2;
+      var W = Math.ceil(C.WORLD.size / step) + 1;
+      var H = W;
+      var water = new Uint8Array(W * H);
+      var ocean = new Uint8Array(W * H);
+      var hh = new Float32Array(W * H);
+      var i, j, id;
+      for (j = 0; j < H; j++) {
+        for (i = 0; i < W; i++) {
+          var x = -half + i * step, z = -half + j * step;
+          var h = baseFull(x, z);
+          hh[j * W + i] = h;
+          if (h < -0.05) water[j * W + i] = 1;
+        }
+      }
+      // Banjiri dari tepi peta: semua air yang tersambung laut ditandai.
+      var stack = [];
+      function seed(id2) {
+        if (!ocean[id2] && water[id2]) { ocean[id2] = 1; stack.push(id2); }
+      }
+      for (i = 0; i < W; i++) { seed(i); seed((H - 1) * W + i); }
+      for (j = 0; j < H; j++) { seed(j * W); seed(j * W + W - 1); }
+      while (stack.length) {
+        id = stack.pop();
+        var ix = id % W, iz = (id / W) | 0;
+        if (ix > 0) seed(id - 1);
+        if (ix < W - 1) seed(id + 1);
+        if (iz > 0) seed(id - W);
+        if (iz < H - 1) seed(id + W);
+      }
+      // Komponen air yang tidak tersambung laut = danau → kumpulkan disk.
+      var seen = new Uint8Array(W * H);
+      for (j = 0; j < H; j++) {
+        for (i = 0; i < W; i++) {
+          id = j * W + i;
+          if (!water[id] || ocean[id] || seen[id]) continue;
+          var comp = [id]; seen[id] = 1;
+          var sumX = 0, sumZ = 0, n = 0;
+          for (var ci = 0; ci < comp.length; ci++) {
+            var cid = comp[ci];
+            var cix = cid % W, ciz = (cid / W) | 0;
+            sumX += cix; sumZ += ciz; n++;
+            for (var k = 0; k < 4; k++) {
+              var nx = cix + (k === 0 ? -1 : k === 1 ? 1 : 0);
+              var nz = ciz + (k === 2 ? -1 : k === 3 ? 1 : 0);
+              if (nx < 0 || nz < 0 || nx >= W || nz >= H) continue;
+              var nid = nz * W + nx;
+              if (!water[nid] || ocean[nid] || seen[nid]) continue;
+              seen[nid] = 1;
+              comp.push(nid);
+            }
+          }
+          if (n < 3) continue;
+          var mx = sumX / n, mz = sumZ / n;
+          var maxD = 0;
+          for (var cj = 0; cj < comp.length; cj++) {
+            var c2 = comp[cj];
+            var dx2 = (c2 % W) - mx, dz2 = ((c2 / W) | 0) - mz;
+            var dd = Math.sqrt(dx2 * dx2 + dz2 * dz2);
+            if (dd > maxD) maxD = dd;
+          }
+          lakeFills.push({
+            x: -half + mx * step,
+            z: -half + mz * step,
+            r: maxD * step + 4
+          });
+        }
+      }
+    })();
+
+    // Ketinggian akhir = bentuk besar + kerutan halus permukaan daratan
+    function full(x, z) {
+      var m = baseFull(x, z);
+      // Isi danau tertutup (bertahap di tepian agar tidak berupa tebing).
+      for (var lf = 0; lf < lakeFills.length; lf++) {
+        var L = lakeFills[lf];
+        var ldx = x - L.x, ldz = z - L.z;
+        var lr = L.r + 16;
+        if (ldx * ldx + ldz * ldz > lr * lr) continue;
+        var lt = 1 - U.smoothstep(L.r * 0.55, lr, Math.sqrt(ldx * ldx + ldz * ldz));
+        if (lt > 0) m = m * (1 - lt) + Math.max(m, 2.0) * lt;
+      }
+      // Lembah sungai lebar: dataran rendah bergelombang di kiri-kanan air,
+      // lalu channel sempit yang dipotong sampai di bawah permukaan laut.
+      var rd = riverDistance(x, z);
+      if (rd < 230) {
+        var valley = 1 - U.smoothstep(20, 230, rd);
+        if (valley > 0) {
+          var target = Math.max(3.5, m * 0.10);
+          m = m * (1 - valley * 0.92) + target * (valley * 0.92);
+        }
+        var bed = 1 - U.smoothstep(8, 24, rd);
+        if (bed > 0) m = m * (1 - bed) - 3.3 * bed;
+      }
       return m;
     }
 
@@ -110,6 +282,9 @@
     full.fbmColor = fbmColor;
     full.islands = islands;
     full.scale = S;
+    full.river = riverPts;
+    full.riverDistance = riverDistance;
+    full.lakeFills = lakeFills;
     return full;
   }
 
@@ -279,6 +454,11 @@
     this.kingdomBuilt = null;
     this.empireBuilt = null;
     this.townSpots = [];       // titik NPC warga kota (kerajaan + kekaisaran)
+    this.river = (this.height.river || []).slice(); // alur sungai panjang (Fase 6)
+    this.roads = [];           // jaringan jalan desa–kerajaan–kekaisaran
+    this.bridges = [];         // jembatan di persimpangan jalan & sungai
+    this.forests = [];         // kantong hutan rimbun (titik + radius)
+    this._roadGrid = null;     // indeks spasial segmen jalan (pencarian cepat)
     this._placed = [];
     this._spawn = null;
     this._tmpColor = new THREE.Color();
@@ -523,7 +703,105 @@
     this.ocean = ocean;
     this.oceanMat = oMat;
     this.scene.add(ocean);
+    this.buildRiver();
     return mesh;
+  };
+
+  /* --- Sungai panjang: pita air khusus ---
+     Mesh laut global hanya punya ±28 m per simpul, terlalu kasar untuk alur
+     sungai selebar ±26 m (busa pantainya jadi segitiga besar). Pita sungai
+     ini mengikuti alur dengan resolusi ±3 m, permukaannya sedikit di atas
+     gelombang laut, dan ujungnya menyatu dengan laut di muara. */
+  World.prototype.buildRiver = function () {
+    var river = this.river || [];
+    if (river.length < 2) return null;
+    // Alur sudah dihaluskan di createHeightFunction (sama dengan galian terrain).
+    var pts = river.slice();
+    // Resample tiap ±3 m.
+    var samples = [{ x: pts[0].x, z: pts[0].z }];
+    var since = 0;
+    for (var si = 1; si < pts.length; si++) {
+      var a = pts[si - 1], b = pts[si];
+      var dx = b.x - a.x, dz = b.z - a.z;
+      var seg = Math.sqrt(dx * dx + dz * dz);
+      if (seg < 1e-4) continue;
+      var t0 = 0;
+      var remain = seg;
+      while (since + remain >= 3) {
+        var need = 3 - since;
+        t0 += need;
+        remain -= need;
+        samples.push({ x: a.x + dx * (t0 / seg), z: a.z + dz * (t0 / seg) });
+        since = 0;
+      }
+      since += remain;
+    }
+    samples.push({ x: pts[pts.length - 1].x, z: pts[pts.length - 1].z });
+
+    var n = samples.length;
+    var pos = [], colArr = [], uv = [], idx = [];
+    var shoreC = srgb(0x8FD3C8), deepC = srgb(0x2E6F8E);
+    var totalLen = 0;
+    var maxH = 18.5;
+    for (var k = 0; k < n; k++) {
+      var p = samples[k];
+      var prev = samples[Math.max(0, k - 1)];
+      var next = samples[Math.min(n - 1, k + 1)];
+      var tx = next.x - prev.x, tz = next.z - prev.z;
+      var tl = Math.sqrt(tx * tx + tz * tz) || 1;
+      tx /= tl; tz /= tl;
+      var nx = -tz, nz = tx;
+      if (k > 0) totalLen += Math.hypot(p.x - samples[k - 1].x, p.z - samples[k - 1].z);
+      var remaining = (n - 1 - k) * 3;
+      var mouthT = U.clamp((220 - remaining) / 220, 0, 1);
+      var headT = U.clamp((60 - totalLen) / 60, 0, 1);
+      var taper = (1 - mouthT) * (1 - headT * 0.85);
+      var hw = maxH * (0.55 + 0.45 * taper) + mouthT * 8;
+      var y = 0.38 * taper + 0.02;
+      // Tiga verteks: tepi kiri (busa), tengah (dalam), tepi kanan (busa).
+      pos.push(p.x + nx * hw, y, p.z + nz * hw);
+      pos.push(p.x, y + 0.03, p.z);
+      pos.push(p.x - nx * hw, y, p.z - nz * hw);
+      colArr.push(shoreC.r, shoreC.g, shoreC.b);
+      colArr.push(deepC.r, deepC.g, deepC.b);
+      colArr.push(shoreC.r, shoreC.g, shoreC.b);
+      var v = totalLen / 8;
+      uv.push(0, v, 0.5, v, 1, v);
+    }
+    for (var q = 0; q < n - 1; q++) {
+      var a0 = q * 3, b0 = a0 + 1, c0 = a0 + 2;
+      var a1 = a0 + 3, b1 = a1 + 1, c1 = a1 + 2;
+      idx.push(a0, a1, b0, b0, a1, b1);
+      idx.push(b0, b1, c0, c0, b1, c1);
+    }
+    var geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.Float32BufferAttribute(colArr, 3));
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    geo.setIndex(idx);
+    geo.computeVertexNormals();
+    var mat = new THREE.MeshStandardMaterial({
+      vertexColors: true, roughness: 0.14, metalness: 0,
+      transparent: false, depthWrite: true
+    });
+    if (global.TexLib) global.TexLib.applyNormal(mat, 'waterNormal', 0.05, 0.05, 0.45);
+    var mesh = new THREE.Mesh(geo, mat);
+    mesh.name = 'riverWater';
+    mesh.renderOrder = 6;
+    this.riverMesh = mesh;
+    this.riverMat = mat;
+    this.riverSurfaceY = 0.38;
+    this.scene.add(mesh);
+    return mesh;
+  };
+
+  /* Tinggi permukaan air di titik tertentu: sungai sedikit di atas laut. */
+  World.prototype.waterLevelAt = function (x, z, t) {
+    if (this.height && this.height.riverDistance) {
+      var d = this.height.riverDistance(x, z);
+      if (d < 17 && this.riverSurfaceY) return this.riverSurfaceY;
+    }
+    return this.waveHeight(x, z, t || 0);
   };
 
   /* Pasang/lepas peta lingkungan (PMREM langit) pada material air.
@@ -533,7 +811,7 @@
     if (this._envTex === t) return;
     var had = !!this._envTex;
     this._envTex = t;
-    var mats = [this.waterMat, this.oceanMat];
+    var mats = [this.waterMat, this.oceanMat, this.riverMat];
     for (var i = 0; i < mats.length; i++) {
       if (!mats[i]) continue;
       mats[i].envMap = t;
@@ -682,6 +960,9 @@
     for (var x = -R; x <= R; x += step) {
       for (var z = -R; z <= R; z += step) {
         if (x * x + z * z > R * R) continue;
+        // Desa hanya di pulau utama — bukan di pulau-pulau kecil sekitar —
+        // supaya semua desa bisa dihubungkan jalan darat.
+        if (nearIsland(this.height, x, z)) continue;
         var h = this.height(x, z);
         if (h < 3 * S || h > 22 * S) continue;
         var s = Math.max(
@@ -845,6 +1126,8 @@
         var er = es.r + 10;
         if (edx * edx + edz * edz < er * er) blocked = true;   // dalam tembok kekaisaran
       }
+      // Jangan menanam pohon/batu di atas jalan penghubung.
+      if (!blocked && this._roadGrid && this.nearRoad(x, z, 1.4)) blocked = true;
       if (blocked) continue;
       if (!this._spotFree(x, z, minDist)) continue;
       return { x: x, z: z, h: h };
@@ -2245,30 +2528,11 @@
     var rng = U.mulberry32(C.WORLD.seed + (cfg.seed || 7777));
     var cx = site.x, cz = site.z;
     var centerY = gh(cx, cz);
-    var village = this.villageSpots && this.villageSpots[0];
     // Gerbang utama menghadap desa Aldenmere (kalau ada), kalau tidak ke timur.
-    var mainAng = village ? Math.atan2(village.z - cz, village.x - cx) : 0;
+    // Kekaisaran: gerbang utama jangan menghadap lereng curam.
+    var mainAng = this._cityGateAngle(site, cfg);
     var gateAngles = [mainAng, mainAng + Math.PI / 2, mainAng + Math.PI, mainAng - Math.PI / 2];
     var QUAD = Math.PI / 2;
-
-    // Kekaisaran: gerbang utama jangan menghadap lereng curam — pilih arah yang
-    // paling datar di luar tembok supaya jalan masuk tetap bisa dilalui.
-    if (cfg.flatGate) {
-      var flatBest = 0, flatScore = Infinity;
-      for (var fgi = 0; fgi < 4; fgi++) {
-        var fga = gateAngles[fgi], fgs = 0;
-        for (var fgd = 0; fgd <= 6; fgd++) {
-          var fgr = R_WALL + 8 + fgd * 9;
-          fgs += Math.abs(gh(cx + Math.cos(fga) * fgr, cz + Math.sin(fga) * fgr) - centerY);
-        }
-        if (fgs < flatScore) { flatScore = fgs; flatBest = fgi; }
-      }
-      if (flatBest) {
-        var fgRot = flatBest * QUAD;
-        for (var fgk = 0; fgk < 4; fgk++) gateAngles[fgk] += fgRot;
-        mainAng = gateAngles[0];
-      }
-    }
 
     // Lebar bukaan tembok per gerbang (busur, meter) supaya pilar gerbang
     // benar-benar menutup ujung segmen tembok — dulu celahnya tembus pandang.
@@ -3006,6 +3270,513 @@
   };
 
   /* --- Vegetasi & batu: penempatan prosedural (instanced) --- */
+  /* Arah gerbang utama kota: menghadap desa utama; kekaisaran memutar gerbang
+     ke arah paling datar di luar tembok. Dipakai juga oleh pembuat jalan agar
+     jalan raya tepat menyambung ke gerbang. */
+  World.prototype._cityGateAngle = function (site, cfg) {
+    if (!site) return 0;
+    var cx = site.x, cz = site.z;
+    var rWall = cfg.rWall || 60;
+    var village = this.villageSpots && this.villageSpots[0];
+    var mainAng = village ? Math.atan2(village.z - cz, village.x - cx) : 0;
+    if (cfg.flatGate) {
+      var centerY = this.groundHeight(cx, cz);
+      var best = 0, bestScore = Infinity;
+      for (var i = 0; i < 4; i++) {
+        var a = mainAng + i * Math.PI / 2, sum = 0;
+        for (var d = 0; d <= 6; d++) {
+          var r = rWall + 8 + d * 9;
+          sum += Math.abs(this.groundHeight(cx + Math.cos(a) * r, cz + Math.sin(a) * r) - centerY);
+        }
+        if (sum < bestScore) { bestScore = sum; best = i; }
+      }
+      mainAng += best * Math.PI / 2;
+    }
+    return mainAng;
+  };
+
+  World.prototype._cityGateOut = function (site, cfg) {
+    if (!site) return null;
+    var a = this._cityGateAngle(site, cfg);
+    var r = (cfg.rWall || 60) + 9;
+    return { x: site.x + Math.cos(a) * r, z: site.z + Math.sin(a) * r, ang: a };
+  };
+
+  /* ---------- Jaringan jalan: desa ↔ kerajaan ↔ kekaisaran ----------
+     Rute dicari dengan A* pada grid kecil yang menghukum lereng curam, air,
+     dan pegunungan tinggi. Jalan lalu dihaluskan, diikuti kontur tanah, dan
+     diberi jembatan saat melintasi sungai. */
+  World.prototype._buildRoadNetwork = function () {
+    var self = this;
+    this.roads = [];
+    this.bridges = [];
+    var v = this.villageSpots || [];
+    if (!v.length) { this._roadGrid = { cell: 24, map: Object.create(null) }; return; }
+
+    var mainV = { x: v[0].x, z: v[0].z };
+    var kingdomGate = this._cityGateOut(this.kingdomSite, { rWall: 60 });
+    var empireGate = this._cityGateOut(this.empireSite, { rWall: 148, flatGate: true });
+    var pairs = [];
+    var i;
+    for (i = 1; i < v.length; i++) pairs.push([mainV, { x: v[i].x, z: v[i].z }]);
+    if (kingdomGate) pairs.push([mainV, kingdomGate]);
+    if (kingdomGate && empireGate) pairs.push([kingdomGate, empireGate]);
+    if (this.harborSpot) {
+      var hp = this.harborSpot;
+      pairs.push([{
+        x: hp.x - (hp.dirX || 1) * 7,
+        z: hp.z - (hp.dirZ || 0) * 7
+      }, mainV]);
+    }
+
+    var acc = { pos: [], uv: [], idx: [], n: 0 };
+    for (i = 0; i < pairs.length; i++) {
+      var a = pairs[i][0], b = pairs[i][1];
+      if (Math.hypot(a.x - b.x, a.z - b.z) < 26) continue;
+      var pts = this._findRoadPath(a, b);
+      if (!pts || pts.length < 2) continue;
+      this._buildRoadRibbon(pts, 2.7, acc);
+    }
+    this._indexRoads();
+
+    if (!acc.n) return;
+    var geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(acc.pos, 3));
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(acc.uv, 2));
+    geo.setIndex(acc.idx);
+    geo.computeVertexNormals();
+    var mat = new THREE.MeshStandardMaterial({
+      color: srgb(0x9C8C74), roughness: 0.98, metalness: 0,
+      polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2
+    });
+    if (global.TexLib) global.TexLib.apply(mat, 'cobble', 1, 1);
+    var mesh = new THREE.Mesh(geo, mat);
+    mesh.name = 'roads';
+    mesh.receiveShadow = true;
+    mesh.castShadow = false;
+    this.scene.add(mesh);
+    this.roadMesh = mesh;
+  };
+
+  World.prototype._findRoadPath = function (a, b) {
+    var self = this;
+    var pad = 86;
+    var minX = Math.min(a.x, b.x) - pad, maxX = Math.max(a.x, b.x) + pad;
+    var minZ = Math.min(a.z, b.z) - pad, maxZ = Math.max(a.z, b.z) + pad;
+    var cell = Math.max(11, (maxX - minX) / 210, (maxZ - minZ) / 210);
+    var cols = Math.max(2, Math.ceil((maxX - minX) / cell) + 1);
+    var rows = Math.max(2, Math.ceil((maxZ - minZ) / cell) + 1);
+    var total = cols * rows;
+    var gScore = new Float32Array(total); gScore.fill(Infinity);
+    var came = new Int32Array(total); came.fill(-1);
+    var closed = new Uint8Array(total);
+    var heap = [];
+
+    function push(id, f) {
+      heap.push({ id: id, f: f });
+      var i = heap.length - 1;
+      while (i > 0) {
+        var p = (i - 1) >> 1;
+        if (heap[p].f <= heap[i].f) break;
+        var tmp = heap[p]; heap[p] = heap[i]; heap[i] = tmp; i = p;
+      }
+    }
+    function pop() {
+      var top = heap[0], last = heap.pop();
+      if (heap.length) {
+        heap[0] = last;
+        var i = 0;
+        for (;;) {
+          var l = i * 2 + 1, r = l + 1, m = i;
+          if (l < heap.length && heap[l].f < heap[m].f) m = l;
+          if (r < heap.length && heap[r].f < heap[m].f) m = r;
+          if (m === i) break;
+          var tmp = heap[m]; heap[m] = heap[i]; heap[i] = tmp; i = m;
+        }
+      }
+      return top;
+    }
+    function toX(ix) { return minX + ix * cell; }
+    function toZ(iz) { return minZ + iz * cell; }
+
+    function cellCost(ix, iz) {
+      var x = toX(ix), z = toZ(iz);
+      var h = self.groundHeight(x, z);
+      var c = 1;
+      if (h < 0.35) c += 20;               // air → jembatan, hindari bila bisa
+      else if (h < 1.5) c += 5;
+      var sl = self._slopeAt(x, z);
+      if (sl > 0.16) c += Math.min(8, (sl - 0.16) * 26);
+      if (h > 52) c += Math.min(12, (h - 52) * 0.16);
+      // Jangan memotong tembok kota.
+      var k = self.kingdomSite;
+      if (k && Math.hypot(x - k.x, z - k.z) < (k.r || 76) + 5) c += 500;
+      var e = self.empireSite;
+      if (e && Math.hypot(x - e.x, z - e.z) < (e.r || 160) + 7) c += 500;
+      var lms = self.landmarkSites || [];
+      for (var i = 0; i < lms.length; i++) {
+        if (Math.hypot(x - lms[i].x, z - lms[i].z) < lms[i].r + 2) { c += 45; break; }
+      }
+      return c;
+    }
+
+    function snapped(x, z) {
+      var ix = Math.round((x - minX) / cell), iz = Math.round((z - minZ) / cell);
+      ix = Math.max(0, Math.min(cols - 1, ix));
+      iz = Math.max(0, Math.min(rows - 1, iz));
+      // Cari sel kering terdekat bila titik awal/akhir kebetulan di air.
+      if (self.groundHeight(toX(ix), toZ(iz)) > 0.8) return iz * cols + ix;
+      var best = iz * cols + ix, bestD = Infinity;
+      for (var dz = -3; dz <= 3; dz++) {
+        for (var dx = -3; dx <= 3; dx++) {
+          var nx = ix + dx, nz = iz + dz;
+          if (nx < 0 || nz < 0 || nx >= cols || nz >= rows) continue;
+          if (self.groundHeight(toX(nx), toZ(nz)) <= 0.8) continue;
+          var d = dx * dx + dz * dz;
+          if (d < bestD) { bestD = d; best = nz * cols + nx; }
+        }
+      }
+      return best;
+    }
+
+    var start = snapped(a.x, a.z), goal = snapped(b.x, b.z);
+    var gx0 = goal % cols, gz0 = (goal / cols) | 0;
+    function heuristic(id) {
+      var dx = (id % cols) - gx0, dz = ((id / cols) | 0) - gz0;
+      return Math.sqrt(dx * dx + dz * dz);
+    }
+    gScore[start] = 0;
+    push(start, heuristic(start));
+    var found = false;
+    while (heap.length) {
+      var cur = pop().id;
+      if (closed[cur]) continue;
+      if (cur === goal) { found = true; break; }
+      closed[cur] = 1;
+      var cx = cur % cols, cz = (cur / cols) | 0;
+      for (var oz = -1; oz <= 1; oz++) {
+        for (var ox = -1; ox <= 1; ox++) {
+          if (!ox && !oz) continue;
+          var nx2 = cx + ox, nz2 = cz + oz;
+          if (nx2 < 0 || nz2 < 0 || nx2 >= cols || nz2 >= rows) continue;
+          var nid = nz2 * cols + nx2;
+          if (closed[nid]) continue;
+          var step = (ox && oz ? 1.414 : 1) * cellCost(nx2, nz2);
+          var ng = gScore[cur] + step;
+          if (ng < gScore[nid]) {
+            gScore[nid] = ng;
+            came[nid] = cur;
+            push(nid, ng + heuristic(nid) * 1.02);
+          }
+        }
+      }
+    }
+    if (!found) return [{ x: a.x, z: a.z }, { x: b.x, z: b.z }];
+
+    var raw = [];
+    for (var id = goal; id >= 0; id = came[id]) {
+      var ix2 = id % cols, iz2 = (id / cols) | 0;
+      raw.push({ x: toX(ix2), z: toZ(iz2) });
+      if (raw.length > 20000) break;
+    }
+    raw.reverse();
+    if (raw.length < 2) return [{ x: a.x, z: a.z }, { x: b.x, z: b.z }];
+
+    // Haluskan (Chaikin 2×) agar tidak bergerigi mengikuti grid.
+    var pts = raw;
+    for (var it = 0; it < 2; it++) {
+      var out = [pts[0]];
+      for (var pi = 0; pi < pts.length - 1; pi++) {
+        var p0 = pts[pi], p1 = pts[pi + 1];
+        out.push({ x: p0.x * 0.75 + p1.x * 0.25, z: p0.z * 0.75 + p1.z * 0.25 });
+        out.push({ x: p0.x * 0.25 + p1.x * 0.75, z: p0.z * 0.25 + p1.z * 0.75 });
+      }
+      out.push(pts[pts.length - 1]);
+      pts = out;
+    }
+    // Resample tiap ±3 m supaya tekstur & tinggi jalan stabil.
+    var res = [{ x: pts[0].x, z: pts[0].z }];
+    var stepLen = 3, since = 0;
+    for (var si = 1; si < pts.length; si++) {
+      var q0 = pts[si - 1], q1 = pts[si];
+      var dx = q1.x - q0.x, dz = q1.z - q0.z;
+      var seg = Math.sqrt(dx * dx + dz * dz);
+      if (seg < 1e-4) continue;
+      var t0 = 0;
+      var remain = seg;
+      while (since + remain >= stepLen) {
+        var need = stepLen - since;
+        t0 += need;
+        remain -= need;
+        res.push({ x: q0.x + dx * (t0 / seg), z: q0.z + dz * (t0 / seg) });
+        since = 0;
+      }
+      since += remain;
+    }
+    var lastP = pts[pts.length - 1];
+    var lastRes = res[res.length - 1];
+    if (Math.hypot(lastP.x - lastRes.x, lastP.z - lastRes.z) > 1.5) res.push({ x: lastP.x, z: lastP.z });
+    // Pastikan ujung jalan benar-benar di gerbang/pusat desa.
+    res[0] = { x: a.x, z: a.z };
+    var endPt = { x: b.x, z: b.z };
+    res.push(endPt);
+    return res;
+  };
+
+  World.prototype._buildRoadRibbon = function (pts, half, acc) {
+    var self = this;
+    var n = pts.length;
+    if (n < 2) return;
+    this.roads.push({ pts: pts, half: half });
+    var i, ground = [], hgt = [];
+    for (i = 0; i < n; i++) ground.push(this.groundHeight(pts[i].x, pts[i].z));
+    // Rata-rata bergerak: jalan tidak menyalip setiap gundukan kecil.
+    for (i = 0; i < n; i++) {
+      var sum = 0, cnt = 0;
+      for (var k = -2; k <= 2; k++) {
+        var j = i + k;
+        if (j < 0 || j >= n) continue;
+        sum += ground[j]; cnt++;
+      }
+      hgt[i] = Math.max(ground[i], sum / cnt) + 0.14;
+    }
+
+    // Deteksi penyeberangan sungai → jembatan datar + ramp.
+    var spans = [];
+    i = 0;
+    while (i < n) {
+      if (ground[i] >= 0.55) { i++; continue; }
+      var j2 = i;
+      while (j2 + 1 < n && ground[j2 + 1] < 0.55) j2++;
+      spans.push({ s: i, e: j2 });
+      i = j2 + 1;
+    }
+    for (var si = 0; si < spans.length; si++) {
+      var sp = spans[si];
+      var bs = Math.max(0, sp.s - 2), be = Math.min(n - 1, sp.e + 2);
+      var bankA = ground[Math.max(0, sp.s - 4)], bankB = ground[Math.min(n - 1, sp.e + 4)];
+      var deckY = Math.max(bankA, bankB, 0.9) + 0.8;
+      var ramp = 5; // 5 sampel ≈ 15 m
+      for (var rk = 1; rk <= ramp; rk++) {
+        var idxA = sp.s - rk, idxB = sp.e + rk;
+        var fa = rk / (ramp + 1), fb = rk / (ramp + 1);
+        if (idxA >= 0) hgt[idxA] = Math.max(hgt[idxA], deckY * fa + hgt[idxA] * (1 - fa));
+        if (idxB < n) hgt[idxB] = Math.max(hgt[idxB], deckY * fb + hgt[idxB] * (1 - fb));
+      }
+      for (var dk = sp.s; dk <= sp.e; dk++) hgt[dk] = deckY;
+
+      var ax = pts[sp.s].x, az = pts[sp.s].z;
+      var bx = pts[sp.e].x, bz = pts[sp.e].z;
+      var len = Math.hypot(bx - ax, bz - az) + 4;
+      var mx = (ax + bx) / 2, mz = (az + bz) / 2;
+      var ang = Math.atan2(bz - az, bx - ax);
+      this.bridges.push({
+        x: mx, z: mz, len: len, ang: ang, deckY: deckY,
+        half: half, ax: ax, az: az, bx: bx, bz: bz
+      });
+      this._buildBridgeMesh(mx, mz, len, ang, deckY, half, ax, az, bx, bz);
+      this.platforms.push({
+        x: mx, z: mz, hw: len / 2, hd: half + 0.45,
+        cos: Math.cos(ang), sin: Math.sin(ang), top: deckY
+      });
+    }
+
+    // Geometri pita jalan (2 verteks per potongan melintang).
+    var base = acc.n;
+    var dist = 0;
+    for (i = 0; i < n; i++) {
+      var p = pts[i];
+      var prev = pts[Math.max(0, i - 1)], next = pts[Math.min(n - 1, i + 1)];
+      var dx = next.x - prev.x, dz = next.z - prev.z;
+      var dl = Math.hypot(dx, dz) || 1;
+      dx /= dl; dz /= dl;
+      var nx = -dz, nz = dx;
+      if (i > 0) dist += Math.hypot(p.x - pts[i - 1].x, p.z - pts[i - 1].z);
+      var lh = Math.max(hgt[i], this.groundHeight(p.x + nx * half, p.z + nz * half) + 0.12);
+      var rh = Math.max(hgt[i], this.groundHeight(p.x - nx * half, p.z - nz * half) + 0.12);
+      // Di atas jembatan, permukaan harus rata.
+      for (var bi = 0; bi < this.bridges.length; bi++) {
+        var br = this.bridges[bi];
+        if (Math.hypot(p.x - br.x, p.z - br.z) < br.len / 2 + half + 1 &&
+            Math.abs(hgt[i] - br.deckY) < 0.01) { lh = rh = br.deckY; break; }
+      }
+      acc.pos.push(p.x + nx * half, lh, p.z + nz * half);
+      acc.pos.push(p.x - nx * half, rh, p.z - nz * half);
+      acc.uv.push(0, dist / 3.2);
+      acc.uv.push(1, dist / 3.2);
+    }
+    for (i = 0; i < n - 1; i++) {
+      var a2 = base + i * 2, b2 = a2 + 1, c2 = a2 + 2, d2 = a2 + 3;
+      acc.idx.push(a2, c2, b2, b2, c2, d2);
+    }
+    acc.n += n * 2;
+  };
+
+  World.prototype._buildBridgeMesh = function (x, z, len, ang, deckY, half, ax, az, bx, bz) {
+    var wood = new THREE.MeshStandardMaterial({ color: srgb(0x6E4E31), roughness: 0.92 });
+    var stone = new THREE.MeshStandardMaterial({ color: srgb(0xB7B2A4), roughness: 0.95 });
+    if (global.TexLib) {
+      global.TexLib.apply(wood, 'wood', 2, 2);
+      global.TexLib.apply(stone, 'rock', 2, 2);
+    }
+    var ry = -ang;
+    var group = new THREE.Group();
+    var deck = new THREE.Mesh(new THREE.BoxGeometry(len + 1.6, 0.55, half * 2 + 1.1), stone);
+    deck.position.set(x, deckY - 0.32, z);
+    deck.rotation.y = ry;
+    deck.castShadow = false; deck.receiveShadow = true;
+    group.add(deck);
+
+    // Dua pilar batu turun sampai dasar sungai.
+    for (var pi = -1; pi <= 1; pi += 2) {
+      var px = x + Math.cos(ang) * len * 0.27 * pi;
+      var pz = z + Math.sin(ang) * len * 0.27 * pi;
+      var bed = this.groundHeight(px, pz);
+      var ph = Math.max(1.2, deckY - bed + 0.4);
+      var pier = new THREE.Mesh(new THREE.BoxGeometry(2.0, ph, half * 1.9), stone);
+      pier.position.set(px, bed + ph / 2 - 0.2, pz);
+      pier.rotation.y = ry;
+      pier.castShadow = false; pier.receiveShadow = true;
+      group.add(pier);
+    }
+
+    // Pagar kayu: tiang tiap ±3 m + dua rel memanjang.
+    var postGeo = new THREE.BoxGeometry(0.18, 1.12, 0.18);
+    var nPost = Math.max(2, Math.round(len / 3.2));
+    for (var s = 0; s <= nPost; s++) {
+      var t = s / nPost;
+      var cx2 = ax + (bx - ax) * t;
+      var cz2 = az + (bz - az) * t;
+      var nx = -Math.sin(ang), nz = Math.cos(ang);
+      for (var side = -1; side <= 1; side += 2) {
+        var post = new THREE.Mesh(postGeo, wood);
+        post.position.set(cx2 + nx * (half + 0.32) * side, deckY + 0.6, cz2 + nz * (half + 0.32) * side);
+        post.castShadow = false;
+        group.add(post);
+      }
+    }
+    var railGeo = new THREE.BoxGeometry(len, 0.14, 0.16);
+    for (var rs = -1; rs <= 1; rs += 2) {
+      var rail = new THREE.Mesh(railGeo, wood);
+      var nx2 = -Math.sin(ang), nz2 = Math.cos(ang);
+      rail.position.set(x + nx2 * (half + 0.32) * rs, deckY + 1.08, z + nz2 * (half + 0.32) * rs);
+      rail.rotation.y = ry;
+      rail.castShadow = false;
+      group.add(rail);
+      // Pagar juga menahan pemain agar tidak jatuh ke sungai.
+      this.wall(
+        ax + nx2 * (half + 0.3) * rs, az + nz2 * (half + 0.3) * rs,
+        bx + nx2 * (half + 0.3) * rs, bz + nz2 * (half + 0.3) * rs, 0.22
+      );
+    }
+    group.name = 'jembatan';
+    this.scene.add(group);
+    return group;
+  };
+
+  /* Indeks spasial segmen jalan agar pengecekan "dekat jalan?" sangat murah
+     (dipakai rumput, pohon, batu, dan musuh). */
+  World.prototype._indexRoads = function () {
+    var cell = 24, map = Object.create(null);
+    for (var ri = 0; ri < this.roads.length; ri++) {
+      var pts = this.roads[ri].pts, half = this.roads[ri].half;
+      for (var i = 0; i < pts.length - 1; i++) {
+        var a = pts[i], b = pts[i + 1];
+        var x0 = Math.min(a.x, b.x) - half - 6, x1 = Math.max(a.x, b.x) + half + 6;
+        var z0 = Math.min(a.z, b.z) - half - 6, z1 = Math.max(a.z, b.z) + half + 6;
+        var cx0 = Math.floor(x0 / cell), cx1 = Math.floor(x1 / cell);
+        var cz0 = Math.floor(z0 / cell), cz1 = Math.floor(z1 / cell);
+        for (var cx = cx0; cx <= cx1; cx++) {
+          for (var cz = cz0; cz <= cz1; cz++) {
+            var key = cx + ',' + cz;
+            (map[key] || (map[key] = [])).push(a.x, a.z, b.x, b.z, half);
+          }
+        }
+      }
+    }
+    this._roadGrid = { cell: cell, map: map };
+  };
+
+  World.prototype.nearRoad = function (x, z, pad) {
+    var g = this._roadGrid;
+    if (!g) return false;
+    var cell = g.cell;
+    var cx = Math.floor(x / cell), cz = Math.floor(z / cell);
+    var lim = pad || 0;
+    for (var ix = -1; ix <= 1; ix++) {
+      for (var iz = -1; iz <= 1; iz++) {
+        var list = g.map[(cx + ix) + ',' + (cz + iz)];
+        if (!list) continue;
+        for (var i = 0; i < list.length; i += 5) {
+          var ax = list[i], az = list[i + 1], bx = list[i + 2], bz = list[i + 3];
+          var half = list[i + 4];
+          var vx = bx - ax, vz = bz - az;
+          var wx = x - ax, wz = z - az;
+          var L2 = vx * vx + vz * vz;
+          var t = L2 > 0 ? U.clamp((wx * vx + wz * vz) / L2, 0, 1) : 0;
+          var px = ax + vx * t, pz = az + vz * t;
+          var dx = x - px, dz = z - pz;
+          var rr = half + lim;
+          if (dx * dx + dz * dz <= rr * rr) return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  World.prototype.inForest = function (x, z, pad) {
+    for (var i = 0; i < this.forests.length; i++) {
+      var f = this.forests[i];
+      var dx = x - f.x, dz = z - f.z;
+      var r = f.r + (pad || 0);
+      if (dx * dx + dz * dz < r * r) return true;
+    }
+    return false;
+  };
+
+  /* Kantong hutan rimbun: dipilih di daratan luas, jauh dari kota dan jalan. */
+  World.prototype._pickForests = function () {
+    this.forests = [];
+    var S = this.scale || 1;
+    var rng = U.mulberry32(C.WORLD.seed + 7373);
+    var half = C.WORLD.size * 0.5;
+    var span = half * 0.82;
+    var tries = 0;
+    while (this.forests.length < 14 && tries < 1400) {
+      tries++;
+      var x = (rng() * 2 - 1) * span;
+      var z = (rng() * 2 - 1) * span;
+      var h = this.height(x, z);
+      if (h < 2.5 * S || h > 52 * S) continue;
+      if (this._slopeAt(x, z) > 0.62) continue;
+      if (this.nearRoad(x, z, 14)) continue;
+      if (this._inSettlement(x, z, 22)) continue;
+      var r = 54 + rng() * 42;
+      var ok = true;
+      for (var i = 0; i < this.forests.length; i++) {
+        if (Math.hypot(x - this.forests[i].x, z - this.forests[i].z) < this.forests[i].r + r * 0.75) { ok = false; break; }
+      }
+      if (!ok) continue;
+      this.forests.push({ x: x, z: z, r: r, tall: 0.55 + rng() * 0.45 });
+    }
+  };
+
+  World.prototype._inSettlement = function (x, z, pad) {
+    var r = pad || 0, i;
+    var spots = this.villageSpots || [];
+    for (i = 0; i < spots.length; i++) {
+      if (Math.hypot(x - spots[i].x, z - spots[i].z) < spots[i].r + r) return true;
+    }
+    if (this.kingdomSite && Math.hypot(x - this.kingdomSite.x, z - this.kingdomSite.z) < (this.kingdomSite.r || 76) + r) return true;
+    if (this.empireSite && Math.hypot(x - this.empireSite.x, z - this.empireSite.z) < (this.empireSite.r || 160) + r) return true;
+    var lms = this.landmarkSites || [];
+    for (i = 0; i < lms.length; i++) {
+      if (Math.hypot(x - lms[i].x, z - lms[i].z) < lms[i].r + r) return true;
+    }
+    if (this.harborSpot && Math.hypot(x - this.harborSpot.x, z - this.harborSpot.z) < 26 + r) return true;
+    return false;
+  };
+
   World.prototype.buildEnvironment = function (assets) {
     var rng = U.mulberry32(C.WORLD.seed + 909);
     this.villageSpots = this.pickVillageSpots();
@@ -3020,6 +3791,10 @@
     this.empireSite = this.pickEmpireSite();
     this.townSpots = [];
     this.landmarkSites = this.pickLandmarkSites();
+    // Jalan penghubung dibangun sebelum vegetasi: jalan, jembatan, dan pepohonan
+    // tepi jalan menjadi acuan tata letak dunia.
+    this._buildRoadNetwork();
+    this._pickForests();
     this._placeProcedural(rng);
 
     // Use MegaKit landmarks if assets are loaded and available
@@ -3037,6 +3812,7 @@
 
   World.prototype._placeProcedural = function (rng) {
     var S = this.scale || 1;
+    var self = this;
     var trees = [], rocks = [];
     var i, p;
 
@@ -3044,10 +3820,40 @@
     var q = (C.RENDER && C.RENDER.quality) || 'hd';
     var vegMul = q === 'cepat' ? 0.70 : (q === 'ultra' ? 1.0 : 0.85);
 
-    var treeN = Math.round(430 * vegMul);   // pohon rimbun (pedalaman, tinggi)
-    var palmN = Math.round(36 * vegMul);    // kelapa pesisir (sangat jarang)
-    var pineN = Math.round(720 * vegMul);   // cemara (punggung bukit & lereng)
-    var rockN = Math.round(390 * vegMul);   // batu
+    var treeN = Math.round(760 * vegMul);   // pohon rimbun (pedalaman, tinggi)
+    var palmN = Math.round(42 * vegMul);    // kelapa pesisir (sangat jarang)
+    var pineN = Math.round(840 * vegMul);   // cemara (punggung bukit & lereng)
+    var rockN = Math.round(860 * vegMul);   // batu
+    var roadTreeN = 0, forestTreeN = 0, roadRockN = 0;
+
+    // Penanam pohon seragam: tinggi, rimbun, dan punya tabrakan.
+    function addTree(x, z, type, tall) {
+      if (self._inSettlement(x, z, 1.5)) return false;
+      if (self.nearRoad(x, z, 0.9)) return false;
+      var gy = self._groundMin(x, z, 1.1) - 0.2;
+      var th = tall ? (15.5 + rng() * 6.5) : (11.5 + rng() * 6.5);
+      var tr = tall ? (0.34 + rng() * 0.16) : (0.30 + rng() * 0.13);
+      var cr = tall ? (3.5 + rng() * 1.5) : (3.1 + rng() * 1.6);
+      trees.push({
+        x: x, z: z, gy: gy, type: type,
+        trunkH: th, trunkR: tr, canopyR: cr,
+        tilt: type === 2 ? (rng() - 0.5) * 0.08 : 0, dir: rng() * Math.PI * 2
+      });
+      self._placed.push({ x: x, z: z });
+      self.colliders.push({ x: x, z: z, r: type === 1 ? 0.7 : 0.85 });
+      return true;
+    }
+    function addRock(x, z, sc) {
+      if (self._inSettlement(x, z, 1.0)) return false;
+      if (self.nearRoad(x, z, 0.35)) return false;
+      var gy = self._groundMin(x, z, sc * 1.4) + sc * 0.15;
+      rocks.push({
+        x: x, z: z, gy: gy, s: sc,
+        ry: rng() * Math.PI * 2, shade: 0.82 + rng() * 0.36
+      });
+      if (sc > 0.8) self.colliders.push({ x: x, z: z, r: sc * 0.85 });
+      return true;
+    }
 
     for (i = 0; i < treeN; i++) {
       p = this._pickSpot(rng, 3.0 * S, 34 * S, 0.55, 15, 70);
@@ -3088,6 +3894,99 @@
       var sc = 0.65 + rng() * 2.0;
       rocks.push({ x: p.x, z: p.z, gy: this._groundMin(p.x, p.z, sc * 1.4) + sc * 0.15, s: sc, ry: rng() * Math.PI * 2, shade: 0.82 + rng() * 0.36 });
       this.colliders.push({ x: p.x, z: p.z, r: sc * 0.85 });
+    }
+
+    /* ---------- Pohon tinggi di kedua sisi setiap jalan ---------- */
+    // Setiap ±6 m, kedua sisi jalan raya ditanami pohon rimbun tinggi sehingga
+    // jalan desa–kerajaan–kekaisaran terasa seperti lorong hutan.
+    for (var ri = 0; ri < this.roads.length; ri++) {
+      var road = this.roads[ri], rpts = road.pts;
+      for (var rp = 2; rp < rpts.length - 2; rp += 2) {
+        var ra = rpts[rp - 1], rb = rpts[rp + 1];
+        var rdx = rb.x - ra.x, rdz = rb.z - ra.z;
+        var rdl = Math.hypot(rdx, rdz) || 1;
+        rdx /= rdl; rdz /= rdl;
+        var rnx = -rdz, rnz = rdx;
+        for (var side = -1; side <= 1; side += 2) {
+          if (rng() < 0.28) continue; // jarak pohon sedikit tidak beraturan
+          var off = road.half + 3.4 + rng() * 4.0;
+          var tx = rpts[rp].x + rnx * off * side;
+          var tz = rpts[rp].z + rnz * off * side;
+          var th = this.groundHeight(tx, tz);
+          if (th < 1.4 * S || th > 62 * S) continue;
+          if (this._slopeAt(tx, tz) > 0.75) continue;
+          if (this.inForest(tx, tz, -6)) continue; // biar diisi hutan rimbun
+          if (addTree(tx, tz, rng() < 0.24 ? 2 : 0, true)) roadTreeN++;
+        }
+      }
+    }
+
+    /* ---------- Hutan rimbun (kantong hutan + pohon tinggi) ---------- */
+    for (var fi = 0; fi < this.forests.length; fi++) {
+      var f = this.forests[fi];
+      var area = Math.PI * f.r * f.r;
+      var nTrees = Math.round(area / 150 * (0.8 + f.tall * 0.5));
+      var placedN = 0;
+      for (var attempt = 0; attempt < nTrees * 5 && placedN < nTrees; attempt++) {
+        var fa = rng() * Math.PI * 2, fr = Math.sqrt(rng()) * f.r;
+        var fx = f.x + Math.cos(fa) * fr, fz = f.z + Math.sin(fa) * fr;
+        var fh = this.groundHeight(fx, fz);
+        if (fh < 1.4 * S || fh > 64 * S) continue;
+        if (this._slopeAt(fx, fz) > 0.85) continue;
+        if (this.nearRoad(fx, fz, 1.6)) continue;
+        if (!this._spotFree(fx, fz, 6.5)) continue;
+        if (addTree(fx, fz, rng() < 0.3 ? 2 : 0, true)) {
+          placedN++;
+          forestTreeN++;
+        }
+      }
+      // Bebatuan tersebar di dalam hutan.
+      var nRocks = Math.round(area / 900);
+      for (var rj = 0; rj < nRocks; rj++) {
+        var ra2 = rng() * Math.PI * 2, rr2 = Math.sqrt(rng()) * f.r;
+        var rx2 = f.x + Math.cos(ra2) * rr2, rz2 = f.z + Math.sin(ra2) * rr2;
+        if (this.groundHeight(rx2, rz2) < 1.2 * S) continue;
+        if (this.nearRoad(rx2, rz2, 0.6)) continue;
+        if (addRock(rx2, rz2, 0.5 + rng() * 1.6)) roadRockN++;
+      }
+    }
+
+    /* ---------- Bebatuan di tepi jalan ---------- */
+    for (var rri = 0; rri < this.roads.length; rri++) {
+      var rd = this.roads[rri], rp2 = rd.pts;
+      for (var k2 = 2; k2 < rp2.length - 2; k2 += 4) {
+        for (var sd = -1; sd <= 1; sd += 2) {
+          if (rng() < 0.55) continue;
+          var q0 = rp2[k2 - 1], q1 = rp2[k2 + 1];
+          var ddx = q1.x - q0.x, ddz = q1.z - q0.z;
+          var ddl = Math.hypot(ddx, ddz) || 1;
+          var nnx = -ddz / ddl, nnz = ddx / ddl;
+          var roff = rd.half + 1.2 + rng() * 2.6;
+          var rxp = rp2[k2].x + nnx * roff * sd;
+          var rzp = rp2[k2].z + nnz * roff * sd;
+          if (this.groundHeight(rxp, rzp) < 1.1 * S) continue;
+          if (this._slopeAt(rxp, rzp) > 0.9) continue;
+          if (addRock(rxp, rzp, 0.35 + rng() * 0.95)) roadRockN++;
+        }
+      }
+    }
+
+    /* ---------- Bongkahan batu besar di lereng pegunungan ---------- */
+    var clusters = 0;
+    for (var ci = 0; ci < 70 && clusters < 34; ci++) {
+      var cx3 = (rng() * 2 - 1) * C.WORLD.size * 0.42;
+      var cz3 = (rng() * 2 - 1) * C.WORLD.size * 0.42;
+      var ch = this.height(cx3, cz3);
+      if (ch < 26 * S || ch > 92 * S) continue;
+      if (this._slopeAt(cx3, cz3) > 1.0) continue;
+      if (this._inSettlement(cx3, cz3, 10)) continue;
+      if (this.nearRoad(cx3, cz3, 4)) continue;
+      clusters++;
+      var nB = 4 + ((rng() * 5) | 0);
+      for (var b3 = 0; b3 < nB; b3++) {
+        var ba = rng() * Math.PI * 2, br = rng() * 11;
+        addRock(cx3 + Math.cos(ba) * br, cz3 + Math.sin(ba) * br, 0.8 + rng() * 2.3);
+      }
     }
 
     // --- Susun instance ---
@@ -3230,18 +4129,58 @@
     var canopyGeo = makeLeafBlobGeometry();
     var canopyMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.95, metalness: 0 });
     if (global.TexLib) global.TexLib.apply(canopyMat, 'leaf', 2, 2);
-    var canopyMesh = new THREE.InstancedMesh(canopyGeo, canopyMat, canopyItems.length);
-    canopyMesh.castShadow = true;
+    // Kanopi dipecah per petak agar frustum culling benar-benar bekerja. Di
+    // r128, InstancedMesh mematikan culling dan memakai bounding sphere
+    // geometri; tiap petak memakai klon geometri dengan bola pembatas sendiri.
+    // Ini memangkas ±1,4 juta segitiga kanopi menjadi hanya petak yang terlihat.
+    var canopyChunk = 520;
+    var canopyBuckets = {};
     for (i = 0; i < canopyItems.length; i++) {
-      var c = canopyItems[i];
-      dummy.position.set(c.px, c.py, c.pz);
-      dummy.rotation.set(c.rx, c.ry, c.rz, 'YXZ');
-      dummy.scale.set(c.sx, c.sy, c.sz);
-      dummy.updateMatrix();
-      canopyMesh.setMatrixAt(i, dummy.matrix);
-      tmpC.setHex(c.hex).convertSRGBToLinear().multiplyScalar(c.shade);
-      canopyMesh.setColorAt(i, tmpC);
+      var ci = canopyItems[i];
+      var ckey = Math.floor(ci.px / canopyChunk) + ',' + Math.floor(ci.pz / canopyChunk);
+      (canopyBuckets[ckey] || (canopyBuckets[ckey] = [])).push(i);
     }
+    var canopyMeshes = [];
+    Object.keys(canopyBuckets).forEach(function (ckey) {
+      var ids = canopyBuckets[ckey];
+      var chunkGeo = canopyGeo.clone();
+      var minX = Infinity, minY = Infinity, minZ = Infinity;
+      var maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+      var j;
+      for (j = 0; j < ids.length; j++) {
+        var cj = canopyItems[ids[j]];
+        var ext = Math.max(cj.sx, cj.sy, cj.sz) * 1.5 + 0.5;
+        if (cj.px - ext < minX) minX = cj.px - ext;
+        if (cj.px + ext > maxX) maxX = cj.px + ext;
+        if (cj.py - ext < minY) minY = cj.py - ext;
+        if (cj.py + ext > maxY) maxY = cj.py + ext;
+        if (cj.pz - ext < minZ) minZ = cj.pz - ext;
+        if (cj.pz + ext > maxZ) maxZ = cj.pz + ext;
+      }
+      var ccx = (minX + maxX) * 0.5, ccy = (minY + maxY) * 0.5, ccz = (minZ + maxZ) * 0.5;
+      var cr = Math.sqrt(
+        (maxX - ccx) * (maxX - ccx) +
+        (maxY - ccy) * (maxY - ccy) +
+        (maxZ - ccz) * (maxZ - ccz)
+      ) + 1.0;
+      chunkGeo.boundingSphere = new THREE.Sphere(new THREE.Vector3(ccx, ccy, ccz), cr);
+      var cm = new THREE.InstancedMesh(chunkGeo, canopyMat, ids.length);
+      cm.castShadow = true;
+      for (j = 0; j < ids.length; j++) {
+        var c = canopyItems[ids[j]];
+        dummy.position.set(c.px, c.py, c.pz);
+        dummy.rotation.set(c.rx, c.ry, c.rz, 'YXZ');
+        dummy.scale.set(c.sx, c.sy, c.sz);
+        dummy.updateMatrix();
+        cm.setMatrixAt(j, dummy.matrix);
+        tmpC.setHex(c.hex).convertSRGBToLinear().multiplyScalar(c.shade);
+        cm.setColorAt(j, tmpC);
+      }
+      cm.frustumCulled = true;
+      canopyMeshes.push(cm);
+      self.scene.add(cm);
+    });
+    this._canopyChunks = canopyMeshes;
 
     // Pelepah kelapa: mesh terpisah (dua sisi) agar bentuknya seperti daun asli
     var frondMesh = null;
@@ -3307,12 +4246,12 @@
 
     this.scene.add(trunkMesh);
     this.scene.add(palmTrunkMesh);
-    this.scene.add(canopyMesh);
     this.scene.add(rockMesh);
-    this.envMeshes = [trunkMesh, palmTrunkMesh, canopyMesh, rockMesh];
+    this.envMeshes = [trunkMesh, palmTrunkMesh].concat(canopyMeshes, [rockMesh]);
     this.envCounts = {
       trees: trees.length, rocks: rocks.length, canopyParts: canopyItems.length,
-      pines: pineItems.length, fronds: frondItems.length
+      pines: pineItems.length, fronds: frondItems.length,
+      roadTrees: roadTreeN, forestTrees: forestTreeN, roadRocks: roadRockN
     };
     if (pineMesh) {
       this.scene.add(pineMesh);
@@ -3344,6 +4283,25 @@
 
     // Gelombang air berjalan mengikuti waktu
     if (this.waterUniforms) this.waterUniforms.uTime.value = this.elapsed;
+    // Riak permukaan sungai (normal map digeser perlahan).
+    if (this.riverMat && this.riverMat.normalMap) {
+      this.riverMat.normalMap.offset.x = this.elapsed * 0.006;
+      this.riverMat.normalMap.offset.y = -this.elapsed * 0.003;
+    }
+
+    // Petak kanopi yang jauh disembunyikan: kabut sudah menutupinya, dan ini
+    // menghemat baik pass utama maupun pass bayangan. Radius petak ikut
+    // diperhitungkan agar tidak ada pop-in di tepi pandang.
+    if (camera && this._canopyChunks) {
+      var cp = camera.position;
+      for (var ci = 0; ci < this._canopyChunks.length; ci++) {
+        var cm = this._canopyChunks[ci];
+        var bs = cm.geometry.boundingSphere;
+        var cdx = cp.x - bs.center.x, cdz = cp.z - bs.center.z;
+        var lim = 1150 + bs.radius;
+        cm.visible = cdx * cdx + cdz * cdz <= lim * lim;
+      }
+    }
   };
 
   World.prototype.getClockInfo = function () {

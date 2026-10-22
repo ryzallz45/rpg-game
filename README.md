@@ -21,6 +21,13 @@ kapel tua, menara jaga, dan lingkaran batu berdiri** di lanskap; serta
 menghadirkan **celeng hutan, penyamun jalan raya, roh rawa, dan ksatria
 terkutuk**. Semua ID internal, simpanan v2, dan mekanik Fase 1–5 tetap utuh.
 
+**Fase 6** menata ulang lanskap: **satu sungai panjang ±2,3 km** menggantikan
+danau pedalaman, **jaringan jalan batu ±5,3 km** yang menghubungkan Aldenmere,
+ketiga pendukuhan, Kerajaan Pusat, Kekaisaran Aetheria, dan pelabuhan (dengan
+**3 jembatan**), **14 kantong hutan rimbun** berisi monster, **pohon tinggi
+berjajar di kedua sisi jalan**, **±1.370 batu**, serta **pegunungan yang jauh
+lebih sedikit** agar pulau terasa lebih terbuka.
+
 > **Deskripsi lengkap** — cerita, seluruh fitur, daftar aset, teknologi, cara game
 > dibangun, dan batasannya ada di [Deskripsi lengkap](#deskripsi-lengkap).
 > Panduan menaruhnya di internet ada di [Publikasi & hosting](#publikasi--hosting).
@@ -125,22 +132,37 @@ gerak & serangan dikunci, dan peta menutup otomatis bila pemain diserang.
   pantai, rumput bercak kering/gelap, tanah lereng, batu, puncak karang;
   peneduhan lembah — mesh 352×352 dengan **kerutan mikro yang diperhalus** +
   **tekstur tanah** (bercak lempung/kerikil + normal map) agar punggung bukit mulus.
-  Fase 5: dunia **3240 m** (10× luas) dengan pegunungan ±3,16× lebih tinggi
+  Fase 5: dunia **3240 m** (10× luas); **Fase 6: pegunungan utama dikurangi**
+  (puncak ±155 m) dan diganti lembah sungai, hutan, serta dataran yang lebih terbuka
 - **Laut** bergradasi kedalaman (turquoise dangkal → biru tua) + gelombang
   naik-turun beranimasi + busa pantai yang berdenyut mengikuti ombak; mesh air
   beriak 3600 m + samudra luar 60 km, gelombangnya juga menganggukkan perahu.
   **Seluruh lautan terbuka**: pemain otomatis berenang di air dalam (W/A/S/D,
   Shift lebih cepat), bisa naik ke dermaga dari air, dan tidak ada dinding
   kedalaman atau batas peta yang tak terlihat — termasuk di sekitar pelabuhan
+- **Sungai panjang (Fase 6)**: satu alur **±2,3 km** dari pegunungan utara ke
+  teluk selatan — lebar air ±30 m, lembah landai bertepi pasir, riak normal map,
+  dan permukaan air yang dipakai pemain/perahu saat berenang. Danau pedalaman
+  dihapus; sungai menjadi satu-satunya air tawar pedalaman
+- **Jaringan jalan (Fase 6)**: **±5,3 km** jalan batu berliku (pencarian jalur
+  A*) menghubungkan Aldenmere, ketiga pendukuhan, Kerajaan Pusat, Kekaisaran
+  Aetheria, dan pelabuhan. **3 jembatan** berdek dengan pilar, pagar, dan ramp
+  yang bisa dipijak; permukaan jalan selalu di atas terrain. Pohon tinggi
+  berjajar di kedua sisi, dan peta mini menggambar jalan serta jembatan
+- **Hutan rimbun (Fase 6)**: **14 kantong hutan** deterministik dengan pohon
+  rapat dan **45 monster** yang berpatroli di dalamnya; bebatuan tersebar di
+  tepi jalan dan di sela hutan
 - **Langit & siklus siang–malam 10 menit**: kubah gradasi yang berubah warna,
   matahari terbit/terbenam, pendar matahari, bulan, 700 bintang, awan tertiup
   angin (berputar ulang di ujung langit), kabut atmosferik (FogExp2)
-- **Vegetasi instanced**: **±1.000 pohon** bergaya hutan sedang — rimbun
+- **Vegetasi instanced**: **±4.700 pohon** bergaya hutan sedang — rimbun
   pedalaman (mahkota 7 gumpalan organik bertekstur daun), **cemara bertingkat**
   yang mendominasi punggung bukit & lereng, dan **kelapa pesisir yang jarang**
-  (batang melengkung + pelepah 3D) — plus **±330 batu**; low-poly, ditanam pas
-  mengikuti permukaan tanah, + tabrakan. Palet daun, rumput, dan bunga digeser
-  ke hijau zaitun/tanah agar terasa seperti lembah kerajaan, bukan tropis
+  (batang melengkung + pelepah 3D) — plus **±1.370 batu**; low-poly, ditanam pas
+  mengikuti permukaan tanah, + tabrakan. **±1.100 pohon tinggi** berjajar di
+  kedua sisi jalan dan **±2.200** memadatkan kantong hutan. Palet daun, rumput,
+  dan bunga digeser ke hijau zaitun/tanah agar terasa seperti lembah kerajaan,
+  bukan tropis
 - **Rumput & bunga**: dibagi **potongan 36 m** yang dibangun bertahap (5×5
   potongan aktif ±90 m, 2 potongan per frame) — ±1.400 rumpun + ±200 bunga instanced
   di sekitar pemain, bergoyang tertiup angin (shader), hanya di daratan berumput.
@@ -212,8 +234,9 @@ gerak & serangan dikunci, dan peta menutup otomatis bila pemain diserang.
   lingkungan** dari langit (PMREM), **bloom + FXAA**, dan model 3D
 - **Pertarungan pedang (Fase 3)**: kombo 3 ayunan (klik kiri / F), busur
   tebasan di depan pemain, musuh terlempar & berkedip merah saat kena
-- **4 jenis penghuni rimba** (±69 ekor: 27 celeng, 22 roh rawa, 16 penyamun,
-  ditambah penjaga terkutuk di kastil; pembangkit kembali setelah ~75 dtk):
+- **4 jenis penghuni rimba** (±118 ekor: 42 celeng, 40 roh rawa, 30 penyamun,
+  ditambah 6 ksatria terkutuk di kastil; 45 hidup di dalam hutan dan pembangkit
+  kembali setelah ~75 dtk):
   **Celeng Hutan** (liar & cepat menanduk), **Penyamun Jalan Raya** (golok,
   koin), **Roh Rawa** (melompat kenyal dengan tiga titik api rawa), dan
   **Ksatria Terkutuk** (pedang panjang, menjaga reruntuhan kastil) — AI:
@@ -287,13 +310,17 @@ gerak & serangan dikunci, dan peta menutup otomatis bila pemain diserang.
 - **Menu utama & trailer**: Play → trailer kamera terbang (lewati kapan saja),
   Pengaturan bertab (audio prosedural / grafis / bahasa ID–EN), Keluar dengan
   layar pamit; pengaturan audio & bahasa tersimpan di peramban
-- **Ringan**: ±660–745 ribu segitiga saat menjelajah (dunia 10×), tetapi rumput
-  hanya digambar sebagai 5×5 potongan di sekitar pemain, hanya 2–3 cahaya dinamis
-  aktif (pool lampu/api terdekat), dan jumlah vegetasi diskalakan sublinear.
-  Terukur di Intel UHD (iGPU kelas bawah, 1262×704, DPR 1): **Cepat ±58 FPS**,
-  **HD ±44–47 FPS**, **Ultra ±39–44 FPS** (≈40; variasi suhu iGPU) — sesuai
-  target **Cepat ±45–60**, **HD/Ultra ±40–50**. Di layar HiDPI, HD/Ultra
-  merender 1,25×/1,5× (bukan 1,75×) agar tetap ringan. Peta mini hanya
+- **Ter-instance & ber-petak**: ±2,2 juta segitiga untuk seluruh dunia Fase 6
+  (vegetasi jauh lebih rapat: 18.000+ gumpalan kanopi dan 1.370 batu), tetapi
+  semuanya memakai *instancing*. **Kanopi dipecah menjadi 24 petak** dengan
+  *frustum culling* + batas jarak 1,15 km, sehingga hanya petak di sekitar
+  pemain yang masuk pass utama dan pass bayangan; rumput hanya 5×5 potongan di sekitar pemain,
+  hanya 2–3 cahaya dinamis aktif (pool lampu/api terdekat), dan jumlah vegetasi
+  diskalakan sublinear. Pada versi sebelum Fase 6, Intel UHD (iGPU kelas bawah,
+  1262×704, DPR 1) terukur **Cepat ±58 FPS**, **HD ±44–47 FPS**, **Ultra ±39–44
+  FPS**; dengan hutan Fase 6 yang lebih rapat, preset **Cepat/HD** disarankan
+  pada iGPU kelas bawah. Di layar HiDPI, HD/Ultra merender 1,25×/1,5× (bukan
+  1,75×) agar tetap ringan. Peta mini hanya
   ±0,1 ms per gambar (~11×/detik); peta besar digambar di kanvas 2D terpisah
   hanya saat dibuka (~5×/detik), dan mercusuar tujuan hanya 3 draw call additive
   tanpa bayangan — overhead di luar render dunia tetap kecil. Efek partikel/cincin
@@ -317,7 +344,7 @@ reruntuhan kastil, kapel tua, menara jaga, dan lingkaran batu.
 | **Mode** | Pemain tunggal; seluruh aset dilayani dari origin yang sama |
 | **Peramban** | Chrome, Edge, Firefox versi desktop |
 | **Mesin** | Three.js r128, JavaScript, HTML, CSS |
-| **Status** | Fase 1–5 selesai, termasuk konversi kerajaan abad pertengahan |
+| **Status** | Fase 1–6 selesai, termasuk konversi kerajaan abad pertengahan |
 | **Bahasa** | Antarmuka Indonesia/English; cerita dan dialog Indonesia |
 | **Simpanan** | `localStorage`, satu slot, format **v2** |
 
@@ -333,15 +360,20 @@ dan batu.
 > pinus, desa batu, dan reruntuhan kastil di tepi lautan.
 
 Dunia dibangun sebagai kepulauan pesisir berukuran **3240 × 3240 m** dengan
-pegunungan dan perbukitan yang jauh lebih tinggi daripada versi awal, **12 pulau
-kecil**, serta samudra terbuka yang dapat diseberangi dengan perahu atau renang.
-Siklus siang–malam berlangsung sekitar **10 menit**, lengkap dengan matahari
-terbit dan terbenam, bulan, bintang, awan, dan kabut atmosferik.
+pegunungan yang lebih sedikit dan lebih rendah, **satu sungai panjang ±2,3 km**,
+**jaringan jalan ±5,3 km** yang menghubungkan permukiman di pulau utama, **14 hutan
+rimbun**, **12 pulau kecil**, serta samudra terbuka yang dapat diseberangi dengan
+perahu atau renang. Siklus siang–malam berlangsung sekitar **10 menit**, lengkap
+dengan matahari terbit dan terbenam, bulan, bintang, awan, dan kabut atmosferik.
 
 Lokasi penting:
 
 - **Aldenmere** — desa utama dengan alun-alun batu, balai desa, sumur, gapura,
   pasar beratap kain, dan rumah setengah-kayu yang bisa dimasuki.
+- **Sungai Panjang** — alur air tawar ±2,3 km dari utara ke teluk selatan,
+  dilintasi **3 jembatan batu** dan dikelilingi hutan serta padang rumput.
+- **Jaringan Jalan** — jalan batu berliku yang menyambung Aldenmere, ketiga
+  pendukuhan, dua kota besar, pelabuhan, dan tepi hutan.
 - **Pelabuhan** — dermaga kayu 28 m dengan jembatan pantai, lentera, peti, tong,
   dan perahu cadik yang bisa dikemudikan.
 - **Reruntuhan Kastil** — dinding tirai, menara sudut, keep, gerbang berlapis
@@ -362,12 +394,20 @@ dialog warga, dan dua tugas kecil. Pemain bebas menentukan arah perjalanan.
 - Terrain prosedural dari noise fBm dan ridged dengan warna vertex alami:
   pantai, rumput bercak kering/gelap, tanah lereng, batu, dan puncak karang.
   Mesh terrain berukuran 352 × 352 dengan tekstur tanah dan normal map.
-- **±1.000 pohon** (rimbun, cemara bertingkat, kelapa pesisir), **±330 batu**,
+- **±4.700 pohon** (rimbun, cemara bertingkat, kelapa pesisir), **±1.370 batu**,
   **±1.400 rumpun rumput**, dan **±200 bunga** yang bergoyang tertiup angin.
+  **±1.100 pohon tinggi** mengapit jalan dan **±2.200** memenuhi kantong hutan.
   Vegetasi memakai *instancing*; rumput dibagi menjadi potongan 36 m dan hanya
   5 × 5 potongan di sekitar pemain yang aktif.
 - Laut bergradasi kedalaman dengan gelombang beranimasi, busa pantai, dan
   samudra luar. Tidak ada dinding kedalaman atau batas peta tak terlihat.
+- **Satu sungai panjang ±2,3 km** dengan air beriak, tepian pasir, dan lembah
+  landai; danau pedalaman tidak lagi dipakai.
+- **Enam jalan batu ±5,3 km** saling terhubung dan menyentuh gerbang kerajaan,
+  kekaisaran, ketiga pendukuhan, serta pelabuhan. Tiga jembatan berdek bisa
+  dipijak, lengkap dengan pilar dan pagar.
+- **14 hutan rimbun** berisi 45 monster, ditambah bebatuan di tepi jalan dan
+  dalam hutan.
 - Siklus siang–malam 10 menit: kubah langit berubah warna, matahari terbit dan
   terbenam, pendar matahari, bulan, 700 bintang, awan tertiup angin, dan kabut.
 - Empat landmark batu tua (kastil, kapel, menara jaga, lingkaran batu) dibangun
@@ -397,9 +437,10 @@ dialog warga, dan dua tugas kecil. Pemain bebas menentukan arah perjalanan.
 
 - **Kombo pedang 3 gerakan** (tebas atas, tebas samping, tusuk) dengan klik kiri
   atau `F`, busur tebasan di depan pemain, dan getaran kamera saat terkena.
-- **4 jenis penghuni rimba** (±69 ekor): **Celeng Hutan** (27), **Roh Rawa**
-  (22), **Penyamun Jalan Raya** (16), dan **Ksatria Terkutuk** (4, penjaga
-  kastil). Mereka bangkit kembali setelah sekitar 75 detik.
+- **4 jenis penghuni rimba** (±118 ekor): **Celeng Hutan** (42), **Roh Rawa**
+  (40), **Penyamun Jalan Raya** (30), dan **Ksatria Terkutuk** (6, penjaga
+  kastil). **45 di antaranya tinggal di dalam hutan** dan tidak ada yang
+  menghalangi jalan. Mereka bangkit kembali setelah sekitar 75 detik.
 - AI berjalan dalam keadaan **jelajah → kejar → serang → lemas → kembali
   pulang**, menjauh dari desa dan titik awal pemain.
 - **HP, XP, dan level**: level melayang di atas kepala pemain, bilah HP/XP di
@@ -563,11 +604,14 @@ Alur utamanya:
 5. Peta mini dan peta besar memakai kanvas 2D terpisah agar tidak membebani
    render 3D.
 
-**Strategi performa**: jumlah vegetasi diskalakan sublinear, rumput hanya
-digambar di sekitar pemain, bayangan dibatasi sesuai preset, DPR HD/Ultra
-dibatasi 1,25×/1,5×, dan banyak geometri bangunan memakai material serta balok
-yang dapat di-*instance*. Target di iGPU kelas bawah (Intel UHD, 1262 × 704,
-DPR 1): **Cepat ±58 FPS**, **HD ±44–47 FPS**, **Ultra ±39–44 FPS**.
+**Strategi performa**: seluruh pohon dan batu memakai `InstancedMesh`, kanopi
+dipecah per petak dengan *frustum culling* + batas jarak, vegetasi diskalakan
+sublinear, rumput hanya digambar di sekitar pemain, bayangan dibatasi
+sesuai preset, DPR HD/Ultra dibatasi 1,25×/1,5×, dan banyak geometri bangunan
+memakai material serta balok yang dapat di-*instance*. Angka acuan versi sebelum
+Fase 6 di iGPU kelas bawah (Intel UHD, 1262 × 704, DPR 1): **Cepat ±58 FPS**,
+**HD ±44–47 FPS**, **Ultra ±39–44 FPS**. Setelah hutan Fase 6 diperbanyak,
+preset **Cepat/HD** lebih aman untuk iGPU lama.
 
 **Tanpa build step**: tidak ada `package.json`, bundler, transpiler, atau proses
 kompilasi. Node.js hanya dipakai untuk server lokal opsional dan alat uji. Ini
@@ -576,7 +620,7 @@ membuat repo bisa langsung diunggah ke hosting statis dan dibuka lewat
 
 ### Cara game dibangun
 
-Game dibangun bertahap dalam lima fase, lalu diubah menjadi latar kerajaan abad
+Game dibangun bertahap dalam enam fase, lalu diubah menjadi latar kerajaan abad
 pertengahan:
 
 1. **Fase 1 — Dunia dan pemain.** Terrain, laut, langit, siklus waktu, karakter,
@@ -588,14 +632,19 @@ pertengahan:
    partikel.
 5. **Fase 5 — Dunia 10×.** Pegunungan lebih besar, 12 pulau kecil, pelabuhan dan
    perahu, peta 4 mode, peta besar dengan tujuan, serta HUD yang bisa diklik.
-6. **Konversi medieval.** Pemain menjadi ksatria fajar, desa menjadi Aldenmere
+6. **Fase 6 — Lanskap terhubung.** Pegunungan dikurangi, satu sungai panjang
+   ±2,3 km menggantikan danau, jaringan jalan ±5,3 km dengan 3 jembatan
+   menghubungkan semua permukiman, hutan rimbun berisi monster diperbanyak,
+   pohon tinggi mengapit jalan, dan bebatuan ditambah.
+7. **Konversi medieval.** Pemain menjadi ksatria fajar, desa menjadi Aldenmere
    dengan rumah setengah-kayu, lanskap mendapat kastil/kapel/menara/lingkaran
    batu, dan makhluk menjadi celeng, penyamun, roh rawa, serta ksatria terkutuk.
    ID internal, ID tugas, tipe musuh, dan kunci `pulau.` dipertahankan agar
    simpanan serta perilaku lama tetap kompatibel.
-7. **QA.** `tools/test-build.js` menguji dunia, pulau, pelabuhan, perahu, renang,
-   rumah, NPC, tugas, tempur, simpan/muat v2, peta, efek, dan 120 frame; skrip
-   CDP dipakai untuk jepretan dan pengukuran FPS di peramban.
+8. **QA.** `tools/test-build.js` menguji dunia, pulau, pelabuhan, perahu, renang,
+   rumah, NPC, tugas, tempur, simpan/muat v2, peta, efek, sungai, jalan,
+   jembatan, hutan/batu, dan 120 frame; skrip CDP dipakai untuk jepretan dan
+   pengukuran FPS di peramban.
 
 Seluruh geometri dunia, bangunan, karakter prosedural, tekstur, dan audio dibuat
 dari kode. Aset eksternal sengaja dibatasi pada enam model GLB CC0, empat berkas
@@ -635,7 +684,7 @@ font Cinzel, Cinzel Decorative, dan Alegreya berlisensi **SIL Open Font License
 ## Uji & alat pengembangan
 
 ```
-node tools/test-build.js        # uji integrasi Node (dunia 10× + pulau kecil + pelabuhan/perahu + berenang/laut terbuka + rumah + NPC + tugas + tempur + simpan/muat v2 + peta 4 mode + peta besar/kompas + efek + 120 frame)
+node tools/test-build.js        # uji integrasi Node (dunia 10× + pulau kecil + pelabuhan/perahu + berenang/laut terbuka + rumah + NPC + tugas + tempur + simpan/muat v2 + peta 4 mode + peta besar/kompas + efek + sungai panjang + jalan/jembatan + hutan/batu + 120 frame)
 node tools/test-terrain.js      # peta ASCII tinggi pulau
 node tools/probe.js <url> <png> # buka game via CDP, cetak diagnostik + jepretan
 node tools/shot.js <url> <png>  # jepretan layar sederhana (menunggu __gameReady)
@@ -718,3 +767,4 @@ tools/                  uji & alat (Node)
 - [x] **Grafis G7** — Pohon lebih tinggi (kelapa melengkung + pelepah 3D), hotbar item + panel tas besar, label level di atas kepala, instruksi/FPS disembunyikan
 - [x] **Dunia K1** — Konversi kerajaan abad pertengahan: ksatria pemain, Aldenmere setengah-kayu + pasar + gapura batu, kapel/kastil/menara/lingkaran batu, celeng/penyamun/roh rawa/ksatria terkutuk, palet hutan sedang, dialog & peta bernuansa kerajaan
 - [x] **Dunia K2** — Kerajaan Pusat Aetheria (120 m, 30 rumah, 10 warga) + **Kekaisaran Aetheria** (296 m, 100 rumah, 30 warga, kastil agung), tembok pejal anti-tembus, jalan masuk bergerbang, POI kedua, trailer 42 dtk
+- [x] **Fase 6 — Lanskap terhubung** — pegunungan dikurangi, **sungai panjang ±2,3 km** menggantikan danau, **6 jalan ±5,3 km** menghubungkan semua desa/kerajaan/kekaisaran/pelabuhan dengan **3 jembatan**, **14 hutan rimbun** + 45 monster, **±1.100 pohon tepi jalan**, **±1.370 batu**, dan peta mini bergaris jalan

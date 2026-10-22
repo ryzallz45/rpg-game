@@ -397,6 +397,32 @@
     }
     c.restore();
 
+    // Jalan penghubung desa–kerajaan–kekaisaran (garis tanah terang).
+    if (world && world.roads && world.roads.length) {
+      c.save();
+      c.lineCap = 'round';
+      c.lineJoin = 'round';
+      c.strokeStyle = 'rgba(216, 197, 156, 0.62)';
+      c.lineWidth = Math.max(1.5, 3.0 * k);
+      for (var rdi = 0; rdi < world.roads.length; rdi++) {
+        var rpts = world.roads[rdi].pts;
+        if (!rpts || rpts.length < 2) continue;
+        c.beginPath();
+        c.moveTo(mx(rpts[0].x), my(rpts[0].z));
+        for (var rpi = 1; rpi < rpts.length; rpi++) c.lineTo(mx(rpts[rpi].x), my(rpts[rpi].z));
+        c.stroke();
+      }
+      // Jembatan: tanda kayu kecil.
+      c.fillStyle = '#c9a46b';
+      for (var bri = 0; bri < (world.bridges || []).length; bri++) {
+        var brg = world.bridges[bri];
+        c.beginPath();
+        c.arc(mx(brg.x), my(brg.z), Math.max(2, 3 * k), 0, Math.PI * 2);
+        c.fill();
+      }
+      c.restore();
+    }
+
     // Pendukuhan kecil (desa utama & pondok punya ikon sendiri).
     var spots = world && world.villageSpots ? world.villageSpots : [];
     for (var i = 1; i < spots.length; i++) {

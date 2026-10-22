@@ -720,14 +720,16 @@
     var placed = [];
     var S = world.scale || 1;
 
-    function tryPlace(minVillage, minSpawn) {
-      for (var a = 0; a < 80; a++) {
+    function tryPlace(minVillage, minSpawn, forestOnly) {
+      for (var a = 0; a < 110; a++) {
         var span = C.WORLD.size * 0.40;
         var x = (rng() * 2 - 1) * span;
         var z = (rng() * 2 - 1) * span;
         var h = world.height(x, z);
         if (h < 1.6 * S || h > 26 * S) continue;
         if (world._slopeAt(x, z) > 0.45) continue;
+        if (world.nearRoad && world.nearRoad(x, z, 3.2)) continue;
+        if (forestOnly && !world.inForest(x, z, -2)) continue;
         var ok = true;
         for (var s = 0; s < spots.length; s++) {
           var vs = spots[s];
@@ -750,9 +752,14 @@
     }
 
     var plan = [
-      { id: 'babi', n: 26, mv: 34, ms: 40 },
-      { id: 'slime', n: 22, mv: 28, ms: 36 },
-      { id: 'bandit', n: 16, mv: 80, ms: 60 }
+      { id: 'babi', n: 30, mv: 34, ms: 40 },
+      { id: 'slime', n: 26, mv: 28, ms: 36 },
+      { id: 'bandit', n: 20, mv: 80, ms: 60 }
+    ];
+    var forestPlan = [
+      { id: 'babi', n: 12, mv: 26, ms: 30 },
+      { id: 'slime', n: 14, mv: 24, ms: 28 },
+      { id: 'bandit', n: 10, mv: 60, ms: 50 }
     ];
     var idx = 0;
     for (var i = 0; i < plan.length; i++) {
@@ -764,6 +771,19 @@
         this.scene.add(en.group);
         this.list.push(en);
         this.counts[plan[i].id]++;
+        idx++;
+      }
+    }
+    // Gerombolan penghuni hutan: lebih banyak musuh di dalam hutan rimbun.
+    for (var fi = 0; fi < forestPlan.length; fi++) {
+      for (var fk = 0; fk < forestPlan[fi].n; fk++) {
+        var fpos = tryPlace(forestPlan[fi].mv, forestPlan[fi].ms, true);
+        if (!fpos) continue;
+        placed.push(fpos);
+        var fen = new Enemy(forestPlan[fi].id, fpos.x, fpos.z, world, C.WORLD.seed + 8300 + idx * 131);
+        this.scene.add(fen.group);
+        this.list.push(fen);
+        this.counts[forestPlan[fi].id]++;
         idx++;
       }
     }

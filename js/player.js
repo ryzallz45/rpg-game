@@ -279,9 +279,11 @@
     this._collide();
 
     var terrain = this.world.groundHeight(this.position.x, this.position.z);
-    var waterY = this.world.waveHeight
-      ? this.world.waveHeight(this.position.x, this.position.z, this.world.elapsed || 0)
-      : ((C.WATER && C.WATER.level) || 0);
+    var waterY = this.world.waterLevelAt
+      ? this.world.waterLevelAt(this.position.x, this.position.z, this.world.elapsed || 0)
+      : (this.world.waveHeight
+        ? this.world.waveHeight(this.position.x, this.position.z, this.world.elapsed || 0)
+        : ((C.WATER && C.WATER.level) || 0));
     var support = this.world.supportHeight
       ? this.world.supportHeight(this.position.x, this.position.z, this.position.y)
       : terrain;

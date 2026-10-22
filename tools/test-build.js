@@ -873,6 +873,111 @@ t('makhluk pulau ditambah untuk dunia 10×', function () {
     ', bandit ' + enemies.counts.bandit + ') ✓');
 });
 
+console.log('\n--- Fase 6: sungai panjang, jalan penghubung, hutan rimbun ---');
+
+t('sungai panjang terisi air & tepiannya landai', function () {
+  if (!world.river || world.river.length < 8) throw new Error('alur sungai tidak ada');
+  if (!world.riverMesh || !world.riverMesh.geometry) throw new Error('mesh air sungai tidak ada');
+  var wet = 0, samples = 0;
+  for (var i = 1; i < world.river.length - 1; i++) {
+    var a = world.river[i], b = world.river[i + 1];
+    for (var k = 1; k < 5; k++) {
+      var tt = k / 5, x = a.x + (b.x - a.x) * tt, z = a.z + (b.z - a.z) * tt;
+      samples++;
+      if (world.groundHeight(x, z) < 0.4) wet++;
+    }
+  }
+  if (wet < samples * 0.95) throw new Error('sungai tidak berair: ' + wet + '/' + samples);
+  var mid = world.river[Math.floor(world.river.length / 2)];
+  var lvl = world.waterLevelAt(mid.x, mid.z, 0);
+  if (Math.abs(lvl - world.riverSurfaceY) > 0.001) throw new Error('permukaan air sungai tidak dipakai');
+  for (var s = -1; s <= 1; s += 2) {
+    var bank = world.groundHeight(mid.x + s * 60, mid.z);
+    if (bank < 0.5) throw new Error('tepian sungai masih tergenang');
+    if (bank > 60) throw new Error('tebing sungai terlalu tinggi: ' + bank.toFixed(0) + ' m');
+  }
+  console.log('  Sungai ' + world.river.length + ' titik, ' + wet + '/' + samples + ' sampel berair, permukaan ' +
+    world.riverSurfaceY.toFixed(2) + ' m ✓');
+});
+
+t('jaringan jalan menghubungkan semua desa, kerajaan, kekaisaran', function () {
+  if (world.roads.length < 5) throw new Error('jalan terlalu sedikit: ' + world.roads.length);
+  var total = 0, i, j;
+  for (i = 0; i < world.roads.length; i++) {
+    var p = world.roads[i].pts;
+    if (!p || p.length < 2) throw new Error('jalan tanpa titik');
+    for (j = 1; j < p.length; j++) total += Math.hypot(p[j].x - p[j - 1].x, p[j].z - p[j - 1].z);
+  }
+  if (total < 3000) throw new Error('total panjang jalan kurang: ' + total.toFixed(0) + ' m');
+  function nearEndpoints(x, z) {
+    var best = Infinity;
+    for (var r = 0; r < world.roads.length; r++) {
+      var q = world.roads[r].pts;
+      var a = q[0], b = q[q.length - 1];
+      best = Math.min(best, Math.hypot(a.x - x, a.z - z), Math.hypot(b.x - x, b.z - z));
+    }
+    return best;
+  }
+  for (i = 0; i < world.villageSpots.length; i++) {
+    if (nearEndpoints(world.villageSpots[i].x, world.villageSpots[i].z) > 6) {
+      throw new Error('desa tidak tersambung jalan: #' + i);
+    }
+  }
+  var kg = world._cityGateOut(world.kingdomSite, { rWall: 60 });
+  var eg = world._cityGateOut(world.empireSite, { rWall: 148, flatGate: true });
+  if (!kg || nearEndpoints(kg.x, kg.z) > 6) throw new Error('gerbang kerajaan tidak tersambung jalan');
+  if (!eg || nearEndpoints(eg.x, eg.z) > 6) throw new Error('gerbang kekaisaran tidak tersambung jalan');
+  // Permukaan jalan harus berada di atas terrain (bukan terbenam).
+  var rp = world.roads[0].pts[Math.min(20, world.roads[0].pts.length - 1)];
+  var rc = new THREE.Raycaster(new THREE.Vector3(rp.x, 400, rp.z), new THREE.Vector3(0, -1, 0));
+  var hits = world.roadMesh ? rc.intersectObject(world.roadMesh, false) : [];
+  if (!hits.length) throw new Error('permukaan jalan tidak terlihat');
+  if (hits[0].point.y < world.groundHeight(rp.x, rp.z) + 0.02) throw new Error('jalan terbenam di terrain');
+  var arr = world.roadMesh.geometry.attributes.position.array;
+  for (i = 0; i < arr.length; i += 97) if (!isFinite(arr[i])) throw new Error('verteks jalan NaN');
+  console.log('  ' + world.roads.length + ' jalan, total ' + total.toFixed(0) + ' m, permukaan +' +
+    (hits[0].point.y - world.groundHeight(rp.x, rp.z)).toFixed(2) + ' m ✓');
+});
+
+t('jembatan sungai bisa dipijak & tidak terlalu panjang', function () {
+  if (world.bridges.length < 1) throw new Error('tidak ada jembatan sungai');
+  if (world.bridges.length > 6) throw new Error('terlalu banyak jembatan: ' + world.bridges.length);
+  for (var i = 0; i < world.bridges.length; i++) {
+    var b = world.bridges[i];
+    if (b.len < 4 || b.len > 60) throw new Error('panjang jembatan tidak wajar: ' + b.len.toFixed(1));
+    var sup = world.supportHeight(b.x, b.z, b.deckY);
+    if (Math.abs(sup - b.deckY) > 0.02) throw new Error('dek jembatan tidak bisa dipijak');
+  }
+  console.log('  ' + world.bridges.length + ' jembatan (' + world.bridges.map(function (b) { return b.len.toFixed(0) + ' m'; }).join(', ') + ') ✓');
+});
+
+t('hutan rimbun, pohon tepi jalan, & bebatuan', function () {
+  if (world.forests.length < 8) throw new Error('hutan terlalu sedikit: ' + world.forests.length);
+  var c = world.envCounts || {};
+  if (!c.trees || c.trees < 2000) throw new Error('pohon terlalu sedikit: ' + c.trees);
+  if (!c.roadTrees || c.roadTrees < 300) throw new Error('pohon tepi jalan kurang: ' + c.roadTrees);
+  if (!c.forestTrees || c.forestTrees < 800) throw new Error('pohon hutan kurang: ' + c.forestTrees);
+  if (!c.rocks || c.rocks < 600) throw new Error('batu terlalu sedikit: ' + c.rocks);
+  var bad = 0;
+  for (var i = 0; i < world._placed.length; i++) {
+    if (world.nearRoad(world._placed[i].x, world._placed[i].z, 0.4)) bad++;
+  }
+  if (bad) throw new Error(bad + ' pohon/batu menutup jalan');
+  var forestEnemies = 0;
+  var vc = village.center || { x: 0, z: 0 };
+  for (var e = 0; e < enemies.list.length; e++) {
+    if (world.inForest(enemies.list[e].home.x, enemies.list[e].home.z, 0)) forestEnemies++;
+    // Satu slime dipindahkan oleh pengujian AI ke pusat desa; abaikan dia.
+    if (Math.hypot(enemies.list[e].home.x - vc.x, enemies.list[e].home.z - vc.z) < 12) continue;
+    if (world.nearRoad(enemies.list[e].home.x, enemies.list[e].home.z, 0.5)) {
+      throw new Error('musuh menempati jalan');
+    }
+  }
+  if (forestEnemies < 12) throw new Error('musuh di hutan kurang: ' + forestEnemies);
+  console.log('  ' + world.forests.length + ' hutan, ' + c.trees + ' pohon (' + c.roadTrees + ' tepi jalan), ' +
+    c.rocks + ' batu, ' + forestEnemies + ' musuh di hutan ✓');
+});
+
 globalThis.localStorage = oldStorage;
 
-console.log('\nSEMUA TAHAP FASE 1 + 2 + 3 + 4 + 5 BERJALAN TANPA ERROR.');
+console.log('\nSEMUA TAHAP FASE 1 + 2 + 3 + 4 + 5 + 6 BERJALAN TANPA ERROR.');

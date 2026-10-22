@@ -566,9 +566,11 @@
     player.position.set(x, y, z);
     player.velocity.set(0, 0, 0);
     player.currentSpeed = 0;
-    var waterY = world.waveHeight
-      ? world.waveHeight(x, z, world.elapsed || 0)
-      : ((C.WATER && C.WATER.level) || 0);
+    var waterY = world.waterLevelAt
+      ? world.waterLevelAt(x, z, world.elapsed || 0)
+      : (world.waveHeight
+        ? world.waveHeight(x, z, world.elapsed || 0)
+        : ((C.WATER && C.WATER.level) || 0));
     player.swimming = support <= ground + 0.05 && ground < waterY - C.PLAYER.swimDepth;
     player.grounded = !player.swimming;
     player.groundedTimer = player.swimming ? 0 : 0.12;

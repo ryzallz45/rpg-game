@@ -102,6 +102,7 @@
     var h = world.groundHeight(x, z);
     if (h < 1.3 * S || h > 32 * S) return NaN;
     if (world._slopeAt(x, z) > 0.5) return NaN;
+    if (world.nearRoad && world.nearRoad(x, z, 0.7)) return NaN; // jalan tetap bersih
     var spots = world.villageSpots || [];
     for (var i = 0; i < spots.length; i++) {
       var dx = x - spots[i].x, dz = z - spots[i].z;
