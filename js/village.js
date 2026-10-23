@@ -634,7 +634,10 @@
 
     // Wall material
     km.wall.mat = new THREE.MeshStandardMaterial({ color: srgb(0xC8B898), roughness: 0.92, metalness: 0 });
-    if (global.TexLib) global.TexLib.apply(km.wall.mat, 'plaster', 2.4, 1.6);
+    if (global.TexLib) {
+      global.TexLib.apply(km.wall.mat, 'plaster', 2.4, 1.6);
+      global.TexLib.applyBump(km.wall.mat, 'stuccoBump', 2.4, 1.6, 0.035);
+    }
     km.wall.geo = getGeo('wall_plaster_straight') || new THREE.BoxGeometry(4, 3, 0.2);
 
     // Floor material
@@ -672,7 +675,10 @@
 
     // Overhang material
     km.overhang.mat = new THREE.MeshStandardMaterial({ color: srgb(0xC8B898), roughness: 0.92, metalness: 0 });
-    if (global.TexLib) global.TexLib.apply(km.overhang.mat, 'plaster', 2.4, 1.6);
+    if (global.TexLib) {
+      global.TexLib.apply(km.overhang.mat, 'plaster', 2.4, 1.6);
+      global.TexLib.applyBump(km.overhang.mat, 'stuccoBump', 2.4, 1.6, 0.035);
+    }
     km.overhang.geo = getGeo('overhang_plaster_long') || new THREE.BoxGeometry(4, 0.3, 0.5);
 
     // Chimney material
@@ -1616,6 +1622,9 @@
       if (!list.length) continue;
       var mat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.92, metalness: 0 });
       if (global.TexLib && texSpec[key]) global.TexLib.apply(mat, texSpec[key][0], texSpec[key][1], texSpec[key][2]);
+      if (global.TexLib && key === 'wall') {
+        global.TexLib.applyBump(mat, 'stuccoBump', 2.4, 1.6, 0.035);
+      }
       if (key === 'iron') { mat.roughness = 0.55; mat.metalness = 0.42; }
       if (key === 'window') {
         // jendela: kaca gelap saat siang, menyala hangat saat malam

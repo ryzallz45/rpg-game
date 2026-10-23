@@ -3,9 +3,9 @@
 Game eksplorasi 3D open-world (mini RPG) berbasis Three.js r128, berlatar
 **kerajaan pesisir abad pertengahan**. Seluruh dunia, vegetasi, langit, dan
 karakter dibuat **prosedural** — cukup dobel-klik `index.html` (atau tombol Play
-di editor), tanpa internet. Versi grafis penuh (bayangan halus, tekstur, efek,
-dan **model karakter 3D CC0**) menyala otomatis saat dijalankan lewat
-`jalankan.bat`; semua aset tersimpan lokal di repo ini.
+di editor), tanpa internet. Versi grafis penuh (bayangan halus, tekstur
+permukaan lokal, efek, dan **model karakter 3D CC0**) menyala otomatis saat
+dijalankan lewat `jalankan.bat`; semua aset tersimpan lokal di repo ini.
 
 **Fase 5** memperluas dunia menjadi **±3,24 km × 3,24 km (10× luas sebelumnya)**
 dengan pegunungan & perbukitan yang ikut membesar, **12 pulau kecil** di lautan,
@@ -40,7 +40,8 @@ saat `file://`).
 
 Untuk grafis penuh: **`jalankan.bat`** — menyalakan server lokal kecil
 (`server.js`, Node.js) dan membuka `http://localhost:8317/`. Mode ini
-mengaktifkan **model karakter 3D** (KayKit & Quaternius, CC0).
+mengaktifkan **model karakter 3D** (KayKit & Quaternius, CC0) serta **detail
+map permukaan** lokal (tanah hutan, jalan kerikil, batu gunung, dan plester).
 
 Untuk memeriksa aset GLB baru tanpa memuat semuanya ke dunia, buka **Galeri
 Aset** dari tautan di menu utama atau langsung ke
@@ -97,8 +98,8 @@ Hal yang perlu diperhatikan:
   Netlify. Game tetap berjalan di HTTP biasa; tidak ada API khusus yang
   mewajibkan HTTPS.
 - **Tidak perlu build step, environment variable, atau database.** Repo berukuran
-  sekitar 20 MB, dengan ±17,5 MB di antaranya model karakter GLB dan ±1,3 MB
-  model bangunan GLB.
+  sekitar 24 MB, dengan ±17,5 MB di antaranya model karakter GLB, ±1,3 MB
+  model bangunan GLB, dan ±5,0 MB detail map permukaan.
 - **Simpanan `localStorage` terikat pada origin.** Pindah dari
   `http://localhost:8317` ke domain publik (atau pindah domain) membuat simpanan
   lama tidak terbaca. Tidak ada cloud save; memindahkan progres secara manual
@@ -111,7 +112,8 @@ Hal yang perlu diperhatikan:
 | Tombol | Fungsi |
 |---|---|
 | W A S D / panah | jalan (relatif kamera) / **berenang** / **mengemudikan perahu** |
-| Shift | lari / berenang lebih cepat |
+| Shift | tahan untuk lari / berenang lebih cepat |
+| **R** | kunci mode lari cepat (tanpa menahan Shift) |
 | Spasi | lompat |
 | **Klik Kiri** / F | ayunkan pedang — kombo 3 gerakan (tebas atas, tebas samping, tusuk) |
 | E | bicara dengan penduduk / memetik kelapa / mengambil benda / **naik & turun perahu** |
@@ -137,9 +139,15 @@ gerak & serangan dikunci, dan peta menutup otomatis bila pemain diserang.
 - **Terrain pulau prosedural** (noise fBm + ridged) dengan warna vertex natural:
   pantai, rumput bercak kering/gelap, tanah lereng, batu, puncak karang;
   peneduhan lembah — mesh 352×352 dengan **kerutan mikro yang diperhalus** +
-  **tekstur tanah** (bercak lempung/kerikil + normal map) agar punggung bukit mulus.
-  Fase 5: dunia **3240 m** (10× luas); **Fase 6: pegunungan utama dikurangi**
-  (puncak ±155 m) dan diganti lembah sungai, hutan, serta dataran yang lebih terbuka
+  **detail tanah hutan** (foto 1024² dinormalisasi + normal map) agar punggung
+  bukit mulus. Fase 5: dunia **3240 m** (10× luas); **Fase 6: pegunungan utama
+  dikurangi** (puncak ±155 m) dan diganti lembah sungai, hutan, serta dataran
+  yang lebih terbuka
+- **Tekstur permukaan (Tahap A)**: tiga detail map lokal (tanah hutan, kerikil
+  sungai kering, batu gunung) dan bump map plester 1024². Foto dinormalisasi
+  menjadi pengali hampir-putih agar warna vertex tetap dominan; detail batu
+  hanya muncul di lereng/gunung. Saat `file://`, semuanya kembali ke tekstur
+  prosedural
 - **Laut** bergradasi kedalaman (turquoise dangkal → biru tua) + gelombang
   naik-turun beranimasi + busa pantai yang berdenyut mengikuti ombak; mesh air
   beriak 3600 m + samudra luar 60 km, gelombangnya juga menganggukkan perahu.
@@ -153,8 +161,9 @@ gerak & serangan dikunci, dan peta menutup otomatis bila pemain diserang.
 - **Jaringan jalan (Fase 6)**: **±5,3 km** jalan batu berliku (pencarian jalur
   A*) menghubungkan Aldenmere, ketiga pendukuhan, Kerajaan Pusat, Kekaisaran
   Aetheria, dan pelabuhan. **3 jembatan** berdek dengan pilar, pagar, dan ramp
-  yang bisa dipijak; permukaan jalan selalu di atas terrain. Pohon tinggi
-  berjajar di kedua sisi, dan peta mini menggambar jalan serta jembatan
+  yang bisa dipijak; permukaan jalan selalu di atas terrain dan diberi detail
+  kerikil sungai kering. Pohon tinggi berjajar di kedua sisi, dan peta mini
+  menggambar jalan serta jembatan
 - **Hutan rimbun (Fase 6)**: **14 kantong hutan** deterministik dengan pohon
   rapat dan **45 monster** yang berpatroli di dalamnya; bebatuan tersebar di
   tepi jalan dan di sela hutan
@@ -540,7 +549,7 @@ layanan eksternal, atau berkas audio/gambar terunduh saat bermain.
 | **Model bangunan** | 33 berkas `.glb` (±1,3 MB) | Quaternius Medieval Village MegaKit (Free, CC0): dinding, lantai, atap, tangga, pintu, jendela, cerobong, pagar, pedati, dan anggur. Setiap model adalah `.glb` mandiri (geometri + buffer di dalam satu berkas, tekstur diganti material prosedural) sehingga **tidak ada permintaan `.bin`/`.gltf`/PNG** saat bermain. |
 | **Font menu** | 4 berkas `.woff2` | Cinzel, Cinzel Decorative 700, Alegreya reguler, dan Alegreya italic; disertai lisensi OFL. |
 | **Pustaka grafis** | Three.js r128 + modul lokal | `three.min.js`, GLTFLoader, SkeletonUtils, EffectComposer, RenderPass, UnrealBloomPass, CopyShader, FXAAShader, dan LuminosityHighPassShader. |
-| **Tekstur** | 18 tekstur + 2 normal map | Dibuat saat runtime dengan Canvas 2D: tanah, rumput kering, kulit kayu, papan, plester, bata batu, cobble, sirap, rumbia, kain, kulit, logam, bulu, daun, batu, dan gel; plus normal map air dan tanah. |
+| **Tekstur** | 18 tekstur prosedural + 2 normal map + 4 detail map lokal (±5,0 MB) | Prosedural dibuat saat runtime dengan Canvas 2D: tanah, rumput kering, kulit kayu, papan, plester, bata batu, cobble, sirap, rumbia, kain, kulit, logam, bulu, daun, batu, dan gel; plus normal map air dan tanah. Detail map di `assets/textures/ground/`: tanah hutan, kerikil sungai kering, batu gunung, dan bump plester 8-bit (turunan dari displacement 16-bit). |
 | **Audio** | 0 berkas | Seluruh musik suasana dan efek suara disintesis dengan Web Audio API. |
 | **Antarmuka** | SVG, emoji, CSS | Emblem fajar, ikon HUD, dan ornamen menu dibuat inline/CSS; tidak ada berkas gambar UI. |
 
@@ -574,9 +583,10 @@ dipindahkan ke `assets/models/buildings/_unused/` yang **diabaikan git**
 (`.gitignore`) sehingga repo tetap ramping; berkas `.bin` dihapus karena tidak
 lagi dibutuhkan.
 
-Saat dibuka lewat `file://`, peramban memblokir pembacaan model sehingga game
-memakai bentuk prosedural untuk pemain, penduduk, dan makhluk. Semua tekstur,
-bangunan, vegetasi, langit, dan efek tetap tersedia karena dibuat dari kode.
+Saat dibuka lewat `file://`, peramban memblokir pembacaan model dan detail map
+eksternal sehingga game memakai bentuk serta tekstur prosedural untuk pemain,
+penduduk, makhluk, dan permukaan. Bangunan, vegetasi, langit, dan efek tetap
+tersedia karena dibuat dari kode.
 
 ### Teknologi dan arsitektur
 
@@ -586,7 +596,7 @@ bangunan, vegetasi, langit, dan efek tetap tersedia karena dibuat dari kode.
 | **Render** | Three.js r128 melalui WebGL; kamera orang ketiga |
 | **Dunia** | PRNG ber-seed, noise 2D, fBm, ridged, sampling tinggi terrain, warna vertex |
 | **Vegetasi** | `InstancedMesh`, potongan rumput 36 m, shader goyangan angin |
-| **Tekstur** | `CanvasTexture` + normal map, repeat dan anisotropi |
+| **Tekstur** | `CanvasTexture` prosedural + detail map JPG/PNG lokal yang dinormalisasi, normal/bump map, repeat dan anisotropi; fallback aman di `file://` |
 | **Audio** | Web Audio API (oscillator, filter, noise, LFO) |
 | **Antarmuka** | DOM overlay + CSS; i18n lewat atribut `data-i18n` |
 | **Simpanan** | JSON di `localStorage`, versi 2, satu slot |
@@ -682,10 +692,10 @@ dunia adalah hasil kode generator yang deterministik dari seed.
 ### Lisensi dan atribusi
 
 Kode game dibuat khusus untuk proyek ini. Three.js r128 berlisensi **MIT**;
-model karakter KayKit dan Quaternius berlisensi **CC0 1.0** (domain publik);
-font Cinzel, Cinzel Decorative, dan Alegreya berlisensi **SIL Open Font License
-1.1**. Rincian berkas dan sumbernya ada di [Lisensi](#lisensi),
-`assets/LICENSE.txt`, dan `assets/fonts/`.
+model karakter KayKit dan Quaternius serta detail map ambientCG berlisensi
+**CC0 1.0** (domain publik); font Cinzel, Cinzel Decorative, dan Alegreya
+berlisensi **SIL Open Font License 1.1**. Rincian berkas dan sumbernya ada di
+[Lisensi](#lisensi), `assets/LICENSE.txt`, dan `assets/fonts/`.
 
 ## Uji & alat pengembangan
 
@@ -726,7 +736,7 @@ js/rpg.js               data RPG: daftar barang + Stats (HP, XP, level, isi tas)
 js/save.js              simpan/muat satu slot v2 (localStorage, aman di Node)
 js/minimap.js           peta 4 mode + peta besar/klik tujuan & arah kompas; peta dasar terrain
 js/effects.js           pool partikel THREE.Points, cincin gelombang, debu & efek naik level
-js/textures.js          pustaka tekstur prosedural (canvas; aman di Node)
+js/textures.js          pustaka tekstur prosedural + pemuat detail/bump map lokal (aman di Node)
 js/assets.js            pemuat model 3D + klon berig (fallback aman)
 js/sky.js               WorldSky: kubah langit, matahari/bulan/bintang/awan, cahaya
 js/world.js             terrain warna vertex, laut, vegetasi/batu, landmark batu tua (kastil/kapel/menara/lingkaran batu), tabrakan, pulau kecil, pelabuhan
@@ -737,6 +747,7 @@ js/boat.js              pelabuhan (dermaga) + perahu cadik: naik/turun, kemudi, 
 js/enemies.js           celeng/penyamun/roh rawa/ksatria terkutuk, AI, pertarungan, jarahan, bilah HP
 js/main.js              game loop, pemuatan bertahap, menu/pengaturan/keluar, trailer, kamera, HUD, simpan/muat, peta besar & tujuan, efek
 assets/models/*.glb     model karakter 3D CC0 (KayKit + Quaternius)
+assets/textures/ground/ detail map permukaan CC0 (ambientCG) + bump plester 8-bit
 assets/fonts/*.woff2    font menu lokal (Cinzel Decorative, Cinzel, Alegreya) + lisensi OFL
 server.js               server statis opsional (tanpa dependensi)
 jalankan.bat            peluncur opsional untuk pemain (server + browser)
@@ -750,6 +761,9 @@ tools/                  uji & alat (Node)
   `lib/postprocessing`, `lib/shaders`).
 - Model karakter 3D — CC0 1.0 / domain publik: KayKit Character Pack Adventures
   (Kay Lousberg) dan Quaternius (babi hutan) — rincian di `assets/LICENSE.txt`.
+- Detail map permukaan — **CC0 1.0** dari ambientCG (ForestGround04,
+  DryRiverPebbles, RockyTerrain02, WhiteStucco02) — rincian di
+  `assets/LICENSE.txt`.
 - Font menu — **Cinzel**, **Cinzel Decorative**, dan **Alegreya**, dilisensikan
   SIL Open Font License 1.1; berkas lisensi ada di `assets/fonts/`.
 
@@ -774,3 +788,4 @@ tools/                  uji & alat (Node)
 - [x] **Dunia K1** — Konversi kerajaan abad pertengahan: ksatria pemain, Aldenmere setengah-kayu + pasar + gapura batu, kapel/kastil/menara/lingkaran batu, celeng/penyamun/roh rawa/ksatria terkutuk, palet hutan sedang, dialog & peta bernuansa kerajaan
 - [x] **Dunia K2** — Kerajaan Pusat Aetheria (120 m, 30 rumah, 10 warga) + **Kekaisaran Aetheria** (296 m, 100 rumah, 30 warga, kastil agung), tembok pejal anti-tembus, jalan masuk bergerbang, POI kedua, trailer 42 dtk
 - [x] **Fase 6 — Lanskap terhubung** — pegunungan dikurangi, **sungai panjang ±2,3 km** menggantikan danau, **6 jalan ±5,3 km** menghubungkan semua desa/kerajaan/kekaisaran/pelabuhan dengan **3 jembatan**, **14 hutan rimbun** + 45 monster, **±1.100 pohon tepi jalan**, **±1.370 batu**, dan peta mini bergaris jalan
+- [x] **Tahap A — Tekstur permukaan** — detail tanah hutan, jalan kerikil, batu gunung, dan bump plester (ambientCG CC0, lokal) + fallback prosedural; **R** mengunci lari cepat dan kecepatan lari dinaikkan ke 17 m/s

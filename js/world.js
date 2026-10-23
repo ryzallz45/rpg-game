@@ -480,6 +480,7 @@
     var pos = geo.attributes.position;
     var count = pos.count;
     var colors = new Float32Array(count * 3);
+    var rockness = new Float32Array(count);
     var col = new THREE.Color();
     var COLORS = getColors();
     var fbmColor = this.height.fbmColor;
@@ -503,6 +504,7 @@
       var shade = 1 + U.clamp((y - avg) * (0.05 / S), -0.16, 0.09);
 
       // Warna prosedural penuh (low-poly)
+      var rockAmt = 0;
       if (y > 0.4 * S) {
         var gm = fbmColor(x * (0.025 / S), z * (0.025 / S)) * 0.5 + 0.5;
         col.copy(COLORS.grassBase).lerp(COLORS.grassLight, gm * 0.9);
@@ -533,10 +535,14 @@
         col.lerp(this._tmpColor.copy(COLORS.rock).lerp(COLORS.rockDark, gm * 0.35), highRock);
         var snowT = U.smoothstep(62 * S, 88 * S, y) * (0.72 + gm * 0.28);
         col.lerp(COLORS.snow, snowT * 0.9);
+
+        // Seberapa kuat detail batu gunung menimpa detail tanah/rumput.
+        rockAmt = U.clamp(Math.max(rockT2, highRock) * (1 - snowT * 0.85), 0, 1);
       } else {
         var depth = U.smoothstep(0.3 * S, 9 * S, -y);
         col.copy(COLORS.sandWet).lerp(COLORS.seabed, depth);
       }
+      rockness[i] = rockAmt;
       col.multiplyScalar(shade);
 
       colors[i * 3] = col.r;
@@ -545,6 +551,7 @@
     }
 
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    geo.setAttribute('aRock', new THREE.BufferAttribute(rockness, 1));
     geo.computeVertexNormals();
 
     var mat = new THREE.MeshStandardMaterial({
@@ -553,8 +560,41 @@
       metalness: 0
     });
     if (global.TexLib) {
-      global.TexLib.apply(mat, 'soil', 110, 110);                       // tekstur tanah
+      global.TexLib.apply(mat, 'soil', 110, 110);                       // cadangan prosedural
       global.TexLib.applyNormal(mat, 'soilNormal', 110, 110, 0.5);      // relief tanah halus
+      global.TexLib.apply(mat, 'forestGround', 110, 110);               // detail tanah hutan
+      var rockDetail = global.TexLib.get('rockyGround');
+      if (rockDetail) {
+        // Tambahkan detail batu hanya pada lereng/gunung, tanpa mengurangi
+        // warna vertex yang sudah menjadi identitas visual dunia.
+        mat.onBeforeCompile = function (shader) {
+          shader.uniforms.uRockMap = { value: rockDetail };
+          shader.uniforms.uRockRepeat = { value: new THREE.Vector2(72, 72) };
+          shader.vertexShader = shader.vertexShader
+            .replace('#include <common>', [
+              '#include <common>',
+              'attribute float aRock;',
+              'varying float vRock;'
+            ].join('\n'))
+            .replace('#include <begin_vertex>', [
+              '#include <begin_vertex>',
+              'vRock = aRock;'
+            ].join('\n'));
+          shader.fragmentShader = shader.fragmentShader
+            .replace('#include <common>', [
+              '#include <common>',
+              'uniform sampler2D uRockMap;',
+              'uniform vec2 uRockRepeat;',
+              'varying float vRock;'
+            ].join('\n'))
+            .replace('#include <map_fragment>', [
+              '#include <map_fragment>',
+              'vec3 rockDetail = texture2D(uRockMap, vUv * uRockRepeat).rgb;',
+              'diffuseColor.rgb *= mix(vec3(1.0), rockDetail, vRock);'
+            ].join('\n'));
+        };
+        mat.customProgramCacheKey = function () { return 'terrain-rock-detail'; };
+      }
     }
 
     var mesh = new THREE.Mesh(geo, mat);
@@ -3349,7 +3389,10 @@
       color: srgb(0x9C8C74), roughness: 0.98, metalness: 0,
       polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2
     });
-    if (global.TexLib) global.TexLib.apply(mat, 'cobble', 1, 1);
+    if (global.TexLib) {
+      global.TexLib.apply(mat, 'cobble', 1, 1);        // cadangan prosedural
+      global.TexLib.apply(mat, 'roadPebbles', 1, 1);   // kerikil sungai kering
+    }
     var mesh = new THREE.Mesh(geo, mat);
     mesh.name = 'roads';
     mesh.receiveShadow = true;
@@ -4227,7 +4270,10 @@
     // Batu-batu
     var rockGeo = new THREE.DodecahedronGeometry(1, 0);
     var rockMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.95, metalness: 0 });
-    if (global.TexLib) global.TexLib.apply(rockMat, 'rock', 1.6, 1.6);
+    if (global.TexLib) {
+      global.TexLib.apply(rockMat, 'rock', 1.6, 1.6);        // cadangan prosedural
+      global.TexLib.apply(rockMat, 'rockyGround', 1.6, 1.6); // batu gunung
+    }
     var rockMesh = new THREE.InstancedMesh(rockGeo, rockMat, rocks.length);
     // Batu tidak melempar bayangan: saat matahari rendah, batu di kejauhan bisa
     // menutup fasad kastil dengan bayangan raksasa yang terbaca seperti lubang.

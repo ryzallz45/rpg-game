@@ -26,6 +26,7 @@
     this.groundedTimer = 0.12;
     this.currentSpeed = 0;
     this.swimming = false; // Fase 5 lanjutan: laut terbuka bisa dijelajahi
+    this.sprintLock = false; // R: kunci lari cepat agar eksplorasi tidak melelahkan
 
     this._wish = new THREE.Vector3();
     this._forward = new THREE.Vector3();
@@ -50,6 +51,11 @@
     this.yaw = Math.atan2(-spawn.x, -spawn.z); // menghadap ke tengah pulau
     this.group.rotation.y = this.yaw;
   }
+
+  Player.prototype.toggleSprint = function () {
+    this.sprintLock = !this.sprintLock;
+    return this.sprintLock;
+  };
 
   /* ---------- Bentuk karakter ---------- */
   Player.prototype._buildMesh = function () {
@@ -243,7 +249,8 @@
       if (Input.isDown('KeyD') || Input.isDown('ArrowRight')) s += 1;
       if (Input.isDown('KeyA') || Input.isDown('ArrowLeft')) s -= 1;
     }
-    var run = controlsEnabled && (Input.isDown('ShiftLeft') || Input.isDown('ShiftRight'));
+    var run = controlsEnabled &&
+      (this.sprintLock || Input.isDown('ShiftLeft') || Input.isDown('ShiftRight'));
 
     // Arah relatif kamera. "Kanan layar" = f x up = (-cos, 0, sin).
     this._forward.set(Math.sin(cameraYaw), 0, Math.cos(cameraYaw));
@@ -269,14 +276,19 @@
       this.groundedTimer = 0;
     }
 
-    var nx = this.position.x + this.velocity.x * dt;
-    var nz = this.position.z + this.velocity.z * dt;
-    // Laut terbuka: tidak ada dinding kedalaman maupun batas peta. Perahu,
-    // pulau kecil, dan samudra luar semuanya dapat dijelajahi.
-    this.position.x = nx;
-    this.position.z = nz;
-
-    this._collide();
+    var dx = this.velocity.x * dt;
+    var dz = this.velocity.z * dt;
+    // Pecah langkah saat lari cepat / fps rendah agar tidak menembus dinding
+    // tipis. Pada kecepatan normal biasanya hanya satu sub-langkah.
+    var stepLen = Math.sqrt(dx * dx + dz * dz);
+    var steps = Math.max(1, Math.ceil(stepLen / 0.35));
+    for (var step = 0; step < steps; step++) {
+      // Laut terbuka: tidak ada dinding kedalaman maupun batas peta. Perahu,
+      // pulau kecil, dan samudra luar semuanya dapat dijelajahi.
+      this.position.x += dx / steps;
+      this.position.z += dz / steps;
+      this._collide();
+    }
 
     var terrain = this.world.groundHeight(this.position.x, this.position.z);
     var waterY = this.world.waterLevelAt

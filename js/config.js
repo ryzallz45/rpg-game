@@ -44,7 +44,7 @@
 
     PLAYER: {
       walkSpeed: 6.5,
-      runSpeed: 11.5,
+      runSpeed: 17.0,
       accel: 34,
       jumpSpeed: 9.5,
       gravity: 26,
@@ -53,7 +53,7 @@
       swimDepth: 1.15,   // kedalaman (di bawah permukaan) sebelum berenang
       swimOffset: -0.92, // kaki di bawah permukaan saat berenang
       swimSpeed: 4.3,
-      swimRunSpeed: 7.2,
+      swimRunSpeed: 10.5,
       swimAccel: 24,
       swimClimb: 1.55    // tinggi dek rendah yang bisa dinaiki dari air
     },

@@ -1,14 +1,38 @@
-/* Tekstur prosedural (Tahap G2) — digambar lewat canvas, tanpa berkas aset.
-   Semua tekstur adalah "pengali" hampir-putih (0.75..1.0) sehingga warna
-   vertex/instance tetap menjadi warna utama — hanya detail permukaan yang
-   bertambah. Aman di Node: tanpa document, get() mengembalikan null. */
+/* Tekstur permukaan — prosedural (Tahap G2) + detail map eksternal (Tahap A).
+   Detail map eksternal dinormalisasi menjadi "pengali" hampir-putih sehingga
+   warna vertex/instance tetap menjadi warna utama. Bila berkas tidak tersedia
+   (mis. mode file://), semua fungsi kembali memakai tekstur prosedural.
+   Aman di Node: tanpa document, get() mengembalikan null. */
 (function (global) {
   'use strict';
   var U = global.Utils;
 
   var hasCanvas = typeof document !== 'undefined' && !!document.createElement;
   var cache = {};
+  var fileCache = {};
+  var filePromise = null;
+  var fileDone = 0;
   var aniso = 1;
+
+  /* Tekstur eksternal Tahap A. Semua lisensi CC0 (ambientCG). */
+  var FILE_TEX = {
+    forestGround: {
+      file: 'assets/textures/ground/forest_ground_04_diff_1k.jpg',
+      detail: { mean: 0.93, gain: 1.35, min: 0.68, max: 1.12 }
+    },
+    roadPebbles: {
+      file: 'assets/textures/ground/dry_river_pebbles_diff_1k.jpg',
+      detail: { mean: 0.94, gain: 0.80, min: 0.72, max: 1.10 }
+    },
+    rockyGround: {
+      file: 'assets/textures/ground/rocky_terrain_02_diff_1k.jpg',
+      detail: { mean: 0.93, gain: 2.30, min: 0.66, max: 1.14 }
+    },
+    stuccoBump: {
+      file: 'assets/textures/ground/white_stucco_02_disp_1k_8bit.png',
+      bump: true
+    }
+  };
 
   function allow() { return hasCanvas; }
 
@@ -328,8 +352,142 @@
     }, 2.4);
   }
 
+  /* ---------- Tekstur eksternal Tahap A ---------- */
+  function finishTexture(t, name) {
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.anisotropy = aniso;
+    if (THREE.LinearEncoding !== undefined) t.encoding = THREE.LinearEncoding;
+    t.name = name;
+    t.needsUpdate = true;
+    return t;
+  }
+
+  /* Ubah foto permukaan menjadi detail map netral: rata-rata ~0,93 dengan
+     kontras terkendali. Warna vertex terrain tetap mendominasi. */
+  function makeDetailTexture(img, name, cfg) {
+    var w = Math.max(1, Math.min(1024, img.naturalWidth || img.width || 1024));
+    var h = Math.max(1, Math.min(1024, img.naturalHeight || img.height || 1024));
+    var cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    var ctx = cv.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0, w, h);
+
+    var data;
+    try {
+      data = ctx.getImageData(0, 0, w, h);
+    } catch (e) {
+      console.warn('[Aetheria] Detail map tidak bisa dibaca: ' + name, e);
+      return null;
+    }
+    var d = data.data;
+    var n = w * h;
+    var lum = new Float32Array(n);
+    var sum = 0;
+    var i, p;
+    for (i = 0, p = 0; i < n; i++, p += 4) {
+      lum[i] = (0.2126 * d[p] + 0.7152 * d[p + 1] + 0.0722 * d[p + 2]) / 255;
+      sum += lum[i];
+    }
+    var mean = sum / n;
+    var outMean = cfg && cfg.mean !== undefined ? cfg.mean : 0.93;
+    var gain = cfg && cfg.gain !== undefined ? cfg.gain : 1;
+    var lo = cfg && cfg.min !== undefined ? cfg.min : 0.68;
+    var hi = cfg && cfg.max !== undefined ? cfg.max : 1.12;
+    for (i = 0, p = 0; i < n; i++, p += 4) {
+      var v = U.clamp(outMean + (lum[i] - mean) * gain, lo, hi);
+      var c = (v * 255) | 0;
+      d[p] = c; d[p + 1] = c; d[p + 2] = c; d[p + 3] = 255;
+    }
+    ctx.putImageData(data, 0, 0);
+    return finishTexture(new THREE.CanvasTexture(cv), name);
+  }
+
+  /* Bump map dari displacement map 8-bit. */
+  function makeBumpTexture(img, name) {
+    var w = Math.max(1, Math.min(1024, img.naturalWidth || img.width || 1024));
+    var h = Math.max(1, Math.min(1024, img.naturalHeight || img.height || 1024));
+    var cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    var ctx = cv.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0, w, h);
+
+    var data;
+    try {
+      data = ctx.getImageData(0, 0, w, h);
+    } catch (e) {
+      console.warn('[Aetheria] Bump map tidak bisa dibaca: ' + name, e);
+      return null;
+    }
+    var d = data.data;
+    var n = w * h;
+    var min = 255, max = 0;
+    var i, p, v, c;
+    for (i = 0, p = 0; i < n; i++, p += 4) {
+      v = (0.2126 * d[p] + 0.7152 * d[p + 1] + 0.0722 * d[p + 2]) / 255;
+      c = (v * 255 + 0.5) | 0;
+      d[p] = c; d[p + 1] = c; d[p + 2] = c; d[p + 3] = 255;
+      if (c < min) min = c;
+      if (c > max) max = c;
+    }
+    if (max - min < 3) {
+      console.warn('[Aetheria] Bump map datar, dilewati: ' + name);
+      return null;
+    }
+    ctx.putImageData(data, 0, 0);
+    return finishTexture(new THREE.CanvasTexture(cv), name);
+  }
+
+  /* Muat semua tekstur eksternal. Tidak pernah reject: berkas yang gagal
+     dilewati dan material tetap memakai tekstur prosedural. */
+  function loadFiles(onProgress) {
+    if (filePromise) return filePromise;
+    if (!allow() || typeof THREE === 'undefined' || !THREE.ImageLoader) {
+      filePromise = Promise.resolve({ done: 0, total: 0 });
+      return filePromise;
+    }
+    if (typeof location !== 'undefined' && location.protocol === 'file:') {
+      console.info('[Aetheria] Mode file:// — tekstur eksternal dilewati.');
+      filePromise = Promise.resolve({ done: 0, total: 0 });
+      return filePromise;
+    }
+
+    var names = Object.keys(FILE_TEX);
+    var total = names.length;
+    fileDone = 0;
+    var jobs = [];
+    for (var k = 0; k < names.length; k++) {
+      (function (name) {
+        var def = FILE_TEX[name];
+        jobs.push(new Promise(function (resolve) {
+          var loader = new THREE.ImageLoader();
+          loader.load(def.file, function (img) {
+            try {
+              var t = def.bump ? makeBumpTexture(img, name) : makeDetailTexture(img, name, def.detail);
+              if (t) fileCache[name] = t;
+            } catch (e) {
+              console.warn('[Aetheria] Gagal mengolah tekstur ' + name, e);
+            }
+            fileDone++;
+            if (onProgress) onProgress(fileDone, total);
+            resolve();
+          }, undefined, function (err) {
+            console.warn('[Aetheria] Tekstur tidak tersedia: ' + def.file, err);
+            fileDone++;
+            if (onProgress) onProgress(fileDone, total);
+            resolve();
+          });
+        }));
+      })(names[k]);
+    }
+    filePromise = Promise.all(jobs).then(function () {
+      return { done: fileDone, total: total };
+    });
+    return filePromise;
+  }
+
   /* ---------- API ---------- */
   function get(name) {
+    if (fileCache[name]) return fileCache[name];
     if (!allow()) return null;
     if (cache[name]) return cache[name];
     var cv = null;
@@ -358,9 +516,29 @@
 
   function setAnisotropy(max) {
     aniso = Math.max(1, Math.min(max || 1, 8));
-    for (var k in cache) {
+    var k;
+    for (k in cache) {
       if (cache[k]) cache[k].anisotropy = aniso;
     }
+    for (k in fileCache) {
+      if (fileCache[k]) fileCache[k].anisotropy = aniso;
+    }
+  }
+
+  /* Pasang bump map ke material (klon per-material). scale = kekuatan relief. */
+  function applyBump(mat, name, rx, ry, scale) {
+    if (!allow() || !mat) return mat;
+    var t = get(name);
+    if (!t) return mat;
+    var map = t.clone();
+    map.needsUpdate = true;
+    map.wrapS = map.wrapT = THREE.RepeatWrapping;
+    map.repeat.set(rx || 1, (ry === undefined) ? (rx || 1) : ry);
+    map.anisotropy = aniso;
+    mat.bumpMap = map;
+    if (scale !== undefined) mat.bumpScale = scale;
+    mat.needsUpdate = true;
+    return mat;
   }
 
   /* Pasang normal map ke material (klon per-material). scale = kekuatan relief. */
@@ -383,6 +561,9 @@
     get: get,
     apply: apply,
     applyNormal: applyNormal,
+    applyBump: applyBump,
+    loadFiles: loadFiles,
+    hasExternal: function (name) { return !!fileCache[name]; },
     setAnisotropy: setAnisotropy,
     hasCanvas: allow
   };

@@ -270,6 +270,12 @@
 
   /* ---------- Pemuatan bertahap (async didukung; setiap tahap terlihat di layar) ---------- */
   var stages = [
+    ['Menyiapkan tekstur permukaan...', function () {
+      if (!window.TexLib || !window.TexLib.loadFiles) return null;
+      return window.TexLib.loadFiles(function (done, total) {
+        dom.loadingText.textContent = Lstr('Menyiapkan tekstur permukaan...') + ' (' + done + '/' + total + ')';
+      });
+    }],
     ['Membangun terrain pulau...', function () { world.buildTerrain(); }],
     ['Mengalirkan lautan...', function () { world.buildWater(); }],
     ['Memasang langit & siklus siang-malam...', function () { world.buildSky(); applySkyEnv(); }],
@@ -1522,6 +1528,7 @@
     if (playing && !worldMapOpen) {
       var pressed = window.Input.wasPressed('KeyE');
       var wantAttack = window.Input.wasPressed('Mouse0') || window.Input.wasPressed('KeyF');
+      var toggleRun = window.Input.wasPressed('KeyR');
       if (dialogOpen) {
         window.UI.showPrompt(null);
         if (pressed) window.UI.advanceDialog();
@@ -1537,6 +1544,12 @@
           if (player.attack()) window.AudioMan.sfx('swing');
         }
         if (window.Input.wasPressed('KeyH')) eatFood();
+        if (toggleRun) {
+          var sprintOn = player.toggleSprint();
+          window.UI.toast(sprintOn
+            ? L('run.on', '🏃 Mode lari cepat aktif — tekan R untuk berhenti')
+            : L('run.off', '🚶 Mode lari cepat nonaktif'));
+        }
       } else {
         window.UI.showPrompt(null);
       }
@@ -1548,6 +1561,7 @@
       window.Input.wasPressed('KeyH');
       window.Input.wasPressed('KeyI');
       window.Input.wasPressed('KeyE');
+      window.Input.wasPressed('KeyR');
     }
     dialogOpen = window.UI.isDialogOpen();
     var invOpen = window.UI.isInventoryOpen();

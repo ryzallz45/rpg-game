@@ -81,7 +81,8 @@
 
     /* Cara bermain */
     'help.wasd': 'walk / steer the boat',
-    'help.shift': 'run / swim faster',
+    'help.shift': 'hold to run / swim faster',
+    'help.runToggle': 'toggle fast run (no need to hold Shift)',
     'help.space': 'jump',
     'help.swim': 'deep water automatically swims — the whole ocean is open to explore',
     'help.attack': 'swing sword (3-hit combo)',
@@ -97,7 +98,9 @@
     'help.f3': 'performance panel',
 
     /* Berenang */
-    'swim.hint': '🌊 Swimming — W/A/S/D to move, Shift to swim faster. The whole ocean is open to explore!',
+    'swim.hint': '🌊 Swimming — W/A/S/D to move, Shift or R to swim faster. The whole ocean is open to explore!',
+    'run.on': '🏃 Fast run locked on — press R to stop',
+    'run.off': '🚶 Fast run off',
 
     /* Pengaturan */
     'set.title': 'SETTINGS',
@@ -154,7 +157,7 @@
     'loading.ready': 'Ready!',
 
     /* HUD */
-    'hud.controls': '<b>WASD</b> move &nbsp;·&nbsp; <b>Shift</b> run &nbsp;·&nbsp; <b>Space</b> jump &nbsp;·&nbsp; <b>Left Click</b> attack &nbsp;·&nbsp; <b>E</b> talk &nbsp;·&nbsp; <b>I</b> bag &nbsp;·&nbsp; <b>H</b> eat &nbsp;·&nbsp; <b>Esc</b> pause',
+    'hud.controls': '<b>WASD</b> move &nbsp;·&nbsp; <b>Shift</b> run &nbsp;·&nbsp; <b>R</b> fast-run lock &nbsp;·&nbsp; <b>Space</b> jump &nbsp;·&nbsp; <b>Left Click</b> attack &nbsp;·&nbsp; <b>E</b> talk &nbsp;·&nbsp; <b>I</b> bag &nbsp;·&nbsp; <b>H</b> eat &nbsp;·&nbsp; <b>Esc</b> pause',
     'hud.bag': 'BAG <span class="inv-key">I</span>',
     'hud.bagHint': 'Press I or Esc to close',
     'hud.north': 'N',
@@ -221,6 +224,7 @@
 
   /* ---------- Kamus untai dinamis (teks Indonesia → Inggris) ---------- */
   var EN_STR = {
+    'Menyiapkan tekstur permukaan...': 'Preparing surface textures...',
     'Membangun terrain pulau...': 'Building the island terrain...',
     'Mengalirkan lautan...': 'Filling the seas...',
     'Memasang langit & siklus siang-malam...': 'Raising the sky & day-night cycle...',

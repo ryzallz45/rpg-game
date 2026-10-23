@@ -1,9 +1,11 @@
 Aetheria: Legacy of the Dawn — Aset pihak ketiga
 ===================================
 
-Semua aset di folder ini berlisensi CC0 1.0 (domain publik) sehingga bebas
-dipakai, diubah, dan disebarkan — termasuk untuk keperluan komersial, tanpa
-wajib atribusi. Atribusi ditulis di sini sebagai bentuk terima kasih.
+Sebagian besar aset di folder ini berlisensi CC0 1.0 (domain publik) sehingga
+bebas dipakai, diubah, dan disebarkan — termasuk untuk keperluan komersial,
+tanpa wajib atribusi. Pustaka three.js memakai lisensi MIT, dan font di
+`assets/fonts/` memakai SIL Open Font License 1.1 (berkas lisensi terpisah).
+Atribusi ditulis di sini sebagai bentuk terima kasih.
 
 1) KayKit — Character Pack: Adventures (1.0)
    Pembuat : Kay Lousberg (https://kaylousberg.com — KayKit)
@@ -27,3 +29,19 @@ wajib atribusi. Atribusi ditulis di sini sebagai bentuk terima kasih.
    Berkas  : lib/three.min.js, lib/loaders/GLTFLoader.js,
              lib/utils/SkeletonUtils.js, lib/postprocessing/*, lib/shaders/*
    Sumber  : https://threejs.org
+
+4) ambientCG — Detail map permukaan (Tahap A)
+   Pembuat : ambientCG (Lennart Demes)
+   Lisensi : CC0 1.0 Universal (Public Domain)
+   Berkas  : assets/textures/ground/forest_ground_04_diff_1k.jpg
+             assets/textures/ground/dry_river_pebbles_diff_1k.jpg
+             assets/textures/ground/rocky_terrain_02_diff_1k.jpg
+             assets/textures/ground/white_stucco_02_disp_1k.png
+             assets/textures/ground/white_stucco_02_disp_1k_8bit.png
+   Sumber  : https://ambientcg.com/view?id=ForestGround04
+             https://ambientcg.com/view?id=DryRiverPebbles
+             https://ambientcg.com/view?id=RockyTerrain02
+             https://ambientcg.com/view?id=WhiteStucco02
+   Isi     : Foto permukaan 1024x1024 untuk tanah hutan, jalan kerikil, batu
+             gunung, dan bump plester. Versi 8-bit adalah turunan dari
+             displacement map 16-bit agar aman dipakai sebagai bumpMap.

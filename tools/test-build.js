@@ -324,7 +324,7 @@ console.log('  Rumah: pintu ' + villagePlatforms[1].doorW + '×' + villagePlatfo
   ' m, langit-langit ' + (villagePlatforms[1].ceil - villagePlatforms[1].top).toFixed(2) + ' m ✓');
 
 // Uji dinding: pemain tidak boleh menembus dinding rumah (termasuk saat fps rendah)
-function ujiDinding(dt) {
+function ujiDinding(dt, sprint) {
   var p0 = villagePlatforms[0];
   var rot = Math.atan2(p0.sin, p0.cos);
   var doorX = Math.sin(rot), doorZ = Math.cos(rot);
@@ -333,7 +333,9 @@ function ujiDinding(dt) {
   var pl = new globalThis.Player(scene, world);
   pl.position.set(sx, world.groundHeight(sx, sz), sz);
   var oldIsDown = globalThis.Input.isDown;
-  globalThis.Input.isDown = function (c) { return c === 'KeyW'; };
+  globalThis.Input.isDown = function (c) {
+    return c === 'KeyW' || (sprint && c === 'ShiftLeft');
+  };
   var camYaw = Math.atan2(doorX, doorZ);
   for (var k = 0; k < Math.round(4 / dt); k++) pl.update(dt, camYaw, true);
   globalThis.Input.isDown = oldIsDown;
@@ -344,6 +346,9 @@ t('dinding rumah menahan pemain (60 fps)', function () {
 });
 t('dinding rumah menahan pemain (20 fps)', function () {
   if (ujiDinding(0.05)) throw new Error('menembus dinding pada 20 fps!');
+});
+t('dinding rumah menahan pemain saat lari cepat (20 fps)', function () {
+  if (ujiDinding(0.05, true)) throw new Error('menembus dinding saat sprint pada 20 fps!');
 });
 t('pintu rumah tetap bisa dimasuki', function () {
   var p0 = villagePlatforms[0];
