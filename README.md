@@ -42,6 +42,12 @@ Untuk grafis penuh: **`jalankan.bat`** — menyalakan server lokal kecil
 (`server.js`, Node.js) dan membuka `http://localhost:8317/`. Mode ini
 mengaktifkan **model karakter 3D** (KayKit & Quaternius, CC0).
 
+Untuk memeriksa aset GLB baru tanpa memuat semuanya ke dunia, buka **Galeri
+Aset** dari tautan di menu utama atau langsung ke
+`http://localhost:8317/galeri.html`. Galeri memuat satu model pada satu waktu,
+menampilkan statistik, skala asli/normal, wireframe, dan peringatan untuk aset
+berat. Mode `file://` tidak bisa memuat GLB.
+
 Menu utama punya **Mulai Menjelajah** (memutar trailer sinematik singkat — bisa
 dilewati dengan klik/tombol apa pun — lalu masuk game), **Pengaturan**, dan
 **Keluar**. Bila ada simpanan, tombol emas **Lanjutkan Perjalanan** muncul di

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Galeri Aset — Aetheria</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/galeri.css" />
+</head>
+<body class="gallery-page">
+  <canvas id="gallery-canvas" aria-label="Pratinjau model 3D"></canvas>
+
+  <div id="gallery-sidebar">
+    <div class="gallery-brand">
+      <a class="gallery-back" href="index.html">← <span data-i18n="gallery.back">Kembali ke Game</span></a>
+      <h1 data-i18n="gallery.title">GALERI ASET</h1>
+      <p data-i18n="gallery.subtitle">Pratinjau model 3D baru — satu per satu.</p>
+    </div>
+
+    <div class="gallery-filters">
+      <input id="gallery-search" type="search" autocomplete="off" spellcheck="false"
+             placeholder="Cari aset..." aria-label="Cari aset" />
+      <select id="gallery-category" aria-label="Kategori aset">
+        <option value="all" data-i18n="gallery.filterAll">Semua</option>
+        <option value="char" data-i18n="gallery.cat.char">Karakter</option>
+        <option value="building" data-i18n="gallery.cat.building">Bangunan</option>
+        <option value="vegetation" data-i18n="gallery.cat.vegetation">Vegetasi</option>
+        <option value="props" data-i18n="gallery.cat.props">Props</option>
+        <option value="scene" data-i18n="gallery.cat.scene">Scene</option>
+        <option value="water" data-i18n="gallery.cat.water">Air</option>
+      </select>
+    </div>
+
+    <div id="gallery-list" class="gallery-list"></div>
+
+    <div class="gallery-side-foot">
+      <span id="gallery-count">17 aset</span>
+      <span class="gallery-sep">·</span>
+      <span data-i18n="gallery.hintList">Klik untuk pratinjau</span>
+    </div>
+  </div>
+
+  <div id="gallery-stage">
+    <div class="gallery-topbar">
+      <div class="gallery-heading">
+        <div id="gallery-current-name" data-i18n="gallery.pick">Pilih aset</div>
+        <div id="gallery-current-meta">—</div>
+      </div>
+      <div class="gallery-actions">
+        <label class="gallery-toggle" title="Tampilkan ukuran asli dari file">
+          <input type="checkbox" id="gallery-original" />
+          <span data-i18n="gallery.original">Skala asli</span>
+        </label>
+        <button type="button" id="gallery-wire" class="gallery-btn" data-i18n="gallery.wire">Wireframe</button>
+        <button type="button" id="gallery-rotate" class="gallery-btn" data-i18n="gallery.autoRotate">Putar otomatis</button>
+        <button type="button" id="gallery-reset" class="gallery-btn" data-i18n="gallery.reset">Reset kamera</button>
+      </div>
+    </div>
+
+    <div id="gallery-empty" class="gallery-empty">
+      <div class="gallery-empty-mark" aria-hidden="true">◇</div>
+      <h2 data-i18n="gallery.emptyTitle">Pilih aset di kiri</h2>
+      <p data-i18n="gallery.emptyText">Model dimuat satu per satu agar game tidak crash.</p>
+    </div>
+
+    <div id="gallery-info" class="gallery-info hidden">
+      <div class="gallery-info-head">
+        <span data-i18n="gallery.stats">Statistik</span>
+        <span class="gallery-info-tools">
+          <span id="gallery-badge" class="gallery-badge"></span>
+          <button type="button" id="gallery-info-toggle" class="gallery-info-toggle"
+                  title="Sembunyikan statistik" aria-expanded="true">−</button>
+        </span>
+      </div>
+      <div id="gallery-stats" class="gallery-stats"></div>
+      <div id="gallery-note" class="gallery-note"></div>
+      <div id="gallery-credit" class="gallery-credit"></div>
+    </div>
+
+    <div id="gallery-anim-bar" class="gallery-anim-bar hidden">
+      <label for="gallery-anim-select" data-i18n="gallery.animation">Animasi</label>
+      <select id="gallery-anim-select"></select>
+      <button type="button" id="gallery-anim-play" class="gallery-btn compact" title="Putar / jeda">▶</button>
+    </div>
+
+    <div class="gallery-hint" data-i18n="gallery.help">Seret untuk memutar · roda mouse untuk zoom · klik dua kali untuk reset</div>
+
+    <div id="gallery-file-warning" class="gallery-file-warning hidden" data-i18n-html="gallery.fileMode">
+      Mode <code>file://</code> tidak bisa memuat GLB. Jalankan <code>jalankan.bat</code> lalu buka
+      <a href="http://localhost:8317/galeri.html">http://localhost:8317/galeri.html</a>.
+    </div>
+  </div>
+
+  <div id="gallery-loading" class="gallery-loading hidden">
+    <div class="gallery-loading-box">
+      <div class="gallery-spinner" aria-hidden="true"></div>
+      <div id="gallery-loading-title" class="gallery-loading-title">Memuat...</div>
+      <div id="gallery-loading-file" class="gallery-loading-file">—</div>
+      <div class="gallery-progress"><div id="gallery-progress-fill"></div></div>
+      <div id="gallery-loading-hint" class="gallery-loading-hint">Model besar bisa memakan waktu.</div>
+    </div>
+  </div>
+
+  <div id="gallery-warning" class="gallery-modal hidden" role="dialog" aria-modal="true"
+       aria-labelledby="gallery-warning-title">
+    <div class="gallery-modal-box">
+      <h2 id="gallery-warning-title" data-i18n="gallery.heavyTitle">Aset berat</h2>
+      <p id="gallery-warning-text"></p>
+      <div class="gallery-modal-actions">
+        <button type="button" id="gallery-warning-cancel" class="gallery-btn" data-i18n="gallery.cancel">Batal</button>
+        <button type="button" id="gallery-warning-load" class="gallery-btn primary" data-i18n="gallery.loadAnyway">Muat juga</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="gallery-toast" class="gallery-toast hidden" role="status"></div>
+
+  <script src="lib/three.min.js"></script>
+  <script src="lib/loaders/GLTFLoader.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/galeri.js"></script>
+</body>
+</html>

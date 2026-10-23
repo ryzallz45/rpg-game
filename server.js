@@ -36,8 +36,8 @@ http.createServer(function (req, res) {
     res.end('Terlarang');
     return;
   }
-  fs.readFile(file, function (err, data) {
-    if (err) {
+  fs.stat(file, function (err, stat) {
+    if (err || !stat.isFile()) {
       res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('Tidak ditemukan: ' + pathname);
       return;
@@ -45,6 +45,7 @@ http.createServer(function (req, res) {
     var ext = path.extname(file).toLowerCase();
     var headers = {
       'Content-Type': MIME[ext] || 'application/octet-stream',
+      'Content-Length': stat.size,
       'Cache-Control': 'no-cache',
       'Access-Control-Allow-Origin': '*'
     };
@@ -53,7 +54,16 @@ http.createServer(function (req, res) {
       headers['Content-Disposition'] = 'inline';
     }
     res.writeHead(200, headers);
-    res.end(data);
+    if (req.method === 'HEAD') {
+      res.end();
+      return;
+    }
+    var stream = fs.createReadStream(file);
+    stream.on('error', function () {
+      // Header sudah terkirim; putuskan koneksi agar pemuat GLTF tahu ini gagal.
+      res.destroy();
+    });
+    stream.pipe(res);
   });
 }).listen(PORT, function () {
   console.log('================================================');
