@@ -48,6 +48,33 @@ t('buildTerrain', function () { world.buildTerrain(); });
 t('buildWater', function () { world.buildWater(); });
 t('buildSky', function () { world.buildSky(); });
 t('buildEnvironment', function () { world.buildEnvironment(); });
+
+// ---- Terrain permukiman datar: cegah rumah/pemain tembus akibat gelombang ----
+t('terrain permukiman benar-benar datar (desa, kerajaan, kekaisaran)', function () {
+  var zones = (world.height && world.height.flattenZones) || [];
+  if (zones.length < 7) throw new Error('zona datar kurang: ' + zones.length);
+  if (!world.terrain || !world.terrain.geometry) throw new Error('mesh terrain tidak ada');
+  var pos = world.terrain.geometry.attributes.position;
+  var checked = 0, bad = 0;
+  for (var z = 0; z < zones.length; z++) {
+    var Z = zones[z];
+    var lim = Z.inner * 0.98;
+    var r2 = lim * lim;
+    var inside = 0;
+    for (var i = 0; i < pos.count; i++) {
+      var dx = pos.getX(i) - Z.x, dz = pos.getZ(i) - Z.z;
+      if (dx * dx + dz * dz > r2) continue;
+      inside++;
+      if (Math.abs(pos.getY(i) - Z.y) > 0.002) bad++;
+    }
+    if (inside < 4) throw new Error('zona ' + Z.tag + ' tidak mencakup vertex terrain');
+    checked += inside;
+    if (Math.abs(world.height(Z.x, Z.z) - Z.y) > 0.0001) throw new Error('fungsi tinggi tidak datar di ' + Z.tag);
+    if (Math.abs(world.groundHeight(Z.x, Z.z) - Z.y) > 0.002) throw new Error('groundHeight tidak datar di ' + Z.tag);
+  }
+  if (bad) throw new Error(bad + ' vertex terrain masih bergelombang di area datar');
+  console.log('  ' + zones.length + ' zona datar, ' + checked + ' vertex terrain diperiksa');
+});
 console.log('  Dunia: ' + globalThis.CONFIG.WORLD.size + ' m (skala ' + world.scale.toFixed(3) + '×), pulau kecil: ' +
   (world.islands ? world.islands.length : 0) + ', pelabuhan: ' +
   (world.harborSpot ? 'x=' + world.harborSpot.x.toFixed(0) + ' z=' + world.harborSpot.z.toFixed(0) + ' (dermaga ' + world.harborSpot.dockLen + ' m)' : 'TIDAK ADA!'));

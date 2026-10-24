@@ -12,6 +12,10 @@
     rogue: 'assets/models/Rogue.glb',
     hooded: 'assets/models/Rogue_Hooded.glb',
     boar: 'assets/models/Boar.glb',
+    /* Vegetasi GLB (CC-BY-4.0): dua varian pohon rimbun + satu pohon pinus.
+       Geometri diekstrak sebagai bagian terpisah lalu di-instance oleh world.js. */
+    tree_oak: 'assets/models/tree_low_poly_lowpoly.glb',
+    tree_pine: 'assets/models/pine_tree_low-poly.glb',
     /* Quaternius Medieval Village MegaKit (Free) — modular buildings.
        Semua sudah dikonversi ke .glb mandiri (tanpa .bin / PNG terpisah)
        lewat tools/gltf-to-glb.js — satu request per model, tidak ada
@@ -236,6 +240,84 @@
     // Merge geometries per material for instancing (simplified: single material per model)
     // For now, return the group with its meshes for manual instancing
     return { group: geo, materials: mats, box: box, scale: s };
+  };
+
+  /* Pecah model statis menjadi bagian geometri siap-instance.
+     Setiap mesh di scene dikonversi ke ruang dunia, dipusatkan di sumbu X/Z,
+     diletakkan dengan kaki di y=0, lalu dinormalisasi ke tinggi `opts.height`
+     (default 1). Model seperti tree_low_poly berisi dua pohon; masing-masing
+     mesh menjadi varian terpisah sehingga tidak muncul berpasangan.
+     opts: { height, alphaTest }
+     Mengembalikan [{ geometry, material, width, height, widthRatio, source }]. */
+  AssetLibrary.prototype.staticParts = function (name, opts) {
+    var src = this.models[name];
+    if (!src || !src.scene) return null;
+    opts = opts || {};
+    var targetH = opts.height || 1;
+    var parts = [];
+    src.scene.updateMatrixWorld(true);
+    src.scene.traverse(function (o) {
+      if (!o.isMesh || !o.geometry || !o.material) return;
+      var geo = o.geometry.clone();
+      geo.applyMatrix4(o.matrixWorld);
+
+      // Cermin (determinan negatif) membalik winding; balik urutan indeks.
+      if (o.matrixWorld.determinant() < 0) {
+        if (geo.index) {
+          var ia = geo.index.array;
+          for (var ii = 0; ii + 2 < ia.length; ii += 3) {
+            var tmp = ia[ii + 1]; ia[ii + 1] = ia[ii + 2]; ia[ii + 2] = tmp;
+          }
+          geo.index.needsUpdate = true;
+        } else if (geo.attributes.position) {
+          var pa = geo.attributes.position.array;
+          for (var pi = 0; pi + 8 < pa.length; pi += 9) {
+            for (var pk = 0; pk < 3; pk++) {
+              var t0 = pa[pi + 3 + pk]; pa[pi + 3 + pk] = pa[pi + 6 + pk]; pa[pi + 6 + pk] = t0;
+            }
+          }
+          geo.attributes.position.needsUpdate = true;
+        }
+      }
+
+      geo.computeBoundingBox();
+      var bb = geo.boundingBox;
+      var h = bb.max.y - bb.min.y;
+      if (!(h > 0.00001)) return;
+      var s = targetH / h;
+      geo.translate(
+        -(bb.min.x + bb.max.x) * 0.5,
+        -bb.min.y,
+        -(bb.min.z + bb.max.z) * 0.5
+      );
+      geo.scale(s, s, s);
+      geo.computeBoundingBox();
+      geo.computeBoundingSphere();
+
+      var mat = o.material;
+      if (mat && opts.alphaTest !== undefined) {
+        mat = mat.clone();
+        mat.side = THREE.DoubleSide;
+        mat.transparent = false;
+        mat.opacity = 1;
+        mat.alphaTest = opts.alphaTest;
+        mat.depthWrite = true;
+        mat.needsUpdate = true;
+      }
+
+      var w = geo.boundingBox.max.x - geo.boundingBox.min.x;
+      var d = geo.boundingBox.max.z - geo.boundingBox.min.z;
+      parts.push({
+        geometry: geo,
+        material: mat,
+        width: w,
+        depth: d,
+        widthRatio: w / targetH,
+        height: targetH,
+        source: o.name || name
+      });
+    });
+    return parts.length ? parts : null;
   };
 
   AssetLibrary.findClip = findClip;

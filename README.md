@@ -1,11 +1,12 @@
 # Aetheria: Legacy of the Dawn — Eksplorasi 3D Low-Poly
 
 Game eksplorasi 3D open-world (mini RPG) berbasis Three.js r128, berlatar
-**kerajaan pesisir abad pertengahan**. Seluruh dunia, vegetasi, langit, dan
-karakter dibuat **prosedural** — cukup dobel-klik `index.html` (atau tombol Play
-di editor), tanpa internet. Versi grafis penuh (bayangan halus, tekstur
-permukaan lokal, efek, dan **model karakter 3D CC0**) menyala otomatis saat
-dijalankan lewat `jalankan.bat`; semua aset tersimpan lokal di repo ini.
+**kerajaan pesisir abad pertengahan**. Terrain, langit, bangunan, dan bentuk
+cadangan karakter dibuat **prosedural** — cukup dobel-klik `index.html` (atau
+tombol Play di editor), tanpa internet. Versi grafis penuh (bayangan halus,
+tekstur permukaan lokal, efek, **model karakter 3D CC0**, dan **pohon GLB
+CC-BY-4.0**) menyala otomatis saat dijalankan lewat `jalankan.bat`; semua aset
+tersimpan lokal di repo ini.
 
 **Fase 5** memperluas dunia menjadi **±3,24 km × 3,24 km (10× luas sebelumnya)**
 dengan pegunungan & perbukitan yang ikut membesar, **12 pulau kecil** di lautan,
@@ -40,8 +41,9 @@ saat `file://`).
 
 Untuk grafis penuh: **`jalankan.bat`** — menyalakan server lokal kecil
 (`server.js`, Node.js) dan membuka `http://localhost:8317/`. Mode ini
-mengaktifkan **model karakter 3D** (KayKit & Quaternius, CC0) serta **detail
-map permukaan** lokal (tanah hutan, jalan kerikil, batu gunung, dan plester).
+mengaktifkan **model karakter 3D** (KayKit & Quaternius, CC0), **pohon GLB**
+(dua varian rimbun + pinus, CC-BY-4.0), serta **detail map permukaan** lokal
+(tanah hutan, jalan kerikil, batu gunung, dan plester).
 
 Untuk memeriksa aset GLB baru tanpa memuat semuanya ke dunia, buka **Galeri
 Aset** dari tautan di menu utama atau langsung ke
@@ -142,7 +144,9 @@ gerak & serangan dikunci, dan peta menutup otomatis bila pemain diserang.
   **detail tanah hutan** (foto 1024² dinormalisasi + normal map) agar punggung
   bukit mulus. Fase 5: dunia **3240 m** (10× luas); **Fase 6: pegunungan utama
   dikurangi** (puncak ±155 m) dan diganti lembah sungai, hutan, serta dataran
-  yang lebih terbuka
+  yang lebih terbuka. **Zona datar permukiman**: desa, pendukuhan, kerajaan,
+  kekaisaran, dan pondok pulau benar-benar rata di bagian dalam, dengan falloff
+  halus di tepinya agar rumah serta pemain tidak tembus akibat gelombang terrain
 - **Tekstur permukaan (Tahap A)**: tiga detail map lokal (tanah hutan, kerikil
   sungai kering, batu gunung) dan bump map plester 1024². Foto dinormalisasi
   menjadi pengali hampir-putih agar warna vertex tetap dominan; detail batu
@@ -170,14 +174,15 @@ gerak & serangan dikunci, dan peta menutup otomatis bila pemain diserang.
 - **Langit & siklus siang–malam 10 menit**: kubah gradasi yang berubah warna,
   matahari terbit/terbenam, pendar matahari, bulan, 700 bintang, awan tertiup
   angin (berputar ulang di ujung langit), kabut atmosferik (FogExp2)
-- **Vegetasi instanced**: **±4.700 pohon** bergaya hutan sedang — rimbun
-  pedalaman (mahkota 7 gumpalan organik bertekstur daun), **cemara bertingkat**
-  yang mendominasi punggung bukit & lereng, dan **kelapa pesisir yang jarang**
-  (batang melengkung + pelepah 3D) — plus **±1.370 batu**; low-poly, ditanam pas
-  mengikuti permukaan tanah, + tabrakan. **±1.100 pohon tinggi** berjajar di
-  kedua sisi jalan dan **±2.200** memadatkan kantong hutan. Palet daun, rumput,
-  dan bunga digeser ke hijau zaitun/tanah agar terasa seperti lembah kerajaan,
-  bukan tropis
+- **Vegetasi GLB (Tahap B)**: **±4.700 pohon** memakai aset lokal
+  **CC-BY-4.0** — `tree_low_poly_lowpoly.glb` (dua varian pohon rimbun) untuk
+  pedalaman, tepi jalan, pesisir, dan pohon hias kota; `pine_tree_low-poly.glb`
+  untuk pinus di punggung bukit dan lereng. Setiap mesh diekstrak sebagai varian
+  terpisah, dipusatkan, dinormalisasi, lalu di-`InstancedMesh` per petak 520 m
+  dengan alpha-test agar ribuan pohon tetap murah. **±1.100** di antaranya
+  mengapit jalan dan **±2.200** memadatkan kantong hutan; plus **±1.370 batu**.
+  Semua ditanam mengikuti permukaan tanah dan diberi tabrakan. Bila aset gagal
+  dimuat (mis. `file://`), jalur prosedural lama dipakai sebagai fallback
 - **Rumput & bunga**: dibagi **potongan 36 m** yang dibangun bertahap (5×5
   potongan aktif ±90 m, 2 potongan per frame) — ±1.400 rumpun + ±200 bunga instanced
   di sekitar pemain, bergoyang tertiup angin (shader), hanya di daratan berumput.
@@ -325,11 +330,10 @@ gerak & serangan dikunci, dan peta menutup otomatis bila pemain diserang.
 - **Menu utama & trailer**: Play → trailer kamera terbang (lewati kapan saja),
   Pengaturan bertab (audio prosedural / grafis / bahasa ID–EN), Keluar dengan
   layar pamit; pengaturan audio & bahasa tersimpan di peramban
-- **Ter-instance & ber-petak**: ±2,2 juta segitiga untuk seluruh dunia Fase 6
-  (vegetasi jauh lebih rapat: 18.000+ gumpalan kanopi dan 1.370 batu), tetapi
-  semuanya memakai *instancing*. **Kanopi dipecah menjadi 24 petak** dengan
-  *frustum culling* + batas jarak 1,15 km, sehingga hanya petak di sekitar
-  pemain yang masuk pass utama dan pass bayangan; rumput hanya 5×5 potongan di sekitar pemain,
+- **Ter-instance & ber-petak**: ±4.700 pohon GLB dan 1.370 batu memakai
+  *instancing*. **Pohon dipecah menjadi 62 petak** (520 m) dengan *frustum
+  culling* + batas jarak 1,15 km, sehingga hanya petak di sekitar pemain yang
+  masuk pass utama dan pass bayangan; rumput hanya 5×5 potongan di sekitar pemain,
   hanya 2–3 cahaya dinamis aktif (pool lampu/api terdekat), dan jumlah vegetasi
   diskalakan sublinear. Pada versi sebelum Fase 6, Intel UHD (iGPU kelas bawah,
   1262×704, DPR 1) terukur **Cepat ±58 FPS**, **HD ±44–47 FPS**, **Ultra ±39–44
@@ -547,6 +551,7 @@ layanan eksternal, atau berkas audio/gambar terunduh saat bermain.
 |---|---|---|
 | **Model karakter** | 6 berkas `.glb` (±17,5 MB) | KayKit Character Pack: Adventures (5 karakter berig + 75 animasi) dan Quaternius Boar. Tekstur tertanam di dalam `.glb`. |
 | **Model bangunan** | 33 berkas `.glb` (±1,3 MB) | Quaternius Medieval Village MegaKit (Free, CC0): dinding, lantai, atap, tangga, pintu, jendela, cerobong, pagar, pedati, dan anggur. Setiap model adalah `.glb` mandiri (geometri + buffer di dalam satu berkas, tekstur diganti material prosedural) sehingga **tidak ada permintaan `.bin`/`.gltf`/PNG** saat bermain. |
+| **Pohon** | 2 berkas `.glb` (±1,9 MB) | `tree_low_poly_lowpoly.glb` oleh 00amza dan `pine_tree_low-poly.glb` oleh Ricardo Sanchez, keduanya **CC-BY-4.0**. Tekstur tertanam; dipakai untuk seluruh pohon dunia lewat *instancing* dan fallback prosedural saat aset tidak tersedia. |
 | **Font menu** | 4 berkas `.woff2` | Cinzel, Cinzel Decorative 700, Alegreya reguler, dan Alegreya italic; disertai lisensi OFL. |
 | **Pustaka grafis** | Three.js r128 + modul lokal | `three.min.js`, GLTFLoader, SkeletonUtils, EffectComposer, RenderPass, UnrealBloomPass, CopyShader, FXAAShader, dan LuminosityHighPassShader. |
 | **Tekstur** | 18 tekstur prosedural + 2 normal map + 4 detail map lokal (±5,0 MB) | Prosedural dibuat saat runtime dengan Canvas 2D: tanah, rumput kering, kulit kayu, papan, plester, bata batu, cobble, sirap, rumbia, kain, kulit, logam, bulu, daun, batu, dan gel; plus normal map air dan tanah. Detail map di `assets/textures/ground/`: tanah hutan, kerikil sungai kering, batu gunung, dan bump plester 8-bit (turunan dari displacement 16-bit). |
@@ -563,6 +568,9 @@ Pemakaian model 3D saat ini:
   ditugaskan ke karakter mana pun.
 - `assets/models/buildings/*.glb` — modul MegaKit untuk **desa Aldenmere,
   pendukuhan, dan Kerajaan Pusat** (dinding, atap, tangga, jendela, pasar, dll).
+- `tree_low_poly_lowpoly.glb` — dua varian pohon rimbun untuk hutan, tepi jalan,
+  pesisir, dan pohon hias kota.
+- `pine_tree_low-poly.glb` — pohon pinus untuk punggung bukit dan lereng.
 
 #### Pipeline model bangunan (`.gltf` → `.glb`)
 
@@ -585,8 +593,9 @@ lagi dibutuhkan.
 
 Saat dibuka lewat `file://`, peramban memblokir pembacaan model dan detail map
 eksternal sehingga game memakai bentuk serta tekstur prosedural untuk pemain,
-penduduk, makhluk, dan permukaan. Bangunan, vegetasi, langit, dan efek tetap
-tersedia karena dibuat dari kode.
+penduduk, makhluk, permukaan, dan pepohonan. Bangunan, langit, dan efek tetap
+tersedia karena dibuat dari kode; jalur pohon prosedural adalah fallback aman
+yang setara dengan aset GLB saat HTTP tidak tersedia.
 
 ### Teknologi dan arsitektur
 
@@ -595,7 +604,7 @@ tersedia karena dibuat dari kode.
 | **Bahasa** | JavaScript gaya ES5 (IIFE), HTML5, CSS3; tanpa framework UI |
 | **Render** | Three.js r128 melalui WebGL; kamera orang ketiga |
 | **Dunia** | PRNG ber-seed, noise 2D, fBm, ridged, sampling tinggi terrain, warna vertex |
-| **Vegetasi** | `InstancedMesh`, potongan rumput 36 m, shader goyangan angin |
+| **Vegetasi** | `InstancedMesh` pohon GLB per petak 520 m + fallback prosedural, potongan rumput 36 m, shader goyangan angin |
 | **Tekstur** | `CanvasTexture` prosedural + detail map JPG/PNG lokal yang dinormalisasi, normal/bump map, repeat dan anisotropi; fallback aman di `file://` |
 | **Audio** | Web Audio API (oscillator, filter, noise, LFO) |
 | **Antarmuka** | DOM overlay + CSS; i18n lewat atribut `data-i18n` |
@@ -620,14 +629,15 @@ Alur utamanya:
 5. Peta mini dan peta besar memakai kanvas 2D terpisah agar tidak membebani
    render 3D.
 
-**Strategi performa**: seluruh pohon dan batu memakai `InstancedMesh`, kanopi
-dipecah per petak dengan *frustum culling* + batas jarak, vegetasi diskalakan
-sublinear, rumput hanya digambar di sekitar pemain, bayangan dibatasi
-sesuai preset, DPR HD/Ultra dibatasi 1,25×/1,5×, dan banyak geometri bangunan
-memakai material serta balok yang dapat di-*instance*. Angka acuan versi sebelum
-Fase 6 di iGPU kelas bawah (Intel UHD, 1262 × 704, DPR 1): **Cepat ±58 FPS**,
-**HD ±44–47 FPS**, **Ultra ±39–44 FPS**. Setelah hutan Fase 6 diperbanyak,
-preset **Cepat/HD** lebih aman untuk iGPU lama.
+**Strategi performa**: seluruh pohon dan batu memakai `InstancedMesh`; pohon GLB
+dipecah menjadi 62 petak dengan *frustum culling* + batas jarak 1,15 km,
+vegetasi diskalakan sublinear, rumput hanya digambar di sekitar pemain, bayangan
+dibatasi sesuai preset, DPR HD/Ultra dibatasi 1,25×/1,5×, dan banyak geometri
+bangunan memakai material serta balok yang dapat di-*instance*. Angka acuan
+versi sebelum Fase 6 di iGPU kelas bawah (Intel UHD, 1262 × 704, DPR 1):
+**Cepat ±58 FPS**, **HD ±44–47 FPS**, **Ultra ±39–44 FPS**. Dengan pohon GLB
+yang lebih rinci, preset **Cepat/HD** lebih aman untuk iGPU lama; ukur ulang
+dengan `node tools/perf.js` pada perangkat target.
 
 **Tanpa build step**: tidak ada `package.json`, bundler, transpiler, atau proses
 kompilasi. Node.js hanya dipakai untuk server lokal opsional dan alat uji. Ini
@@ -657,15 +667,20 @@ pertengahan:
    batu, dan makhluk menjadi celeng, penyamun, roh rawa, serta ksatria terkutuk.
    ID internal, ID tugas, tipe musuh, dan kunci `pulau.` dipertahankan agar
    simpanan serta perilaku lama tetap kompatibel.
-8. **QA.** `tools/test-build.js` menguji dunia, pulau, pelabuhan, perahu, renang,
+8. **Tahap B — Pohon GLB & terrain datar.** Seluruh pohon memakai dua aset GLB
+   lokal CC-BY-4.0 (dua varian rimbun + pinus) yang diekstrak per mesh dan
+   di-instance per petak; lokasi permukiman dipilih sebelum terrain dibangun dan
+   diratakan dengan falloff agar bangunan serta pemain tidak tembus.
+9. **QA.** `tools/test-build.js` menguji dunia, pulau, pelabuhan, perahu, renang,
    rumah, NPC, tugas, tempur, simpan/muat v2, peta, efek, sungai, jalan,
-   jembatan, hutan/batu, dan 120 frame; skrip CDP dipakai untuk jepretan dan
-   pengukuran FPS di peramban.
+   jembatan, hutan/batu, **kerataan vertex terrain permukiman**, dan 120 frame;
+   skrip CDP dipakai untuk jepretan dan pengukuran FPS di peramban.
 
 Seluruh geometri dunia, bangunan, karakter prosedural, tekstur, dan audio dibuat
-dari kode. Aset eksternal sengaja dibatasi pada enam model GLB CC0, empat berkas
-font, dan pustaka Three.js. Tidak ada editor level atau mesin game pihak ketiga:
-dunia adalah hasil kode generator yang deterministik dari seed.
+dari kode. Aset eksternal dibatasi pada enam model karakter/babi GLB CC0, 33
+modul bangunan CC0, dua pohon GLB CC-BY-4.0, empat berkas font, dan pustaka
+Three.js. Tidak ada editor level atau mesin game pihak ketiga: dunia adalah
+hasil kode generator yang deterministik dari seed.
 
 ### Batasan
 
@@ -692,10 +707,11 @@ dunia adalah hasil kode generator yang deterministik dari seed.
 ### Lisensi dan atribusi
 
 Kode game dibuat khusus untuk proyek ini. Three.js r128 berlisensi **MIT**;
-model karakter KayKit dan Quaternius serta detail map ambientCG berlisensi
-**CC0 1.0** (domain publik); font Cinzel, Cinzel Decorative, dan Alegreya
-berlisensi **SIL Open Font License 1.1**. Rincian berkas dan sumbernya ada di
-[Lisensi](#lisensi), `assets/LICENSE.txt`, dan `assets/fonts/`.
+model karakter KayKit dan Quaternius, modul bangunan, serta detail map ambientCG
+berlisensi **CC0 1.0** (domain publik); dua pohon GLB berlisensi **CC-BY-4.0**;
+font Cinzel, Cinzel Decorative, dan Alegreya berlisensi **SIL Open Font License
+1.1**. Rincian berkas dan sumbernya ada di [Lisensi](#lisensi),
+`assets/LICENSE.txt`, dan `assets/fonts/`.
 
 ## Uji & alat pengembangan
 
@@ -764,6 +780,9 @@ tools/                  uji & alat (Node)
 - Detail map permukaan — **CC0 1.0** dari ambientCG (ForestGround04,
   DryRiverPebbles, RockyTerrain02, WhiteStucco02) — rincian di
   `assets/LICENSE.txt`.
+- Pohon 3D — **CC-BY-4.0**: *Tree low poly lowpoly* oleh 00amza dan *Pine tree
+  low-poly* oleh Ricardo Sanchez (Sketchfab) — atribusi lengkap ada di
+  `assets/LICENSE.txt`.
 - Font menu — **Cinzel**, **Cinzel Decorative**, dan **Alegreya**, dilisensikan
   SIL Open Font License 1.1; berkas lisensi ada di `assets/fonts/`.
 
@@ -789,3 +808,4 @@ tools/                  uji & alat (Node)
 - [x] **Dunia K2** — Kerajaan Pusat Aetheria (120 m, 30 rumah, 10 warga) + **Kekaisaran Aetheria** (296 m, 100 rumah, 30 warga, kastil agung), tembok pejal anti-tembus, jalan masuk bergerbang, POI kedua, trailer 42 dtk
 - [x] **Fase 6 — Lanskap terhubung** — pegunungan dikurangi, **sungai panjang ±2,3 km** menggantikan danau, **6 jalan ±5,3 km** menghubungkan semua desa/kerajaan/kekaisaran/pelabuhan dengan **3 jembatan**, **14 hutan rimbun** + 45 monster, **±1.100 pohon tepi jalan**, **±1.370 batu**, dan peta mini bergaris jalan
 - [x] **Tahap A — Tekstur permukaan** — detail tanah hutan, jalan kerikil, batu gunung, dan bump plester (ambientCG CC0, lokal) + fallback prosedural; **R** mengunci lari cepat dan kecepatan lari dinaikkan ke 17 m/s
+- [x] **Tahap B — Pohon GLB & permukiman datar** — seluruh pohon memakai dua aset GLB CC-BY-4.0 (dua varian rimbun + pinus) yang di-instance per petak, plus zona datar terrain untuk desa/kerajaan/kekaisaran/pondok pulau dan regresi kerataan di `tools/test-build.js`

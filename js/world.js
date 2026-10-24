@@ -251,6 +251,13 @@
       }
     })();
 
+    /* --- Zona datar permukiman ---
+       Diisi setelah lokasi desa/kerajaan/kekaisaran dipilih. Bagian dalam zona
+       benar-benar rata; cincin luar memakai falloff halus agar tidak menjadi
+       tebing. Karena terrain, jalan, rumah, dan collider semuanya membaca
+       fungsi ini, tinggi mereka tetap sinkron. */
+    var flattenZones = [];
+
     // Ketinggian akhir = bentuk besar + kerutan halus permukaan daratan
     function full(x, z) {
       var m = baseFull(x, z);
@@ -275,6 +282,21 @@
         var bed = 1 - U.smoothstep(8, 24, rd);
         if (bed > 0) m = m * (1 - bed) - 3.3 * bed;
       }
+      // Ratakan area permukiman (desa, kerajaan, kekaisaran, pondok pulau).
+      // Bobot terbesar menang bila dua zona berdekatan.
+      if (flattenZones.length) {
+        var bestW = 0, bestY = m;
+        for (var fz = 0; fz < flattenZones.length; fz++) {
+          var Z = flattenZones[fz];
+          var zdx = x - Z.x, zdz = z - Z.z;
+          var zd2 = zdx * zdx + zdz * zdz;
+          if (zd2 >= Z.outer * Z.outer) continue;
+          var zw = zd2 <= Z.inner * Z.inner ? 1 : 1 - U.smoothstep(Z.inner, Z.outer, Math.sqrt(zd2));
+          if (zw > bestW) { bestW = zw; bestY = Z.y; }
+          if (bestW >= 1) break;
+        }
+        if (bestW > 0) m = m * (1 - bestW) + bestY * bestW;
+      }
       return m;
     }
 
@@ -285,6 +307,7 @@
     full.river = riverPts;
     full.riverDistance = riverDistance;
     full.lakeFills = lakeFills;
+    full.flattenZones = flattenZones;
     return full;
   }
 
@@ -463,6 +486,11 @@
     this._spawn = null;
     this._tmpColor = new THREE.Color();
     this._tmpColor2 = new THREE.Color();
+    this._sitesReady = false;
+    this._treePartsCache = null;
+    // Pilih lokasi permukiman lebih awal agar zona datar sudah aktif sebelum
+    // mesh terrain dibangun (urutan stage: konstruktor → buildTerrain).
+    this._prepareSiteLayout();
   }
 
   World.createHeightFunction = createHeightFunction;
@@ -2992,6 +3020,7 @@
       return false;
     }
     var nTrees = cfg.trees === undefined ? 22 : cfg.trees;
+    var decorativeTrees = [];
     for (var tr2 = 0; tr2 < nTrees; tr2++) {
       var tra = rng() * Math.PI * 2;
       var trr = PLAZA_R + 4 + rng() * (R_WALL - PLAZA_R - 8);
@@ -3009,8 +3038,25 @@
       }
       if (nearRoad) continue;
       if (inPlatform(trx, trz, 1.3)) continue;
-      add('timber', trx, try2 + 1.1, trz, 0.3, 2.2, 0.3, 0x4E3B26);
-      add('stone', trx, try2 + 2.6, trz, 2.6, 1.9, 2.6, 0x4C6B3C, 0.4);
+      decorativeTrees.push({
+        x: trx, z: trz, gy: try2, type: 0,
+        trunkH: 1.8 + rng() * 1.3, canopyR: 1.5 + rng() * 0.75,
+        dir: rng() * Math.PI * 2, tilt: 0
+      });
+    }
+    // Pohon hias kota juga memakai aset GLB bila tersedia.
+    var decoParts = this._treeAssetParts(assets);
+    if (decoParts) {
+      var decoMeshes = this._buildAssetTreeMeshes(decorativeTrees, decoParts, rng);
+      for (var dm = 0; dm < decoMeshes.length; dm++) this.scene.add(decoMeshes[dm]);
+      this.envMeshes = (this.envMeshes || []).concat(decoMeshes);
+      this._canopyChunks = (this._canopyChunks || []).concat(decoMeshes);
+    } else {
+      for (var dt = 0; dt < decorativeTrees.length; dt++) {
+        var dtr = decorativeTrees[dt];
+        add('timber', dtr.x, dtr.gy + 1.1, dtr.z, 0.3, 2.2, 0.3, 0x4E3B26);
+        add('stone', dtr.x, dtr.gy + 2.6, dtr.z, 2.6, 1.9, 2.6, 0x4C6B3C, 0.4);
+      }
     }
 
     /* ---------- 10. WARGA KOTA (titik NPC) ---------- */
@@ -3820,8 +3866,10 @@
     return false;
   };
 
-  World.prototype.buildEnvironment = function (assets) {
-    var rng = U.mulberry32(C.WORLD.seed + 909);
+  /* Pilih seluruh lokasi permukiman sekali saja. Dipanggil dari konstruktor
+     (sebelum terrain dibangun) agar zona datar ikut membentuk mesh. */
+  World.prototype._prepareSiteLayout = function () {
+    if (this._sitesReady) return;
     this.villageSpots = this.pickVillageSpots();
     this.villageSpot = this.villageSpots[0];
     this._placed = [];
@@ -3834,11 +3882,76 @@
     this.empireSite = this.pickEmpireSite();
     this.townSpots = [];
     this.landmarkSites = this.pickLandmarkSites();
+    // Simpan selisih tinggi landmark (mis. alas 0,35 m di bawah tanah) supaya
+    // posisinya bisa dihitung ulang setelah perataan.
+    for (var i = 0; i < this.landmarkSites.length; i++) {
+      var lm = this.landmarkSites[i];
+      lm._yOff = (lm.y || 0) - this.height(lm.x, lm.z);
+    }
+    this._sitesReady = true;
+    this._flattenSettlements();
+  };
+
+  /* Rata-kan terrain di dalam batas permukiman; falloff 15–40 m di luarnya
+     mencegah dinding tanah vertikal. */
+  World.prototype._flattenSettlements = function () {
+    var zones = this.height.flattenZones;
+    if (!zones) return;
+    zones.length = 0;
+    var self = this;
+    function add(x, z, inner, outer, tag) {
+      var y = self.height(x, z);
+      if (!isFinite(y)) return;
+      // Jangan pernah meratakan area di bawah permukaan laut.
+      if (y < 1.2) y = 1.2;
+      zones.push({ x: x, z: z, inner: inner, outer: outer, y: y, tag: tag });
+    }
+    var i;
+    for (i = 0; i < this.villageSpots.length; i++) {
+      var v = this.villageSpots[i];
+      if (v.main) add(v.x, v.z, 26, 44, 'village');
+      else add(v.x, v.z, 18, 32, 'hamlet');
+    }
+    for (i = 0; i < this.islandSites.length; i++) {
+      var is = this.islandSites[i];
+      add(is.x, is.z, 10, 20, 'island_hut');
+    }
+    if (this.kingdomSite) add(this.kingdomSite.x, this.kingdomSite.z, 72, 98, 'kingdom');
+    if (this.empireSite) add(this.empireSite.x, this.empireSite.z, 168, 212, 'empire');
+
+    // Sinkronkan tinggi acuan semua situs dengan permukaan yang sekarang datar.
+    for (i = 0; i < this.villageSpots.length; i++) {
+      var vv = this.villageSpots[i];
+      vv.h = this.height(vv.x, vv.z);
+    }
+    for (i = 0; i < this.islandSites.length; i++) {
+      var ii = this.islandSites[i];
+      ii.y = this.height(ii.x, ii.z);
+    }
+    if (this.kingdomSite) this.kingdomSite.y = this.height(this.kingdomSite.x, this.kingdomSite.z);
+    if (this.empireSite) this.empireSite.y = this.height(this.empireSite.x, this.empireSite.z);
+    for (i = 0; i < this.landmarkSites.length; i++) {
+      var lms = this.landmarkSites[i];
+      lms.y = this.height(lms.x, lms.z) + (lms._yOff || 0);
+    }
+    if (global.console) {
+      console.log('[Aetheria] Zona datar permukiman: ' + zones.length +
+        ' (desa ' + this.villageSpots.length + ', kerajaan + kekaisaran' +
+        (this.islandSites.length ? ', pondok pulau ' + this.islandSites.length : '') + ')');
+    }
+  };
+
+  World.prototype.buildEnvironment = function (assets) {
+    var rng = U.mulberry32(C.WORLD.seed + 909);
+    this._prepareSiteLayout();
+    this.villageSpot = this.villageSpots[0];
+    this._placed = [];
+    this._spawn = null;
     // Jalan penghubung dibangun sebelum vegetasi: jalan, jembatan, dan pepohonan
     // tepi jalan menjadi acuan tata letak dunia.
     this._buildRoadNetwork();
     this._pickForests();
-    this._placeProcedural(rng);
+    this._placeProcedural(rng, assets);
 
     // Use MegaKit landmarks if assets are loaded and available
     if (assets && assets.ready && assets.has('wall_plaster_straight')) {
@@ -3853,7 +3966,115 @@
     this.buildEmpire(assets && assets.ready ? assets : null);
   };
 
-  World.prototype._placeProcedural = function (rng) {
+  /* ---------- Vegetasi dari aset GLB (Tahap B) ----------
+     Geometri pohon diekstrak sekali, dinormalisasi ke tinggi 1, lalu di-instance
+     per petak 520 m agar frustum culling tetap bekerja. Bila aset belum siap
+     (mode file:// atau gagal muat), pemanggil memakai jalur prosedural lama. */
+  World.prototype._treeAssetParts = function (assets) {
+    if (this._treePartsCache) return this._treePartsCache;
+    if (!assets || !assets.ready || !assets.staticParts) return null;
+    var broad = assets.staticParts('tree_oak', { height: 1, alphaTest: 0.42 });
+    if (!broad || !broad.length) return null;
+    var pine = assets.staticParts('tree_pine', { height: 1, alphaTest: 0.42 });
+    if (!pine || !pine.length) pine = broad;
+    this._treePartsCache = { broad: broad, pine: pine };
+    return this._treePartsCache;
+  };
+
+  World.prototype._buildAssetTreeMeshes = function (trees, parts, rng) {
+    var dummy = new THREE.Object3D();
+    var tmpC = new THREE.Color();
+    // key → { part, items[] } — dipisah per varian dan petak dunia.
+    var buckets = Object.create(null);
+    var i;
+
+    function addItem(part, variant, x, y, z, ry, sx, sy, sz, shade) {
+      var cx = Math.floor(x / 520), cz = Math.floor(z / 520);
+      var key = variant + ':' + cx + ',' + cz;
+      var b = buckets[key] || (buckets[key] = { part: part, items: [] });
+      b.items.push({ x: x, y: y, z: z, ry: ry, sx: sx, sy: sy, sz: sz, shade: shade, part: part });
+    }
+
+    for (i = 0; i < trees.length; i++) {
+      var t = trees[i];
+      var pool = t.type === 2 ? parts.pine : parts.broad;
+      var vi = t.type === 2 ? 0 : (Math.floor(rng() * parts.broad.length) % parts.broad.length);
+      var part = pool[vi] || pool[0];
+      if (!part) continue;
+      var height;
+      var width;
+      if (t.type === 1) {
+        height = t.trunkH + 2.6;
+        width = t.canopyR * 2.1;
+      } else if (t.type === 2) {
+        height = t.trunkH + t.canopyR * 0.95;
+        width = t.canopyR * 2.35;
+      } else {
+        height = t.trunkH + t.canopyR * 1.15;
+        width = t.canopyR * 2.05;
+      }
+      // Geometri sudah dinormalisasi ke tinggi 1. Skala X/Z dihitung dari
+      // lebar asli pada tinggi 1 (bukan dikali tinggi lagi) agar kanopi tidak
+      // mengecil menjadi batang jarum saat tinggi pohon 18–25 m.
+      var sxz = width / Math.max(0.001, part.widthRatio);
+      var shade = 0.82 + rng() * 0.22;
+      // Prefiks tipe wajib: pinus dan rimbun bisa berbagi nomor varian 0.
+      var variantKey = (t.type === 2 ? 'p' : 'b') + vi;
+      addItem(part, variantKey, t.x, t.gy, t.z, t.dir, sxz, height, sxz, shade);
+    }
+
+    var meshes = [];
+    Object.keys(buckets).forEach(function (key) {
+      var bucket = buckets[key];
+      var ids = bucket.items;
+      if (!ids.length) return;
+      var geo = bucket.part.geometry.clone();
+      var minX = Infinity, minY = Infinity, minZ = Infinity;
+      var maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+      for (var j = 0; j < ids.length; j++) {
+        var it = ids[j];
+        var ex = Math.max(bucket.part.width * it.sx, bucket.part.depth * it.sz) + 1.2;
+        var ey = it.sy + 1.2;
+        if (it.x - ex < minX) minX = it.x - ex;
+        if (it.x + ex > maxX) maxX = it.x + ex;
+        if (it.y - 1 < minY) minY = it.y - 1;
+        if (it.y + ey > maxY) maxY = it.y + ey;
+        if (it.z - ex < minZ) minZ = it.z - ex;
+        if (it.z + ex > maxZ) maxZ = it.z + ex;
+      }
+      var ccx = (minX + maxX) * 0.5, ccy = (minY + maxY) * 0.5, ccz = (minZ + maxZ) * 0.5;
+      var cr = Math.sqrt(
+        (maxX - ccx) * (maxX - ccx) +
+        (maxY - ccy) * (maxY - ccy) +
+        (maxZ - ccz) * (maxZ - ccz)
+      ) + 2.0;
+      geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(ccx, ccy, ccz), cr);
+
+      var mesh = new THREE.InstancedMesh(geo, bucket.part.material, ids.length);
+      mesh.castShadow = true;
+      mesh.receiveShadow = false;
+      mesh.frustumCulled = true;
+      mesh.name = 'pohon_aset';
+      for (var k = 0; k < ids.length; k++) {
+        var d = ids[k];
+        dummy.position.set(d.x, d.y, d.z);
+        dummy.rotation.set(0, d.ry, 0, 'YXZ');
+        dummy.scale.set(d.sx, d.sy, d.sz);
+        dummy.updateMatrix();
+        mesh.setMatrixAt(k, dummy.matrix);
+        tmpC.setRGB(
+          Math.min(1.15, d.shade * (0.97 + rng() * 0.06)),
+          Math.min(1.15, d.shade * (0.98 + rng() * 0.05)),
+          Math.min(1.15, d.shade * (0.94 + rng() * 0.07))
+        );
+        mesh.setColorAt(k, tmpC);
+      }
+      meshes.push(mesh);
+    });
+    return meshes;
+  };
+
+  World.prototype._placeProcedural = function (rng, assets) {
     var S = this.scale || 1;
     var self = this;
     var trees = [], rocks = [];
@@ -4035,6 +4256,16 @@
     // --- Susun instance ---
     var dummy = new THREE.Object3D();
     var tmpC = new THREE.Color();
+    var canopyItems = [], pineItems = [], frondItems = [];
+    var trunkMesh = null, palmTrunkMesh = null, canopyMeshes = [], pineMesh = null, frondMesh = null;
+    var treeAsset = this._treeAssetParts(assets);
+    var assetTreeMeshes = null;
+
+    if (treeAsset) {
+      // Semua pohon memakai GLB: dua varian rimbun + pinus.
+      assetTreeMeshes = this._buildAssetTreeMeshes(trees, treeAsset, rng);
+      this._canopyChunks = assetTreeMeshes;
+    } else {
 
     // --- Batang pohon: lurus (rimbun & cemara) + melengkung (kelapa) ---
     var straightTrees = [], palmTrees = [];
@@ -4267,6 +4498,8 @@
       }
     }
 
+    } // akhir jalur prosedural (fallback file:// / aset gagal)
+
     // Batu-batu
     var rockGeo = new THREE.DodecahedronGeometry(1, 0);
     var rockMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.95, metalness: 0 });
@@ -4290,23 +4523,31 @@
       rockMesh.setColorAt(i, tmpC);
     }
 
-    this.scene.add(trunkMesh);
-    this.scene.add(palmTrunkMesh);
-    this.scene.add(rockMesh);
-    this.envMeshes = [trunkMesh, palmTrunkMesh].concat(canopyMeshes, [rockMesh]);
+    if (assetTreeMeshes) {
+      for (i = 0; i < assetTreeMeshes.length; i++) this.scene.add(assetTreeMeshes[i]);
+      this.scene.add(rockMesh);
+      this.envMeshes = assetTreeMeshes.concat([rockMesh]);
+    } else {
+      this.scene.add(trunkMesh);
+      this.scene.add(palmTrunkMesh);
+      this.scene.add(rockMesh);
+      this.envMeshes = [trunkMesh, palmTrunkMesh].concat(canopyMeshes, [rockMesh]);
+      if (pineMesh) {
+        this.scene.add(pineMesh);
+        this.envMeshes.push(pineMesh);
+      }
+      if (frondMesh) {
+        this.scene.add(frondMesh);
+        this.envMeshes.push(frondMesh);
+      }
+    }
     this.envCounts = {
       trees: trees.length, rocks: rocks.length, canopyParts: canopyItems.length,
       pines: pineItems.length, fronds: frondItems.length,
+      assetTrees: assetTreeMeshes ? assetTreeMeshes.length : 0,
+      treeAssets: !!assetTreeMeshes,
       roadTrees: roadTreeN, forestTrees: forestTreeN, roadRocks: roadRockN
     };
-    if (pineMesh) {
-      this.scene.add(pineMesh);
-      this.envMeshes.push(pineMesh);
-    }
-    if (frondMesh) {
-      this.scene.add(frondMesh);
-      this.envMeshes.push(frondMesh);
-    }
 
     // Daftar kelapa & batu untuk kebutuhan desa/tugas (Fase 2)
     this.palms = [];

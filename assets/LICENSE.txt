@@ -3,7 +3,8 @@ Aetheria: Legacy of the Dawn — Aset pihak ketiga
 
 Sebagian besar aset di folder ini berlisensi CC0 1.0 (domain publik) sehingga
 bebas dipakai, diubah, dan disebarkan — termasuk untuk keperluan komersial,
-tanpa wajib atribusi. Pustaka three.js memakai lisensi MIT, dan font di
+tanpa wajib atribusi. Dua pohon GLB memakai CC-BY-4.0 sehingga atribusi kepada
+pembuatnya wajib disertakan. Pustaka three.js memakai lisensi MIT, dan font di
 `assets/fonts/` memakai SIL Open Font License 1.1 (berkas lisensi terpisah).
 Atribusi ditulis di sini sebagai bentuk terima kasih.
 
@@ -30,7 +31,24 @@ Atribusi ditulis di sini sebagai bentuk terima kasih.
              lib/utils/SkeletonUtils.js, lib/postprocessing/*, lib/shaders/*
    Sumber  : https://threejs.org
 
-4) ambientCG — Detail map permukaan (Tahap A)
+4) Vegetasi GLB (Tahap B) — CC-BY-4.0
+   Pembuat : 00amza (https://sketchfab.com/00amza)
+   Lisensi : Creative Commons Attribution 4.0 International
+             (http://creativecommons.org/licenses/by/4.0/)
+   Sumber  : https://sketchfab.com/3d-models/tree-low-poly-lowpoly-73201f05280d48dcb10ed4ca362d69f8
+   Berkas  : assets/models/tree_low_poly_lowpoly.glb
+   Judul   : Tree low poly lowpoly
+   Isi     : dua varian pohon rimbun dalam satu berkas; tekstur tertanam.
+
+   Pembuat : Ricardo Sanchez (https://sketchfab.com/380660711785)
+   Lisensi : Creative Commons Attribution 4.0 International
+             (http://creativecommons.org/licenses/by/4.0/)
+   Sumber  : https://sketchfab.com/3d-models/pine-tree-low-poly-e72f2c31aac544e58b667c13ec718daf
+   Berkas  : assets/models/pine_tree_low-poly.glb
+   Judul   : Pine tree low-poly
+   Isi     : satu pohon pinus; tekstur tertanam.
+
+5) ambientCG — Detail map permukaan (Tahap A)
    Pembuat : ambientCG (Lennart Demes)
    Lisensi : CC0 1.0 Universal (Public Domain)
    Berkas  : assets/textures/ground/forest_ground_04_diff_1k.jpg

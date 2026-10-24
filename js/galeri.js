@@ -1,4 +1,4 @@
-/* Galeri Aset — penjelajah 17 model GLB baru.
+/* Galeri Aset — penjelajah 18 model GLB baru.
    Halaman terpisah dari gameplay: model dimuat satu per satu, aset lama
    di-dispose sebelum aset baru dimuat, dan kamera auto-frame. Tidak menyentuh
    save, UI game, atau registry assets.js. */
@@ -13,6 +13,14 @@
       cat: 'vegetation', badge: 'light', size: '173 KB', sizeMB: 0.17,
       tris: 1629, draw: 2, author: '00amza', license: 'CC-BY-4.0', height: 8,
       note: 'Dua pohon dalam satu file; pivot di dasar. Ringan untuk hutan massal.'
+    },
+    {
+      id: 'pine_tree_low_poly',
+      title: 'Pine Tree Low-Poly',
+      file: 'assets/models/pine_tree_low-poly.glb',
+      cat: 'vegetation', badge: 'light', size: '1.7 MB', sizeMB: 1.7,
+      tris: 282, draw: 1, author: 'Ricardo Sanchez', license: 'CC-BY-4.0', height: 739.6,
+      note: 'Pohon pinus; skala asli sangat besar, dunia menormalkan tinggi lalu meng-instance per petak.'
     },
     {
       id: 'grass_patches',
